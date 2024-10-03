@@ -46,7 +46,7 @@ FROM base AS release
 COPY --from=install /temp/prod/node_modules node_modules
 COPY  ./backend/index.ts .
 COPY  ./backend/package.json .
-COPY --from=frontend ./app/dist/. .
+COPY --from=frontend ./app/dist/. ./public/
 
 # run the app
 USER bun

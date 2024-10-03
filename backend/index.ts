@@ -2,7 +2,7 @@ const { stat } = require("fs").promises;
 
 console.log("Hello via Bun!");
 
-const PUBLIC_DIR = "dist";
+const PUBLIC_DIR = "public";
 
 Bun.serve({
   port: 3000,
@@ -11,7 +11,7 @@ Bun.serve({
       const file = Bun.file(PUBLIC_DIR + "/index.html");
       return new Response(file);
     }
-    const filePath = "dist" + new URL(req.url).pathname;
+    const filePath = PUBLIC_DIR + new URL(req.url).pathname;
     const file = Bun.file(filePath);
     return new Response(file);
   },
