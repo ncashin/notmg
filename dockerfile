@@ -44,8 +44,12 @@ COPY . .
 # copy production dependencies and source code into final image
 FROM base AS release
 COPY --from=install /temp/prod/node_modules node_modules
-COPY  ./backend/index.ts .
+
+# fix this to pull from prelease 
+COPY  ./backend/index.ts . 
+# fix this to pull from prelease 
 COPY  ./backend/package.json .
+
 COPY --from=frontend ./app/dist/. ./public/
 
 # run the app

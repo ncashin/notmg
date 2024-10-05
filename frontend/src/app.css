@@ -5,7 +5,7 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  background-color:black;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -26,7 +26,7 @@ body {
   margin: 0;
   display: flex;
   place-items: center;
-  min-width: 320px;
+  min-width: 100vw;
   min-height: 100vh;
 }
 
@@ -40,9 +40,8 @@ h1 {
 }
 
 #app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+  min-width: 100vw;
+  min-height: 100vh;
   text-align: center;
 }
 
