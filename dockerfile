@@ -47,6 +47,7 @@ COPY --from=install /temp/prod/node_modules node_modules
 
 # fix this to pull from prelease 
 COPY  ./backend/index.ts . 
+COPY  ./backend/src/. ./src 
 # fix this to pull from prelease 
 COPY  ./backend/package.json .
 

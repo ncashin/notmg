@@ -1,36 +1,33 @@
-export type Position = {
+export type Entity = {
+  id: number;
   x: number;
   y: number;
 };
-
-export type Entity = {
-  position: Position;
+export type ControlledEntity = {
+  x: number;
+  y: number;
 };
 export type GameState = {
+  playerEntities: Record<string, Entity>;
   entities: Entity[];
 };
-
 export const createInitialGameState = () => {
   return {
-    entities: [
-      {
-        position: {
-          x: 0,
-          y: 0,
-        },
-      },
-    ],
+    playerEntities: {},
+    entities: [],
   };
 };
 
-export const update = (gameState: GameState, inputMap: any) => ({
-  entities: gameState.entities.map((entity) => ({
-    position: {
-      x: inputMap["d"] ? entity.position.x + 5 : entity.position.x,
-      y: entity.position.y,
-    },
-  })),
-});
+import littleGuyURL from "../public/notmglittleguy.png";
+const loadSprite = (url: string) => {
+  let imageElement = new Image(32, 32);
+  imageElement.src = url;
+  return imageElement;
+};
+
+export const sprites = {
+  littleGuy: loadSprite(littleGuyURL),
+};
 
 export const renderGameState = (
   gameState: GameState,
@@ -39,7 +36,11 @@ export const renderGameState = (
   context.fillStyle = "black";
   context.clearRect(0, 0, 900, 600);
   context.fillStyle = "red";
+  Object.values(gameState.playerEntities).forEach((player) => {
+    context.fillText("ID: " + player.id.toString(), player.x, player.y - 5);
+    context.drawImage(sprites.littleGuy, player.x, player.y);
+  });
   gameState.entities.forEach((entity) => {
-    context.fillRect(entity.position.x, entity.position.y, 32, 32);
+    context.drawImage(sprites.littleGuy, entity.x, entity.y);
   });
 };

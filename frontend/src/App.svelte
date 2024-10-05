@@ -4,7 +4,8 @@
   import {
     createInitialGameState,
     renderGameState,
-    update,
+    type ControlledEntity,
+    type Entity,
     type GameState,
   } from "./game";
 
@@ -18,29 +19,46 @@
     inputMap[event.key] = false;
   });
 
+  let playerEntity = {
+    x: 0,
+    y: 0,
+  };
+  const updatePlayer = (player: ControlledEntity, inputMap: any) => {
+    return {
+      x: inputMap["d"] ? player.x + 5 : inputMap["a"] ? player.x - 5 : player.x,
+      y: inputMap["s"] ? player.y + 5 : inputMap["w"] ? player.y - 5 : player.y,
+    };
+  };
+  let gameState = createInitialGameState();
   onMount(() => {
     invariant(canvas !== null);
     const context = canvas.getContext("2d");
     invariant(context !== null);
 
-    const initialGameState = createInitialGameState();
-    const nextFrameCallback = (gameState: GameState) => {
-      return () => {
-        const clonedInputMap = structuredClone(inputMap);
-        const updatedGameState = update(gameState, clonedInputMap);
-        renderGameState(updatedGameState, context);
-        window.requestAnimationFrame(nextFrameCallback(updatedGameState));
-      };
+    const animationFrame = () => {
+      const clonedGameState = structuredClone(gameState);
+      renderGameState(clonedGameState, context);
+      playerEntity = updatePlayer(playerEntity, inputMap);
+      const message = JSON.stringify(playerEntity);
+      websocket.send(message);
+      window.requestAnimationFrame(animationFrame);
     };
-    window.requestAnimationFrame(nextFrameCallback(initialGameState));
+
+    let initialStateReceived = false;
+    const websocket = new WebSocket("/websocket");
+    websocket.addEventListener("message", (message) => {
+      gameState = JSON.parse(message.data);
+    });
+    websocket.addEventListener("open", () => {
+      const initialGameState = createInitialGameState();
+      window.requestAnimationFrame(animationFrame);
+    });
   });
 </script>
 
 <main class="main">
   <div class="container">
-    <div class="sidebar">
-      <p>THIS IS A TEST FOR TEXT YEEHAW</p>
-    </div>
+    <div class="sidebar"></div>
     <div class="canvas-container">
       <canvas bind:this={canvas} class="canvas" width="900px" height="600px" />
     </div>
@@ -73,10 +91,11 @@
     flex-grow: 1;
     align-content: center;
     justify-content: center;
+    background-color: rgb(48, 48, 48);
   }
   .canvas {
-    width: 900px;
-    height: 600px;
+    width: 100%;
+    height: 100%;
     image-rendering: pixelated;
     image-rendering: crisp-edges;
   }
