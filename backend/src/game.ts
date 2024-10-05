@@ -12,7 +12,7 @@ export const createInitialGameState = () => {
   return {
     playerEntities: {},
     entities: [],
-  };
+  } satisfies GameState;
 };
 
 export const update = (gameState: GameState) => ({

@@ -8,9 +8,13 @@ type WebSocketData = {
 };
 const MAX_OPEN_SOCKET_COUNT = 4;
 let openSocketCount = 0;
+let socketIDCounter = 0;
 const openSockets: Record<string, ServerWebSocket<WebSocketData>> = {};
 
-let gameState = createInitialGameState();
+let gameState = {
+  playerEntities: {},
+  entities: [],
+} as GameState;
 let previousGameState;
 const tick = () => {
   previousGameState = structuredClone(gameState);
@@ -31,7 +35,7 @@ Bun.serve({
         new Response("Upgrade failed", { status: 500 });
 
       const upgradeSuccessful = server.upgrade<WebSocketData>(request, {
-        data: { id: openSocketCount++ },
+        data: { id: socketIDCounter++ },
       });
       if (upgradeSuccessful) return;
       return new Response("Upgrade failed", { status: 500 });
@@ -47,6 +51,8 @@ Bun.serve({
   },
   websocket: {
     message(websocket: ServerWebSocket<WebSocketData>, message) {
+      if (typeof message !== "string") return;
+
       const messageJSON = JSON.parse(message);
       gameState.playerEntities[websocket.data.id] = {
         ...gameState.playerEntities[websocket.data.id],
@@ -54,6 +60,7 @@ Bun.serve({
       };
     },
     open(websocket: ServerWebSocket<WebSocketData>) {
+      openSocketCount++;
       openSockets[websocket.data.id] = websocket;
       gameState.playerEntities[websocket.data.id] = {
         id: websocket.data.id,
