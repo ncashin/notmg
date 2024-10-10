@@ -3,7 +3,9 @@
   import invariant from "tiny-invariant";
   import {
     createInitialGameState,
+    interpolateGameState,
     renderGameState,
+    TICK_RATE,
     type ControlledEntity,
     type Entity,
     type GameState,
@@ -30,24 +32,33 @@
     };
   };
   let gameState = createInitialGameState();
+  let serverGameState = createInitialGameState();
+  let tickRateCounter = TICK_RATE;
   onMount(() => {
     invariant(canvas !== null);
     const context = canvas.getContext("2d");
     invariant(context !== null);
 
-    const animationFrame = () => {
-      const clonedGameState = structuredClone(gameState);
-      renderGameState(clonedGameState, context);
+    let deltaTime = 0;
+    let previousTime = 0;
+    const animationFrame = (currentTime: number) => {
+      deltaTime = currentTime - previousTime;
+      previousTime = currentTime;
+      gameState = interpolateGameState(gameState, serverGameState, deltaTime);
+      renderGameState(gameState, context);
       playerEntity = updatePlayer(playerEntity, inputMap);
-      const message = JSON.stringify(playerEntity);
-      websocket.send(message);
+      if (tickRateCounter <= 0) {
+        tickRateCounter = TICK_RATE;
+        const message = JSON.stringify(playerEntity);
+        websocket.send(message);
+      }
+      tickRateCounter -= deltaTime;
       window.requestAnimationFrame(animationFrame);
     };
 
-    let initialStateReceived = false;
     const websocket = new WebSocket("/websocket");
     websocket.addEventListener("message", (message) => {
-      gameState = JSON.parse(message.data);
+      serverGameState = JSON.parse(message.data);
     });
     websocket.addEventListener("open", () => {
       const initialGameState = createInitialGameState();

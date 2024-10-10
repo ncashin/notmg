@@ -14,6 +14,8 @@ const openSockets: Record<string, ServerWebSocket<WebSocketData>> = {};
 let gameState = {
   playerEntities: {},
   entities: [],
+
+  projectiles: [],
 } as GameState;
 let previousGameState;
 const tick = () => {

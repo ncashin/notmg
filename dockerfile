@@ -9,7 +9,7 @@ RUN npm install
 
 COPY ./frontend/. .
 
-RUN npm run build && ls
+RUN npm run build
 
 # BUILD BACKEND
 
