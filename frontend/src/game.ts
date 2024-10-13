@@ -29,12 +29,12 @@ export const sprites = {
   littleGuy: loadSprite(littleGuyURL),
 };
 
-export const TICK_RATE = 100;
 export const interpolateGameState = (
   currentGameState: GameState,
   nextGameState: GameState,
   interpTime: number
 ) => {
+  console.log(interpTime);
   if (
     nextGameState.playerEntities.length !=
     currentGameState.playerEntities.length
