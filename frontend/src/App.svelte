@@ -33,12 +33,11 @@
     };
   };
   let gameState = createInitialGameState();
+  let priorGameState = createInitialGameState();
   let serverGameState = createInitialGameState();
   let tickRateCounter = 0;
   let time = Date.now();
-  let priorStateTime = time;
   let nextStateTime = time;
-  export const TICK_RATE = 100;
   onMount(() => {
     invariant(canvas !== null);
     const context = canvas.getContext("2d");
@@ -49,12 +48,14 @@
     const animationFrame = (currentTime: number) => {
       deltaTime = currentTime - previousTime;
       previousTime = currentTime;
-      time += deltaTime;
       gameState = interpolateGameState(
         gameState,
+        priorGameState,
         serverGameState,
-        time / (nextStateTime - priorStateTime)
+        Math.sqrt(deltaTime / (time - nextStateTime))
       );
+      time += deltaTime;
+
       renderGameState(gameState, context);
       playerEntity = updatePlayer(playerEntity, inputMap);
       context.fillText("ID: " + "PLAYER", playerEntity.x, playerEntity.y - 5);
@@ -66,9 +67,8 @@
 
     const websocket = new WebSocket("/websocket");
     websocket.addEventListener("message", (message) => {
-      time = 0;
-      priorStateTime = nextStateTime;
       nextStateTime = Date.now();
+      priorGameState = serverGameState;
       serverGameState = JSON.parse(message.data);
       const clientMessage = JSON.stringify(playerEntity);
       websocket.send(clientMessage);
