@@ -64,7 +64,7 @@
       window.requestAnimationFrame(animationFrame);
     };
 
-    const websocket = new WebSocket("http://localhost:3000/websocket");
+    const websocket = new WebSocket("/websocket");
     websocket.addEventListener("message", (message) => {
       time = 0;
       priorStateTime = nextStateTime;
