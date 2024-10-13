@@ -1,5 +1,4 @@
 export type Entity = {
-  id: number;
   x: number;
   y: number;
 };
@@ -8,16 +7,17 @@ export type ControlledEntity = {
   y: number;
 };
 export type GameState = {
-  playerEntities: Record<string, Entity>;
+  playerEntities: Entity[];
   entities: Entity[];
 };
 export const createInitialGameState = () => {
   return {
-    playerEntities: {},
+    playerEntities: [],
     entities: [],
   };
 };
 
+import { server } from "typescript";
 import littleGuyURL from "../public/notmglittleguy.png";
 const loadSprite = (url: string) => {
   let imageElement = new Image(32, 32);
@@ -29,36 +29,33 @@ export const sprites = {
   littleGuy: loadSprite(littleGuyURL),
 };
 
-export const TICK_RATE = 1000 / 60;
+export const TICK_RATE = 50;
 export const interpolateGameState = (
-  gameState: GameState,
-  serverGameState: GameState,
-  deltaTime: number
+  currentGameState: GameState,
+  nextGameState: GameState,
+  interpTime: number
 ) => {
-  const interpTime = Math.min(deltaTime / TICK_RATE, 1);
+  if (
+    nextGameState.playerEntities.length !=
+    currentGameState.playerEntities.length
+  ) {
+    currentGameState.playerEntities = structuredClone(
+      nextGameState.playerEntities
+    );
+  }
   return {
-    ...serverGameState,
-    playerEntities: Object.values(gameState.playerEntities).reduce(
-      (accumulator, entity) => ({
-        ...accumulator,
-        [entity.id]: {
-          ...serverGameState.playerEntities[entity.id],
-          x:
-            entity.x +
-            (serverGameState.playerEntities[entity.id].x - entity.x) *
-              interpTime,
-          y:
-            entity.y +
-            (serverGameState.playerEntities[entity.id].y - entity.y) *
-              interpTime,
-        },
-      }),
-      structuredClone(serverGameState.playerEntities)
-    ),
-    entities: gameState.entities.map((entity, index) => ({
-      ...serverGameState.entities[index],
-      x: entity.x + (serverGameState.entities[index].x - entity.x) * interpTime,
-      y: entity.y + (serverGameState.entities[index].y - entity.y) * interpTime,
+    playerEntities: currentGameState.playerEntities.map((entity, index) => ({
+      x:
+        entity.x +
+        (nextGameState.playerEntities[index].x - entity.x) * interpTime,
+      y:
+        entity.y +
+        (nextGameState.playerEntities[index].y - entity.y) * interpTime,
+    })),
+
+    entities: currentGameState.entities.map((entity, index) => ({
+      x: entity.x + (nextGameState.entities[index].x - entity.x) * interpTime,
+      y: entity.y + (nextGameState.entities[index].y - entity.y) * interpTime,
     })),
   } satisfies GameState;
 };
@@ -69,8 +66,8 @@ export const renderGameState = (
   context.fillStyle = "black";
   context.clearRect(0, 0, 900, 600);
   context.fillStyle = "red";
-  Object.values(gameState.playerEntities).forEach((player) => {
-    context.fillText("ID: " + player.id.toString(), player.x, player.y - 5);
+  gameState.playerEntities.forEach((player, index) => {
+    context.fillText("Index: " + index, player.x, player.y - 5);
     context.drawImage(sprites.littleGuy, player.x, player.y);
   });
   gameState.entities.forEach((entity) => {

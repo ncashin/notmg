@@ -1,10 +1,6 @@
 export type Entity = {
-  id: number;
   x: number;
   y: number;
-  maxHealth: number;
-  health: number;
-  collisionRadius: number;
 };
 export type Projectile = {
   x: number;
@@ -14,7 +10,7 @@ export type Projectile = {
   collisionRadius: number;
 };
 export type GameState = {
-  playerEntities: Record<string, Entity>;
+  playerEntities: Entity[];
   entities: Entity[];
 
   projectiles: Projectile[];
@@ -22,7 +18,7 @@ export type GameState = {
 
 export const createInitialGameState = () => {
   return {
-    playerEntities: {},
+    playerEntities: [],
     entities: [],
 
     projectiles: [],

@@ -4,15 +4,14 @@ import { createInitialGameState, update, type GameState } from "./src/game";
 const PUBLIC_DIR = "public";
 
 type WebSocketData = {
-  id: number;
+  playerIndex: number;
 };
 const MAX_OPEN_SOCKET_COUNT = 4;
-let openSocketCount = 0;
-let socketIDCounter = 0;
-const openSockets: Record<string, ServerWebSocket<WebSocketData>> = {};
+
+const openSockets: ServerWebSocket<WebSocketData>[] = [];
 
 let gameState = {
-  playerEntities: {},
+  playerEntities: [],
   entities: [],
 
   projectiles: [],
@@ -25,7 +24,7 @@ const tick = () => {
     websocket.send(JSON.stringify(updatedGameState));
   });
 };
-const TICK_RATE = 1000 / 60;
+const TICK_RATE = 50;
 setInterval(tick, TICK_RATE);
 
 Bun.serve({
@@ -33,11 +32,11 @@ Bun.serve({
   async fetch(request: Request, server) {
     const pathname = new URL(request.url).pathname;
     if (pathname === "/websocket") {
-      if (openSocketCount === MAX_OPEN_SOCKET_COUNT)
+      if (openSockets.length >= MAX_OPEN_SOCKET_COUNT)
         new Response("Upgrade failed", { status: 500 });
 
       const upgradeSuccessful = server.upgrade<WebSocketData>(request, {
-        data: { id: socketIDCounter++ },
+        data: { playerIndex: gameState.playerEntities.length },
       });
       if (upgradeSuccessful) return;
       return new Response("Upgrade failed", { status: 500 });
@@ -56,24 +55,27 @@ Bun.serve({
       if (typeof message !== "string") return;
 
       const messageJSON = JSON.parse(message);
-      gameState.playerEntities[websocket.data.id] = {
-        ...gameState.playerEntities[websocket.data.id],
+      gameState.playerEntities[websocket.data.playerIndex] = {
+        ...gameState.playerEntities[websocket.data.playerIndex],
         ...messageJSON,
       };
     },
     open(websocket: ServerWebSocket<WebSocketData>) {
-      openSocketCount++;
-      openSockets[websocket.data.id] = websocket;
-      gameState.playerEntities[websocket.data.id] = {
-        id: websocket.data.id,
+      gameState.playerEntities.push({
         x: 0,
         y: 0,
-      };
+      });
+      openSockets.push(websocket);
     },
     close(websocket: ServerWebSocket<WebSocketData>, code, message) {
-      delete gameState.playerEntities[websocket.data.id];
-      delete openSockets[websocket.data.id];
-      openSocketCount--;
+      const deletedIndex = websocket.data.playerIndex;
+      gameState.playerEntities.splice(deletedIndex, 1);
+      openSockets.splice(deletedIndex, 1);
+      for (var openSocket of openSockets) {
+        if (openSocket.data.playerIndex > deletedIndex) {
+          openSocket.data.playerIndex--;
+        }
+      }
     }, // a socket is closed
     drain(websocket: ServerWebSocket<WebSocketData>) {}, // the socket is ready to receive more data
   },

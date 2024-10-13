@@ -5,11 +5,13 @@
     createInitialGameState,
     interpolateGameState,
     renderGameState,
+    sprites,
     TICK_RATE,
     type ControlledEntity,
     type Entity,
     type GameState,
   } from "./game";
+  import { server } from "typescript";
 
   export let canvas: HTMLCanvasElement;
 
@@ -33,7 +35,7 @@
   };
   let gameState = createInitialGameState();
   let serverGameState = createInitialGameState();
-  let tickRateCounter = TICK_RATE;
+  let tickRateCounter = 0;
   onMount(() => {
     invariant(canvas !== null);
     const context = canvas.getContext("2d");
@@ -44,20 +46,28 @@
     const animationFrame = (currentTime: number) => {
       deltaTime = currentTime - previousTime;
       previousTime = currentTime;
-      gameState = interpolateGameState(gameState, serverGameState, deltaTime);
+      gameState = interpolateGameState(
+        gameState,
+        serverGameState,
+        Math.min(tickRateCounter / TICK_RATE, 1)
+      );
       renderGameState(gameState, context);
       playerEntity = updatePlayer(playerEntity, inputMap);
-      if (tickRateCounter <= 0) {
-        tickRateCounter = TICK_RATE;
+      context.fillText("ID: " + "PLAYER", playerEntity.x, playerEntity.y - 5);
+      context.drawImage(sprites.littleGuy, playerEntity.x, playerEntity.y);
+
+      if (tickRateCounter >= TICK_RATE) {
+        tickRateCounter = tickRateCounter - TICK_RATE;
         const message = JSON.stringify(playerEntity);
         websocket.send(message);
       }
-      tickRateCounter -= deltaTime;
+      tickRateCounter += deltaTime;
       window.requestAnimationFrame(animationFrame);
     };
 
-    const websocket = new WebSocket("/websocket");
+    const websocket = new WebSocket("http://localhost:3000/websocket");
     websocket.addEventListener("message", (message) => {
+      gameState = serverGameState;
       serverGameState = JSON.parse(message.data);
     });
     websocket.addEventListener("open", () => {
