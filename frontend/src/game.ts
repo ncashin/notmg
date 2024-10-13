@@ -29,7 +29,7 @@ export const sprites = {
   littleGuy: loadSprite(littleGuyURL),
 };
 
-export const TICK_RATE = 50;
+export const TICK_RATE = 100;
 export const interpolateGameState = (
   currentGameState: GameState,
   nextGameState: GameState,
