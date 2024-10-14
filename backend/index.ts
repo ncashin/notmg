@@ -24,7 +24,7 @@ const tick = () => {
     websocket.send(JSON.stringify(updatedGameState));
   });
 };
-const TICK_RATE = 100;
+const TICK_RATE = 1000 / 60;
 setInterval(tick, TICK_RATE);
 
 Bun.serve({

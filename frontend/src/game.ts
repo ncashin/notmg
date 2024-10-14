@@ -31,7 +31,6 @@ export const sprites = {
 
 export const interpolateGameState = (
   currentGameState: GameState,
-  priorGameState: GameState,
   nextGameState: GameState,
   interpTime: number
 ) => {

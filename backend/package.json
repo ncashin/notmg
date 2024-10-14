@@ -1,5 +1,5 @@
 {
-  "name": "rotmg-backend",
+  "name": "notmg-backend",
   "module": "index.ts",
   "type": "module",
   "devDependencies": {

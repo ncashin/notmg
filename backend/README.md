@@ -1,4 +1,4 @@
-# rotmg-backend
+# notmg-backend
 
 To install dependencies:
 
