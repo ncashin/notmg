@@ -7,10 +7,8 @@
     renderGameState,
     sprites,
     type ControlledEntity,
-    type Entity,
     type GameState,
   } from "./game";
-  import { server } from "typescript";
 
   export let canvas: HTMLCanvasElement;
 
@@ -43,7 +41,6 @@
     const getAnimationFrameCallback =
       (gameState: GameState, previousTime: number) => (currentTime: number) => {
         const deltaTime = currentTime - previousTime;
-        previousTime = currentTime;
 
         renderGameState(gameState, context);
         playerEntity = updatePlayer(playerEntity, inputMap);

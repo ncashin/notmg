@@ -1,5 +1,5 @@
 import type { ServerWebSocket } from "bun";
-import { createInitialGameState, update, type GameState } from "./src/game";
+import { update, type GameState } from "./src/game";
 
 let gameState = {
   playerEntities: [],
@@ -30,12 +30,12 @@ Bun.serve({
     const pathname = new URL(request.url).pathname;
     if (pathname === "/websocket") {
       if (openSockets.length >= MAX_OPEN_SOCKET_COUNT) {
-        new Response("Upgrade failed", { status: 500 });
+        new Response("Upgrade failed max connections", { status: 500 });
       }
-      const wasUpgradeSuccessful = server.upgrade<WebSocketData>(request, {
+      const upgradeSuccessful = server.upgrade<WebSocketData>(request, {
         data: { playerIndex: gameState.playerEntities.length },
       });
-      if (wasUpgradeSuccessful) return;
+      if (upgradeSuccessful) return;
       return new Response("Upgrade failed", { status: 500 });
     }
 

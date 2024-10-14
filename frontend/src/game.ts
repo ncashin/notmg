@@ -17,7 +17,6 @@ export const createInitialGameState = () => {
   };
 };
 
-import { server } from "typescript";
 import littleGuyURL from "../public/notmglittleguy.png";
 const loadSprite = (url: string) => {
   let imageElement = new Image(32, 32);
