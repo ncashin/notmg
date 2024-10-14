@@ -20,14 +20,13 @@ const tick = () => {
 const TICK_RATE = 1000 / 60;
 setInterval(tick, TICK_RATE);
 
-const PUBLIC_DIRECTORY = "public";
-
 const MAX_OPEN_SOCKET_COUNT = 4;
 type WebSocketData = {
   playerIndex: number;
 };
 const openSockets: ServerWebSocket<WebSocketData>[] = [];
 
+const PUBLIC_DIRECTORY = "public";
 const app = new Hono();
 app.get("/", (c) => {
   const file = Bun.file(PUBLIC_DIRECTORY + "/index.html");
@@ -38,6 +37,7 @@ app.get("/assets/:filename", (c) => {
   const file = Bun.file(PUBLIC_DIRECTORY + "/assets/" + filename);
   return new Response(file);
 });
+
 app.get(
   "/websocket",
   upgradeWebSocket((c) => ({

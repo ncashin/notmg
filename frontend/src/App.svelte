@@ -8,7 +8,7 @@
     sprites,
     type ControlledEntity,
     type GameState,
-  } from "./game.ts";
+  } from "./game";
 
   export let canvas: HTMLCanvasElement;
 
