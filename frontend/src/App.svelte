@@ -63,7 +63,7 @@
         );
       };
 
-    const websocket = new WebSocket("/websocket");
+    const websocket = new WebSocket(import.meta.env.VITE_SOCKET_URL);
     websocket.addEventListener("message", (message) => {
       nextStateTime = Date.now();
       serverGameState = JSON.parse(message.data);
@@ -72,7 +72,6 @@
     });
 
     websocket.addEventListener("open", () => {
-      const initialGameState = createInitialGameState();
       window.requestAnimationFrame(
         getAnimationFrameCallback(createInitialGameState(), 0)
       );

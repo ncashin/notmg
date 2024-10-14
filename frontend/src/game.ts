@@ -34,7 +34,6 @@ export const interpolateGameState = (
   nextGameState: GameState,
   interpTime: number
 ) => {
-  console.log(interpTime);
   if (
     nextGameState.playerEntities.length !=
     currentGameState.playerEntities.length
