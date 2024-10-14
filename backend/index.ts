@@ -1,5 +1,9 @@
 import type { ServerWebSocket } from "bun";
 import { update, type GameState } from "./src/game";
+import { Hono } from "hono";
+import { createBunWebSocket } from "hono/bun";
+const { upgradeWebSocket, websocket } =
+  createBunWebSocket<ServerWebSocket<WebSocketData>>();
 
 let gameState = {
   playerEntities: [],
@@ -24,56 +28,55 @@ type WebSocketData = {
 };
 const openSockets: ServerWebSocket<WebSocketData>[] = [];
 
-Bun.serve({
-  port: 3000,
-  async fetch(request: Request, server) {
-    const pathname = new URL(request.url).pathname;
-    if (pathname === "/websocket") {
-      if (openSockets.length >= MAX_OPEN_SOCKET_COUNT) {
-        new Response("Upgrade failed max connections", { status: 500 });
-      }
-      const upgradeSuccessful = server.upgrade<WebSocketData>(request, {
-        data: { playerIndex: gameState.playerEntities.length },
-      });
-      if (upgradeSuccessful) return;
-      return new Response("Upgrade failed", { status: 500 });
-    }
+const app = new Hono();
+app.get("/", (c) => {
+  const file = Bun.file(PUBLIC_DIRECTORY + "/index.html");
+  return new Response(file);
+});
+app.get("/assets/:filename", (c) => {
+  const { filename } = c.req.param();
+  const file = Bun.file(PUBLIC_DIRECTORY + "/assets/" + filename);
+  return new Response(file);
+});
+app.get(
+  "/websocket",
+  upgradeWebSocket((c) => ({
+    onMessage(event, websocket) {
+      if (typeof event.data !== "string" || websocket.raw === undefined) return;
 
-    if (pathname === "/") {
-      const file = Bun.file(PUBLIC_DIRECTORY + "/index.html");
-      return new Response(file);
-    }
-    const filePath = PUBLIC_DIRECTORY + pathname;
-    const file = Bun.file(filePath);
-    return new Response(file);
-  },
-  websocket: {
-    message(websocket: ServerWebSocket<WebSocketData>, message) {
-      if (typeof message !== "string") return;
-
-      const messageJSON = JSON.parse(message);
-      gameState.playerEntities[websocket.data.playerIndex] = {
-        ...gameState.playerEntities[websocket.data.playerIndex],
+      const messageJSON = JSON.parse(event.data);
+      gameState.playerEntities[websocket.raw.data.playerIndex] = {
+        ...gameState.playerEntities[websocket.raw.data.playerIndex],
         ...messageJSON,
       };
     },
-    open(websocket: ServerWebSocket<WebSocketData>) {
+
+    onOpen(_, websocket) {
+      if (websocket.raw === undefined) return;
+
       gameState.playerEntities.push({
         x: 0,
         y: 0,
       });
-      openSockets.push(websocket);
+      openSockets.push(websocket.raw);
     },
-    close(websocket: ServerWebSocket<WebSocketData>, code, message) {
-      const deletedIndex = websocket.data.playerIndex;
+
+    onClose(_, websocket) {
+      if (websocket.raw === undefined) return;
+
+      const deletedIndex = websocket.raw.data.playerIndex;
       gameState.playerEntities.splice(deletedIndex, 1);
       openSockets.splice(deletedIndex, 1);
-      for (var openSocket of openSockets) {
-        if (openSocket.data.playerIndex > deletedIndex) {
+      openSockets
+        .filter((openSocket) => openSocket.data.playerIndex > deletedIndex)
+        .forEach((openSocket) => {
           openSocket.data.playerIndex--;
-        }
-      }
-    }, // a socket is closed
-    drain(websocket: ServerWebSocket<WebSocketData>) {}, // the socket is ready to receive more data
-  },
+        });
+    },
+  }))
+);
+
+Bun.serve({
+  port: 3000,
+  fetch: app.fetch,
 });
