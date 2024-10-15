@@ -36,7 +36,6 @@ Bun.serve({
         const html = Bun.file(PUBLIC_DIRECTORY + "/index.html");
         return new Response(html);
       case "/ws":
-        console.log("HIT");
         if (openSockets.length >= MAX_OPEN_SOCKET_COUNT) {
           new Response("Upgrade failed", { status: 500 });
         }

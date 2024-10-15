@@ -60,7 +60,7 @@
         );
       };
 
-    const websocket = new WebSocket(import.meta.env.VITE_SOCKET_URL);
+    const websocket = new WebSocket("/ws");
     websocket.addEventListener("message", (message) => {
       nextStateTime = Date.now();
       serverGameState = JSON.parse(message.data);
