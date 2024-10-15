@@ -13,11 +13,13 @@ export type GameState = {
 export const createInitialGameState = () => {
   return {
     playerEntities: [],
-    entities: [],
+    entities: [{ x: 0, y: 0 }],
   };
 };
 
+import ghoulURL from "../public/ghoul.png";
 import littleGuyURL from "../public/notmglittleguy.png";
+
 const loadSprite = (url: string) => {
   let imageElement = new Image(32, 32);
   imageElement.src = url;
@@ -26,6 +28,7 @@ const loadSprite = (url: string) => {
 
 export const sprites = {
   littleGuy: loadSprite(littleGuyURL),
+  ghoul: loadSprite(ghoulURL),
 };
 
 export const interpolateGameState = (
@@ -51,10 +54,11 @@ export const interpolateGameState = (
         (nextGameState.playerEntities[index].y - entity.y) * interpTime,
     })),
 
-    entities: currentGameState.entities.map((entity, index) => ({
+    entities: currentGameState.entities,
+    /*entities: currentGameState.entities.map((entity, index) => ({
       x: entity.x + (nextGameState.entities[index].x - entity.x) * interpTime,
       y: entity.y + (nextGameState.entities[index].y - entity.y) * interpTime,
-    })),
+    })),*/
   } satisfies GameState;
 };
 export const renderGameState = (
@@ -69,6 +73,6 @@ export const renderGameState = (
     context.drawImage(sprites.littleGuy, player.x, player.y);
   });
   gameState.entities.forEach((entity) => {
-    context.drawImage(sprites.littleGuy, entity.x, entity.y);
+    context.drawImage(sprites.ghoul, entity.x, entity.y);
   });
 };
