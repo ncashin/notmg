@@ -1,4 +1,6 @@
 import { type ServerWebSocket } from "bun";
+import { Database } from "bun:sqlite";
+import { drizzle } from "drizzle-orm/bun-sqlite";
 import { update, type GameState } from "./src/game";
 
 let gameState = {
@@ -75,12 +77,9 @@ Bun.serve({
         .filter((ws) => ws.data.playerIndex > deletedIndex)
         .forEach((ws) => ws.data.playerIndex--);
     },
-    drain(websocket: ServerWebSocket<WebSocketData>) {},
+    drain(ws: ServerWebSocket<WebSocketData>) {},
   },
 });
-
-import { drizzle } from "drizzle-orm/bun-sqlite";
-import { Database } from "bun:sqlite";
 
 const sqlite = new Database("/app/data/db.sqlite", { create: true });
 export const db = drizzle(sqlite);
