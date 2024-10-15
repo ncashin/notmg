@@ -1,5 +1,10 @@
 services:
   notmg:
+    volumes:
+      - notmg-data:/app/data
     build: .
     ports:
       - "3000:3000"
+
+volumes:
+  notmg-data:

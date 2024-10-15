@@ -54,6 +54,6 @@ COPY  ./backend/package.json .
 COPY --from=frontend ./app/dist/. ./public/
 
 # run the app
-USER bun
+USER root
 EXPOSE 3000
 ENTRYPOINT [ "bun", "run", "index.ts" ]

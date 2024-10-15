@@ -1,9 +1,5 @@
-import type { ServerWebSocket } from "bun";
+import { type ServerWebSocket } from "bun";
 import { update, type GameState } from "./src/game";
-import { Hono } from "hono";
-import { createBunWebSocket } from "hono/bun";
-const { upgradeWebSocket, websocket } =
-  createBunWebSocket<ServerWebSocket<WebSocketData>>();
 
 let gameState = {
   playerEntities: [],
@@ -11,6 +7,12 @@ let gameState = {
 
   projectiles: [],
 } as GameState;
+
+type WebSocketData = {
+  playerIndex: number;
+};
+let openSockets: ServerWebSocket<WebSocketData>[] = [];
+
 const tick = () => {
   gameState = update(gameState);
   Object.values(openSockets).forEach((websocket) => {
@@ -21,62 +23,64 @@ const TICK_RATE = 1000 / 60;
 setInterval(tick, TICK_RATE);
 
 const MAX_OPEN_SOCKET_COUNT = 4;
-type WebSocketData = {
-  playerIndex: number;
-};
-const openSockets: ServerWebSocket<WebSocketData>[] = [];
 
 const PUBLIC_DIRECTORY = "public";
-const app = new Hono();
-app.get("/", (c) => {
-  const file = Bun.file(PUBLIC_DIRECTORY + "/index.html");
-  return new Response(file);
-});
-app.get("/assets/:filename", (c) => {
-  const { filename } = c.req.param();
-  const file = Bun.file(PUBLIC_DIRECTORY + "/assets/" + filename);
-  return new Response(file);
-});
+Bun.serve({
+  port: 3000,
+  async fetch(request: Request, server) {
+    const pathname = new URL(request.url).pathname;
+    switch (pathname) {
+      case "/":
+        const html = Bun.file(PUBLIC_DIRECTORY + "/index.html");
+        return new Response(html);
+      case "/ws":
+        console.log("HIT");
+        if (openSockets.length >= MAX_OPEN_SOCKET_COUNT) {
+          new Response("Upgrade failed", { status: 500 });
+        }
+        const upgradeSuccessful = server.upgrade<WebSocketData>(request, {
+          data: { playerIndex: gameState.playerEntities.length },
+        });
+        if (upgradeSuccessful) return;
+        return new Response("Upgrade failed", { status: 500 });
 
-app.get(
-  "/websocket",
-  upgradeWebSocket((c) => ({
-    onMessage(event, websocket) {
-      if (typeof event.data !== "string" || websocket.raw === undefined) return;
+      default:
+        const filePath = PUBLIC_DIRECTORY + pathname;
+        const file = Bun.file(filePath);
+        return new Response(file);
+    }
+  },
+  websocket: {
+    message(ws: ServerWebSocket<WebSocketData>, message) {
+      if (typeof message !== "string") return;
 
-      const messageJSON = JSON.parse(event.data);
-      gameState.playerEntities[websocket.raw.data.playerIndex] = {
-        ...gameState.playerEntities[websocket.raw.data.playerIndex],
+      const messageJSON = JSON.parse(message);
+      gameState.playerEntities[ws.data.playerIndex] = {
+        ...gameState.playerEntities[ws.data.playerIndex],
         ...messageJSON,
       };
     },
-
-    onOpen(_, websocket) {
-      if (websocket.raw === undefined) return;
-
+    open(ws: ServerWebSocket<WebSocketData>) {
       gameState.playerEntities.push({
         x: 0,
         y: 0,
       });
-      openSockets.push(websocket.raw);
+      openSockets.push(ws);
     },
-
-    onClose(_, websocket) {
-      if (websocket.raw === undefined) return;
-
-      const deletedIndex = websocket.raw.data.playerIndex;
+    close(websocket: ServerWebSocket<WebSocketData>, code, message) {
+      const deletedIndex = websocket.data.playerIndex;
       gameState.playerEntities.splice(deletedIndex, 1);
       openSockets.splice(deletedIndex, 1);
       openSockets
-        .filter((openSocket) => openSocket.data.playerIndex > deletedIndex)
-        .forEach((openSocket) => {
-          openSocket.data.playerIndex--;
-        });
+        .filter((ws) => ws.data.playerIndex > deletedIndex)
+        .forEach((ws) => ws.data.playerIndex--);
     },
-  }))
-);
-
-Bun.serve({
-  port: 3000,
-  fetch: app.fetch,
+    drain(websocket: ServerWebSocket<WebSocketData>) {},
+  },
 });
+
+import { drizzle } from "drizzle-orm/bun-sqlite";
+import { Database } from "bun:sqlite";
+
+const sqlite = new Database("/app/data/db.sqlite", { create: true });
+export const db = drizzle(sqlite);
