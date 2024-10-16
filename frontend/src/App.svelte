@@ -60,6 +60,7 @@
         );
       };
 
+    const a = 0;
     const websocket = new WebSocket("/ws");
     websocket.addEventListener("message", (message) => {
       nextStateTime = Date.now();
