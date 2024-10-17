@@ -2,18 +2,19 @@ export type Entity = {
   x: number;
   y: number;
 };
-export type ControlledEntity = {
+export type ClientState = {
   x: number;
   y: number;
+  targetedEntity: number | undefined;
 };
 export type GameState = {
-  playerEntities: Entity[];
-  entities: Entity[];
+  playerEntities: Record<string, Entity>;
+  entities: Record<string, Entity>;
 };
 export const createInitialGameState = () => {
   return {
-    playerEntities: [],
-    entities: [{ x: 0, y: 0 }],
+    playerEntities: {},
+    entities: {},
   };
 };
 
@@ -31,48 +32,54 @@ export const sprites = {
   ghoul: loadSprite(ghoulURL),
 };
 
+export const interpolatePlayer = (
+  key: string,
+
+  entity: Entity,
+  nextGameState: GameState,
+  interpTime: number
+) => ({
+  x: entity.x + (nextGameState.playerEntities[key].x - entity.x) * interpTime,
+  y: entity.y + (nextGameState.playerEntities[key].y - entity.y) * interpTime,
+});
+
 export const interpolateGameState = (
   currentGameState: GameState,
   nextGameState: GameState,
   interpTime: number
-) => {
-  if (
-    nextGameState.playerEntities.length !=
-    currentGameState.playerEntities.length
-  ) {
-    currentGameState.playerEntities = structuredClone(
-      nextGameState.playerEntities
-    );
-  }
-  return {
-    playerEntities: currentGameState.playerEntities.map((entity, index) => ({
-      x:
-        entity.x +
-        (nextGameState.playerEntities[index].x - entity.x) * interpTime,
-      y:
-        entity.y +
-        (nextGameState.playerEntities[index].y - entity.y) * interpTime,
-    })),
+) =>
+  ({
+    playerEntities: Object.fromEntries(
+      Object.entries(currentGameState.playerEntities).map(([k, v]) => [
+        k,
+        interpolatePlayer(k, v, nextGameState, interpTime),
+      ])
+    ),
 
     entities: currentGameState.entities,
     /*entities: currentGameState.entities.map((entity, index) => ({
       x: entity.x + (nextGameState.entities[index].x - entity.x) * interpTime,
       y: entity.y + (nextGameState.entities[index].y - entity.y) * interpTime,
     })),*/
-  } satisfies GameState;
-};
+  } satisfies GameState);
+
 export const renderGameState = (
+  clientState: ClientState,
   gameState: GameState,
   context: CanvasRenderingContext2D
 ) => {
   context.fillStyle = "black";
   context.clearRect(0, 0, 900, 600);
   context.fillStyle = "red";
-  gameState.playerEntities.forEach((player, index) => {
+  Object.values(gameState.playerEntities).forEach((player, index) => {
     context.fillText("Index: " + index, player.x, player.y - 5);
     context.drawImage(sprites.littleGuy, player.x, player.y);
   });
-  gameState.entities.forEach((entity) => {
-    context.drawImage(sprites.ghoul, entity.x, entity.y);
+  Object.values(gameState.entities).forEach((entity, index) => {
+    if (index !== clientState.targetedEntity) {
+      context.drawImage(sprites.ghoul, entity.x, entity.y);
+    }
   });
+  context.fillText("ID: " + "PLAYER", clientState.x, clientState.y - 5);
+  context.drawImage(sprites.littleGuy, clientState.x, clientState.y);
 };

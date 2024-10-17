@@ -5,8 +5,7 @@
     createInitialGameState,
     interpolateGameState,
     renderGameState,
-    sprites,
-    type ControlledEntity,
+    type ClientState,
     type GameState,
   } from "./game";
 
@@ -20,16 +19,40 @@
     inputMap[event.key] = false;
   });
 
-  let playerEntity = {
+  let clientState = {
     x: 0,
     y: 0,
-  };
-  const updatePlayer = (player: ControlledEntity, inputMap: any) => {
+    targetedEntity: undefined,
+  } satisfies ClientState;
+
+  const updateClientState = (
+    client: ClientState,
+    gameState: GameState,
+    inputMap: any
+  ) => {
     return {
-      x: inputMap["d"] ? player.x + 5 : inputMap["a"] ? player.x - 5 : player.x,
-      y: inputMap["s"] ? player.y + 5 : inputMap["w"] ? player.y - 5 : player.y,
+      x: inputMap["d"] ? client.x + 5 : inputMap["a"] ? client.x - 5 : client.x,
+      y: inputMap["s"] ? client.y + 5 : inputMap["w"] ? client.y - 5 : client.y,
+      targetedEntity: inputMap["q"]
+        ? Object.values(gameState.entities).reduce(
+            (accumulator, entity, index) => {
+              const distance = Math.sqrt(
+                ((entity.x - client.x) ^ 2) + ((entity.y - client.y) ^ 2)
+              );
+
+              return accumulator.distance < distance
+                ? accumulator
+                : {
+                    index,
+                    distance,
+                  };
+            },
+            { index: 0, distance: Number.MAX_SAFE_INTEGER }
+          ).index
+        : client.targetedEntity,
     };
   };
+  let gameState = createInitialGameState();
   let serverGameState = createInitialGameState();
   let time = Date.now();
   let nextStateTime = time;
@@ -39,40 +62,54 @@
     invariant(context !== null);
 
     const getAnimationFrameCallback =
-      (gameState: GameState, previousTime: number) => (currentTime: number) => {
+      (previousTime: number) => (currentTime: number) => {
         const deltaTime = currentTime - previousTime;
 
-        renderGameState(gameState, context);
-        playerEntity = updatePlayer(playerEntity, inputMap);
-        context.fillText("ID: " + "PLAYER", playerEntity.x, playerEntity.y - 5);
-        context.drawImage(sprites.littleGuy, playerEntity.x, playerEntity.y);
+        console.log("BEFORE INTERP: ", gameState);
+        renderGameState(clientState, gameState, context);
+        clientState = updateClientState(clientState, gameState, inputMap);
+
+        gameState = interpolateGameState(
+          gameState,
+          serverGameState,
+          Math.sqrt(deltaTime / (time - nextStateTime))
+        );
+        console.log("AFTER INTERP: ", gameState);
 
         time += deltaTime;
-        window.requestAnimationFrame(
-          getAnimationFrameCallback(
-            interpolateGameState(
-              gameState,
-              serverGameState,
-              Math.sqrt(deltaTime / (time - nextStateTime))
-            ),
-            currentTime
-          )
-        );
+        window.requestAnimationFrame(getAnimationFrameCallback(currentTime));
       };
 
-    const a = 0;
     const websocket = new WebSocket("/ws");
     websocket.addEventListener("message", (message) => {
       nextStateTime = Date.now();
-      serverGameState = JSON.parse(message.data);
-      const clientMessage = JSON.stringify(playerEntity);
+      const serverMessage = JSON.parse(message.data);
+      switch (serverMessage.type) {
+        case "connect":
+          gameState.playerEntities[serverMessage.data.id] = {
+            x: 0,
+            y: 0,
+          };
+          serverGameState.playerEntities[serverMessage.data.id] = {
+            x: 0,
+            y: 0,
+          };
+          break;
+        case "disconnect":
+          delete gameState.playerEntities[serverMessage.data.id];
+          delete serverGameState.playerEntities[serverMessage.data.id];
+          break;
+
+        case "update":
+          console.log("MESSAGE STATE: ", serverMessage.data);
+          serverGameState = serverMessage.data;
+      }
+      const clientMessage = JSON.stringify(clientState);
       websocket.send(clientMessage);
     });
 
-    websocket.addEventListener("open", () => {
-      window.requestAnimationFrame(
-        getAnimationFrameCallback(createInitialGameState(), 0)
-      );
+    websocket.addEventListener("open", (event) => {
+      window.requestAnimationFrame(getAnimationFrameCallback(0));
     });
   });
 </script>

@@ -10,26 +10,28 @@ export type Projectile = {
   collisionRadius: number;
 };
 export type GameState = {
-  playerEntities: Entity[];
-  entities: Entity[];
+  playerEntities: Record<string, Entity>;
+  entities: Record<string, Entity>;
 
   projectiles: Projectile[];
 };
 
 export const createInitialGameState = () => {
   return {
-    playerEntities: [],
-    entities: [],
+    playerEntities: {},
+    entities: {},
 
     projectiles: [],
   } satisfies GameState;
 };
 
 export const update = (gameState: GameState) => ({
-  playerEntities: Object.values(gameState.playerEntities).map(
-    (player) => player
+  playerEntities: Object.fromEntries(
+    Object.entries(gameState.playerEntities).map((entry) => entry)
   ),
-  entities: gameState.entities.map((entity) => entity),
+  entities: Object.fromEntries(
+    Object.entries(gameState.entities).map((entry) => entry)
+  ),
   projectiles: gameState.projectiles.map((projectile) => projectile),
 });
 

@@ -2,28 +2,36 @@ import { type ServerWebSocket } from "bun";
 import { Database } from "bun:sqlite";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 import { update, type GameState } from "./src/game";
+import type {
+  ConnectEvent,
+  DisconnectEvent,
+  UpdateEvent,
+} from "./src/socketEvent";
 
 let gameState = {
-  playerEntities: [],
-  entities: [],
+  playerEntities: {},
+  entities: {},
 
   projectiles: [],
 } as GameState;
 
 type WebSocketData = {
-  playerIndex: number;
+  id: string;
 };
-let openSockets: ServerWebSocket<WebSocketData>[] = [];
+let openSockets: Record<string, ServerWebSocket<WebSocketData>> = {};
 
 const tick = () => {
   gameState = update(gameState);
   Object.values(openSockets).forEach((websocket) => {
-    websocket.send(JSON.stringify(gameState));
+    websocket.send(
+      JSON.stringify({ type: "update", data: gameState } satisfies UpdateEvent)
+    );
   });
 };
 const TICK_RATE = 1000 / 60;
 setInterval(tick, TICK_RATE);
 
+let playerIdCounter = 0;
 const MAX_OPEN_SOCKET_COUNT = 4;
 
 const PUBLIC_DIRECTORY = "public";
@@ -37,11 +45,11 @@ Bun.serve({
         return new Response(html);
 
       case "/ws":
-        if (openSockets.length >= MAX_OPEN_SOCKET_COUNT) {
+        if (Object.values(openSockets).length >= MAX_OPEN_SOCKET_COUNT) {
           new Response("Upgrade failed", { status: 500 });
         }
         const upgradeSuccessful = server.upgrade<WebSocketData>(request, {
-          data: { playerIndex: gameState.playerEntities.length },
+          data: { id: (playerIdCounter++).toString() },
         });
         if (upgradeSuccessful) return;
         return new Response("Upgrade failed", { status: 500 });
@@ -57,25 +65,37 @@ Bun.serve({
       if (typeof message !== "string") return;
 
       const messageJSON = JSON.parse(message);
-      gameState.playerEntities[ws.data.playerIndex] = {
-        ...gameState.playerEntities[ws.data.playerIndex],
+      gameState.playerEntities[ws.data.id] = {
+        ...gameState.playerEntities[ws.data.id],
         ...messageJSON,
       };
     },
     open(ws: ServerWebSocket<WebSocketData>) {
-      gameState.playerEntities.push({
+      gameState.playerEntities[ws.data.id] = {
         x: 0,
         y: 0,
+      };
+      openSockets[ws.data.id] = ws;
+      Object.values(openSockets).forEach((websocket) => {
+        websocket.send(
+          JSON.stringify({
+            type: "connect",
+            data: { id: ws.data.id },
+          } satisfies ConnectEvent)
+        );
       });
-      openSockets.push(ws);
     },
-    close(websocket: ServerWebSocket<WebSocketData>, code, message) {
-      const deletedIndex = websocket.data.playerIndex;
-      gameState.playerEntities.splice(deletedIndex, 1);
-      openSockets.splice(deletedIndex, 1);
-      openSockets
-        .filter((ws) => ws.data.playerIndex > deletedIndex)
-        .forEach((ws) => ws.data.playerIndex--);
+    close(ws: ServerWebSocket<WebSocketData>, code, message) {
+      delete openSockets[ws.data.id];
+      delete gameState.playerEntities[ws.data.id];
+      Object.values(openSockets).forEach((websocket) => {
+        websocket.send(
+          JSON.stringify({
+            type: "disconnect",
+            data: { id: ws.data.id },
+          } satisfies DisconnectEvent)
+        );
+      });
     },
     drain(ws: ServerWebSocket<WebSocketData>) {},
   },
