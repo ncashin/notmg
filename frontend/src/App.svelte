@@ -65,7 +65,6 @@
       (previousTime: number) => (currentTime: number) => {
         const deltaTime = currentTime - previousTime;
 
-        console.log("BEFORE INTERP: ", gameState);
         renderGameState(clientState, gameState, context);
         clientState = updateClientState(clientState, gameState, inputMap);
 
@@ -74,7 +73,6 @@
           serverGameState,
           Math.sqrt(deltaTime / (time - nextStateTime))
         );
-        console.log("AFTER INTERP: ", gameState);
 
         time += deltaTime;
         window.requestAnimationFrame(getAnimationFrameCallback(currentTime));
@@ -101,7 +99,6 @@
           break;
 
         case "update":
-          console.log("MESSAGE STATE: ", serverMessage.data);
           serverGameState = serverMessage.data;
       }
       const clientMessage = JSON.stringify(clientState);
