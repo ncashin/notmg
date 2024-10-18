@@ -19,11 +19,11 @@
     inputMap[event.key] = false;
   });
 
-  let clientState = {
+  let clientState: ClientState = {
     x: 0,
     y: 0,
     targetedEntity: undefined,
-  } satisfies ClientState;
+  };
 
   const updateClientState = (
     client: ClientState,
@@ -64,14 +64,16 @@
     const getAnimationFrameCallback =
       (previousTime: number) => (currentTime: number) => {
         const deltaTime = currentTime - previousTime;
-
         renderGameState(clientState, gameState, context);
+
         clientState = updateClientState(clientState, gameState, inputMap);
+
+        const interpTime = Math.sqrt(deltaTime / (time - nextStateTime));
 
         gameState = interpolateGameState(
           gameState,
           serverGameState,
-          Math.sqrt(deltaTime / (time - nextStateTime))
+          Number.isNaN(interpTime) ? 0 : interpTime
         );
 
         time += deltaTime;
@@ -84,11 +86,11 @@
       const serverMessage = JSON.parse(message.data);
       switch (serverMessage.type) {
         case "connect":
-          gameState.playerEntities[serverMessage.data.id] = {
+          serverGameState.playerEntities[serverMessage.data.id] = {
             x: 0,
             y: 0,
           };
-          serverGameState.playerEntities[serverMessage.data.id] = {
+          gameState.playerEntities[serverMessage.data.id] = {
             x: 0,
             y: 0,
           };
@@ -98,8 +100,15 @@
           delete serverGameState.playerEntities[serverMessage.data.id];
           break;
 
+        case "initialize":
+          serverGameState = serverMessage.data.gameState;
+          gameState = structuredClone(serverGameState);
+          break;
+
         case "update":
-          serverGameState = serverMessage.data;
+          nextStateTime = Date.now();
+          serverGameState = serverMessage.data.gameState;
+          break;
       }
       const clientMessage = JSON.stringify(clientState);
       websocket.send(clientMessage);

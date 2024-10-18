@@ -1,5 +1,11 @@
 import type { GameState } from "./game";
 
+export type IntializeEvent = {
+  type: "initialize";
+  data: {
+    gameState: GameState;
+  };
+};
 export type ConnectEvent = {
   type: "connect";
   data: {
@@ -14,5 +20,7 @@ export type DisconnectEvent = {
 };
 export type UpdateEvent = {
   type: "update";
-  data: GameState;
+  data: {
+    gameState: GameState;
+  };
 };

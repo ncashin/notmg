@@ -34,25 +34,24 @@ export const sprites = {
 
 export const interpolatePlayer = (
   key: string,
-
   entity: Entity,
-  nextGameState: GameState,
+  serverGameState: GameState,
   interpTime: number
 ) => ({
-  x: entity.x + (nextGameState.playerEntities[key].x - entity.x) * interpTime,
-  y: entity.y + (nextGameState.playerEntities[key].y - entity.y) * interpTime,
+  x: entity.x + (serverGameState.playerEntities[key].x - entity.x) * interpTime,
+  y: entity.y + (serverGameState.playerEntities[key].y - entity.y) * interpTime,
 });
 
 export const interpolateGameState = (
   currentGameState: GameState,
-  nextGameState: GameState,
+  serverGameState: GameState,
   interpTime: number
 ) =>
   ({
     playerEntities: Object.fromEntries(
-      Object.entries(currentGameState.playerEntities).map(([k, v]) => [
-        k,
-        interpolatePlayer(k, v, nextGameState, interpTime),
+      Object.entries(currentGameState.playerEntities).map(([key, value]) => [
+        key,
+        interpolatePlayer(key, value, serverGameState, interpTime),
       ])
     ),
 
@@ -80,6 +79,6 @@ export const renderGameState = (
       context.drawImage(sprites.ghoul, entity.x, entity.y);
     }
   });
-  context.fillText("ID: " + "PLAYER", clientState.x, clientState.y - 5);
-  context.drawImage(sprites.littleGuy, clientState.x, clientState.y);
+  //context.fillText("ID: " + "PLAYER", clientState.x, clientState.y - 5);
+  //context.drawImage(sprites.littleGuy, clientState.x, clientState.y);
 };

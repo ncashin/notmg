@@ -5,6 +5,7 @@ import { update, type GameState } from "./src/game";
 import type {
   ConnectEvent,
   DisconnectEvent,
+  IntializeEvent,
   UpdateEvent,
 } from "./src/socketEvent";
 
@@ -24,7 +25,10 @@ const tick = () => {
   gameState = update(gameState);
   Object.values(openSockets).forEach((websocket) => {
     websocket.send(
-      JSON.stringify({ type: "update", data: gameState } satisfies UpdateEvent)
+      JSON.stringify({
+        type: "update",
+        data: { gameState: gameState },
+      } satisfies UpdateEvent)
     );
   });
 };
@@ -71,11 +75,6 @@ Bun.serve({
       };
     },
     open(ws: ServerWebSocket<WebSocketData>) {
-      gameState.playerEntities[ws.data.id] = {
-        x: 0,
-        y: 0,
-      };
-      openSockets[ws.data.id] = ws;
       Object.values(openSockets).forEach((websocket) => {
         websocket.send(
           JSON.stringify({
@@ -84,10 +83,20 @@ Bun.serve({
           } satisfies ConnectEvent)
         );
       });
+
+      gameState.playerEntities[ws.data.id] = {
+        x: 0,
+        y: 0,
+      };
+      openSockets[ws.data.id] = ws;
+      ws.send(
+        JSON.stringify({
+          type: "initialize",
+          data: { gameState: gameState },
+        } satisfies IntializeEvent)
+      );
     },
     close(ws: ServerWebSocket<WebSocketData>, code, message) {
-      delete openSockets[ws.data.id];
-      delete gameState.playerEntities[ws.data.id];
       Object.values(openSockets).forEach((websocket) => {
         websocket.send(
           JSON.stringify({
@@ -96,6 +105,8 @@ Bun.serve({
           } satisfies DisconnectEvent)
         );
       });
+      delete openSockets[ws.data.id];
+      delete gameState.playerEntities[ws.data.id];
     },
     drain(ws: ServerWebSocket<WebSocketData>) {},
   },
