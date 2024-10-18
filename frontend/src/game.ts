@@ -6,6 +6,7 @@ export type ClientState = {
   x: number;
   y: number;
   targetedEntity: number | undefined;
+  clientEntityID: string | undefined;
 };
 export type GameState = {
   playerEntities: Record<string, Entity>;
@@ -70,15 +71,15 @@ export const renderGameState = (
   context.fillStyle = "black";
   context.clearRect(0, 0, 900, 600);
   context.fillStyle = "red";
-  Object.values(gameState.playerEntities).forEach((player, index) => {
+  Object.entries(gameState.playerEntities).forEach(([id, player], index) => {
+    if (id === clientState.clientEntityID) return;
     context.fillText("Index: " + index, player.x, player.y - 5);
     context.drawImage(sprites.littleGuy, player.x, player.y);
   });
   Object.values(gameState.entities).forEach((entity, index) => {
-    if (index !== clientState.targetedEntity) {
-      context.drawImage(sprites.ghoul, entity.x, entity.y);
-    }
+    if (index === clientState.targetedEntity) return;
+    context.drawImage(sprites.ghoul, entity.x, entity.y);
   });
-  //context.fillText("ID: " + "PLAYER", clientState.x, clientState.y - 5);
-  //context.drawImage(sprites.littleGuy, clientState.x, clientState.y);
+  context.fillText("ID: " + "PLAYER", clientState.x, clientState.y - 5);
+  context.drawImage(sprites.littleGuy, clientState.x, clientState.y);
 };

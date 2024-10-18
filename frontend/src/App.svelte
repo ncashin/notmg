@@ -50,12 +50,13 @@
             { index: 0, distance: Number.MAX_SAFE_INTEGER }
           ).index
         : client.targetedEntity,
+      clientEntityID: client.clientEntityID,
     };
   };
   let gameState = createInitialGameState();
   let serverGameState = createInitialGameState();
   let time = Date.now();
-  let nextStateTime = time;
+  let nextStateTime = time - 1;
   onMount(() => {
     invariant(canvas !== null);
     const context = canvas.getContext("2d");
@@ -82,7 +83,6 @@
 
     const websocket = new WebSocket("/ws");
     websocket.addEventListener("message", (message) => {
-      nextStateTime = Date.now();
       const serverMessage = JSON.parse(message.data);
       switch (serverMessage.type) {
         case "connect":
@@ -103,6 +103,7 @@
         case "initialize":
           serverGameState = serverMessage.data.gameState;
           gameState = structuredClone(serverGameState);
+          clientState.clientEntityID = serverMessage.data.clientEntityID;
           break;
 
         case "update":

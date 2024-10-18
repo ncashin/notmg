@@ -4,6 +4,7 @@ export type IntializeEvent = {
   type: "initialize";
   data: {
     gameState: GameState;
+    clientEntityID: string;
   };
 };
 export type ConnectEvent = {

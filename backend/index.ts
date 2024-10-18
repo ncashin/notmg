@@ -92,7 +92,7 @@ Bun.serve({
       ws.send(
         JSON.stringify({
           type: "initialize",
-          data: { gameState: gameState },
+          data: { gameState: gameState, clientEntityID: ws.data.id },
         } satisfies IntializeEvent)
       );
     },
