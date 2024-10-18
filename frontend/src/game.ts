@@ -20,17 +20,19 @@ export const createInitialGameState = () => {
 };
 
 import ghoulURL from "../public/ghoul.png";
+import leviathanURL from "../public/leviathan.png";
 import littleGuyURL from "../public/notmglittleguy.png";
 
-const loadSprite = (url: string) => {
-  let imageElement = new Image(32, 32);
+const loadSprite = (x: number, y: number, url: string) => {
+  let imageElement = new Image(x, y);
   imageElement.src = url;
   return imageElement;
 };
 
 export const sprites = {
-  littleGuy: loadSprite(littleGuyURL),
-  ghoul: loadSprite(ghoulURL),
+  littleGuy: loadSprite(32, 32, littleGuyURL),
+  ghoul: loadSprite(32, 32, ghoulURL),
+  leviathan: loadSprite(128, 128, leviathanURL),
 };
 
 export const interpolatePlayer = (
@@ -80,6 +82,8 @@ export const renderGameState = (
     if (index === clientState.targetedEntity) return;
     context.drawImage(sprites.ghoul, entity.x, entity.y);
   });
+  context.drawImage(sprites.leviathan, 0, 0);
+
   context.fillText("ID: " + "PLAYER", clientState.x, clientState.y - 5);
   context.drawImage(sprites.littleGuy, clientState.x, clientState.y);
 };

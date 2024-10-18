@@ -11,7 +11,12 @@ import type {
 
 let gameState = {
   playerEntities: {},
-  entities: {},
+  entities: {
+    0: {
+      x: 0,
+      y: 0,
+    },
+  },
 
   projectiles: [],
 } as GameState;
