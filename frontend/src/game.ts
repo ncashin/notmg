@@ -63,7 +63,6 @@ export const interpolateGameState = (
       [key]: gameState.playerEntities[key],
     };
   }, {});
-  console.log(playerEntities);
 
   const disconnectionDiff = Object.entries(gameState.playerEntities).filter(
     ([key, value]) => serverState.gameState.playerEntities[key] === undefined
