@@ -1,7 +1,12 @@
-export type Entity = {
-  index: any;
+export type PlayerEntity = {
   x: number;
   y: number;
+};
+export type Entity = {
+  x: number;
+  y: number;
+  health: number;
+  maxHealth: number;
 };
 export type ClientState = {
   x: number;
@@ -39,6 +44,16 @@ export const interpolatePlayer = (
   serverEntity: Entity,
   interpolationTime: number
 ) => ({
+  ...entity,
+  x: entity.x + (serverEntity.x - entity.x) * interpolationTime,
+  y: entity.y + (serverEntity.y - entity.y) * interpolationTime,
+});
+export const interpolateEntity = (
+  entity: Entity,
+  serverEntity: Entity,
+  interpolationTime: number
+) => ({
+  ...serverEntity,
   x: entity.x + (serverEntity.x - entity.x) * interpolationTime,
   y: entity.y + (serverEntity.y - entity.y) * interpolationTime,
 });
@@ -67,10 +82,30 @@ export const interpolateGameState = (
       ),
     };
   }, {});
+  const entities = Object.entries(serverState.gameState.entities).reduce(
+    (accumulator, [key, value]) => {
+      if (gameState.entities[key] === undefined) {
+        return {
+          ...accumulator,
+          [key]: value,
+        };
+      }
+
+      return {
+        ...accumulator,
+        [key]: interpolateEntity(
+          gameState.entities[key],
+          value,
+          interpolationTime
+        ),
+      };
+    },
+    {}
+  );
 
   return {
     playerEntities,
-    entities: gameState.entities,
+    entities,
   } satisfies GameState;
 };
 
@@ -84,15 +119,28 @@ export const renderGameState = (
   context.fillStyle = "red";
   Object.entries(gameState.playerEntities).forEach(([id, player], index) => {
     if (id === clientState.clientEntityID) return;
-    context.fillText("Index: " + index, player.x, player.y - 5);
+    context.fillText("ID: " + index, player.x, player.y - 5);
     context.drawImage(sprites.littleGuy, player.x, player.y);
   });
   Object.values(gameState.entities).forEach((entity, index) => {
-    if (index === clientState.targetedEntity) return;
-    context.drawImage(sprites.ghoul, entity.x, entity.y);
+    if (index === clientState.targetedEntity) {
+      context.fillStyle = "red";
+      context.fillRect(entity.x, entity.y, 48, 48);
+    }
+    context.drawImage(sprites.leviathan, entity.x, entity.y);
+    console.log(entity);
+    context.fillStyle = "blue";
+    context.fillRect(entity.x, entity.y, 32, 5);
+    context.fillStyle = "green";
+    context.fillRect(
+      entity.x,
+      entity.y,
+      Math.floor(32 * (entity.health / entity.maxHealth)),
+      5
+    );
   });
-  context.drawImage(sprites.leviathan, 0, 0);
 
+  context.fillStyle = "red";
   context.fillText("ID: " + "PLAYER", clientState.x, clientState.y - 5);
   context.drawImage(sprites.littleGuy, clientState.x, clientState.y);
 };

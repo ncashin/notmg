@@ -59,11 +59,11 @@
     deltaTime: number
   ) => {
     const deltaTimeSeconds = deltaTime / 1000;
-    const left = inputMap["d"] ? 70 * deltaTimeSeconds : 0;
-    const right = inputMap["a"] ? -70 * deltaTimeSeconds : 0;
+    const left = inputMap["d"] ? 200 * deltaTimeSeconds : 0;
+    const right = inputMap["a"] ? -200 * deltaTimeSeconds : 0;
 
-    const down = inputMap["w"] ? -70 * deltaTimeSeconds : 0;
-    const up = inputMap["s"] ? 70 * deltaTimeSeconds : 0;
+    const down = inputMap["w"] ? -200 * deltaTimeSeconds : 0;
+    const up = inputMap["s"] ? 200 * deltaTimeSeconds : 0;
 
     const targetedEntity = inputMap["q"]
       ? Object.values(gameState.entities).reduce<{
@@ -85,6 +85,7 @@
           { index: undefined, distance: Number.MAX_SAFE_INTEGER }
         )?.index
       : clientState.targetedEntity;
+
     return {
       x: clientState.x + left + right,
       y: clientState.y + up + down,
@@ -97,7 +98,7 @@
     const context = canvas.getContext("2d");
     invariant(context !== null);
 
-    const websocket = new WebSocket("/ws");
+    const websocket = new WebSocket("http://localhost:3000/ws");
     websocket.addEventListener("message", (message) => {
       const clientState = useClientState();
 
@@ -125,17 +126,41 @@
           break;
       }
 
-      const clientMessage = JSON.stringify(clientState);
+      const clientMessage = JSON.stringify({
+        type: "update",
+        data: {
+          clientUpdate: {
+            x: clientState.x,
+            y: clientState.y,
+          },
+        },
+      });
       websocket.send(clientMessage);
     });
 
+    const ATTACK_COOLDOWN = 1000;
     const getAnimationFrameCallback =
-      (previousFrameTime: number, clientTime: number) =>
+      (previousFrameTime: number, clientTime: number, attackTime: number) =>
       (frameTime: number) => {
         const deltaTime = frameTime - previousFrameTime;
 
         const inputMap = useInput();
         const clientState = useClientState();
+        const attack =
+          inputMap["e"] &&
+          clientState.targetedEntity !== undefined &&
+          frameTime - attackTime > 1;
+        const newAttackTime = attack ? Date.now() : attackTime;
+        if (attack) {
+          websocket.send(
+            JSON.stringify({
+              type: "ability",
+              data: {
+                entityID: clientState.targetedEntity,
+              },
+            })
+          );
+        }
         const gameState = useGameState();
         const serverState = useServerState();
 
@@ -159,11 +184,15 @@
         );
         setClientState(newClientState);
         window.requestAnimationFrame(
-          getAnimationFrameCallback(frameTime, clientTime + deltaTime)
+          getAnimationFrameCallback(
+            frameTime,
+            clientTime + deltaTime,
+            newAttackTime
+          )
         );
       };
     websocket.addEventListener("open", (event) => {
-      window.requestAnimationFrame(getAnimationFrameCallback(0, Date.now()));
+      window.requestAnimationFrame(getAnimationFrameCallback(0, Date.now(), 0));
     });
   });
 </script>

@@ -1,6 +1,12 @@
+export type PlayerEntity = {
+  x: number;
+  y: number;
+};
 export type Entity = {
   x: number;
   y: number;
+  health: number;
+  maxHealth: number;
 };
 export type Projectile = {
   x: number;
@@ -10,7 +16,7 @@ export type Projectile = {
   collisionRadius: number;
 };
 export type GameState = {
-  playerEntities: Record<string, Entity>;
+  playerEntities: Record<string, PlayerEntity>;
   entities: Record<string, Entity>;
 
   projectiles: Projectile[];

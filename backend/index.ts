@@ -10,11 +10,13 @@ let _gameState = {
     0: {
       x: 0,
       y: 0,
+      health: 4,
+      maxHealth: 5,
     },
   },
 
   projectiles: [],
-} as GameState;
+} satisfies GameState;
 const useGameState = () => structuredClone(_gameState);
 const setGameState = (newGameState: GameState) => {
   _gameState = structuredClone(newGameState);
@@ -43,7 +45,7 @@ const TICK_RATE = 1000 / 60;
 setInterval(tick, TICK_RATE);
 
 let playerIdCounter = 0;
-const MAX_OPEN_SOCKET_COUNT = 4;
+const MAX_OPEN_SOCKET_COUNT = 1000;
 
 const PUBLIC_DIRECTORY = "public";
 Bun.serve({
@@ -74,19 +76,37 @@ Bun.serve({
   websocket: {
     message(ws: ServerWebSocket<WebSocketData>, message) {
       if (typeof message !== "string") return;
-
-      const messageJSON = JSON.parse(message);
       const gameState = useGameState();
-      setGameState({
-        ...gameState,
-        playerEntities: {
-          ...gameState.playerEntities,
-          [ws.data.id]: {
-            ...gameState.playerEntities[ws.data.id],
-            ...messageJSON,
-          },
-        },
-      });
+      const messageJSON = JSON.parse(message);
+
+      switch (messageJSON.type) {
+        case "ability":
+          const messageEntity = gameState.entities[messageJSON.data.entityID];
+          console.log(messageEntity);
+          setGameState({
+            ...gameState,
+            entities: {
+              ...gameState.entities,
+              [messageJSON.data.entityID]: {
+                ...messageEntity,
+                health: messageEntity.health - 1,
+              },
+            },
+          });
+          break;
+        case "update":
+          setGameState({
+            ...gameState,
+            playerEntities: {
+              ...gameState.playerEntities,
+              [ws.data.id]: {
+                ...gameState.playerEntities[ws.data.id],
+                ...messageJSON.data.clientUpdate,
+              },
+            },
+          });
+          break;
+      }
     },
     open(ws: ServerWebSocket<WebSocketData>) {
       const gameState = useGameState();
@@ -118,7 +138,7 @@ Bun.serve({
         ...gameState,
         playerEntities: Object.fromEntries(
           Object.entries(gameState.playerEntities).filter(
-            ([key, value]) => key !== message
+            ([key, value]) => key !== ws.data.id
           )
         ),
       });
