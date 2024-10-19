@@ -12,11 +12,9 @@ export type GameState = {
   playerEntities: Record<string, Entity>;
   entities: Record<string, Entity>;
 };
-export const createInitialGameState = () => {
-  return {
-    playerEntities: {},
-    entities: {},
-  };
+export type ServerState = {
+  timeStateReceived: number;
+  gameState: GameState;
 };
 
 import ghoulURL from "../public/ghoul.png";
@@ -46,24 +44,41 @@ export const interpolatePlayer = (
 });
 
 export const interpolateGameState = (
-  currentGameState: GameState,
-  serverGameState: GameState,
-  interpTime: number
-) =>
-  ({
+  gameState: GameState,
+  serverState: ServerState,
+  interpolationTime: number
+) => {
+  const playerEntities = Object.entries(
+    serverState.gameState.playerEntities
+  ).reduce((accumulator, [key, value]) => {
+    if (gameState.playerEntities[key] === undefined) {
+      return {
+        ...accumulator,
+        [key]: value,
+      };
+    }
+
+    return {
+      ...accumulator,
+      [key]: gameState.playerEntities[key],
+    };
+  }, {});
+  console.log(playerEntities);
+
+  const disconnectionDiff = Object.entries(gameState.playerEntities).filter(
+    ([key, value]) => serverState.gameState.playerEntities[key] === undefined
+  );
+
+  return {
     playerEntities: Object.fromEntries(
-      Object.entries(currentGameState.playerEntities).map(([key, value]) => [
+      Object.entries(playerEntities).map(([key, value]) => [
         key,
-        interpolatePlayer(key, value, serverGameState, interpTime),
+        interpolatePlayer(key, value, serverState.gameState, interpolationTime),
       ])
     ),
-
-    entities: currentGameState.entities,
-    /*entities: currentGameState.entities.map((entity, index) => ({
-      x: entity.x + (nextGameState.entities[index].x - entity.x) * interpTime,
-      y: entity.y + (nextGameState.entities[index].y - entity.y) * interpTime,
-    })),*/
-  } satisfies GameState);
+    entities: gameState.entities,
+  } satisfies GameState;
+};
 
 export const renderGameState = (
   clientState: ClientState,

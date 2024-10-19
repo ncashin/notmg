@@ -2,28 +2,54 @@
   import { onMount } from "svelte";
   import invariant from "tiny-invariant";
   import {
-    createInitialGameState,
     interpolateGameState,
     renderGameState,
     type ClientState,
     type GameState,
+    type ServerState,
   } from "./game";
 
   export let canvas: HTMLCanvasElement;
 
-  let inputMap: any = {};
+  let _inputMap: any = {};
   document.addEventListener("keydown", (event) => {
-    inputMap[event.key] = true;
+    _inputMap[event.key] = true;
   });
   document.addEventListener("keyup", (event) => {
-    inputMap[event.key] = false;
+    _inputMap[event.key] = false;
   });
+  const useInput = () => structuredClone(_inputMap);
 
-  let clientControlledState: ClientState = {
+  let _clientState: ClientState = {
     x: 0,
     y: 0,
     targetedEntity: undefined,
     clientEntityID: undefined,
+  };
+  const useClientState = () => structuredClone(_clientState);
+  const setClientState = (newClientState: ClientState) => {
+    _clientState = structuredClone(newClientState);
+  };
+
+  let _serverState = {
+    timeStateReceived: Date.now(),
+    gameState: {
+      playerEntities: {},
+      entities: {},
+    },
+  };
+  const useServerState = () => structuredClone(_serverState);
+  const setServerState = (newServerState: ServerState) => {
+    _serverState = structuredClone(newServerState);
+  };
+
+  let _gameState = {
+    playerEntities: {},
+    entities: {},
+  };
+  const useGameState = () => structuredClone(_gameState);
+  const setGameState = (newGameState: GameState) => {
+    _gameState = structuredClone(newGameState);
   };
 
   const updateClientState = (
@@ -54,53 +80,41 @@
       clientEntityID: client.clientEntityID,
     };
   };
-  let clientGameState = createInitialGameState();
-  let serverState = {
-    timeStateReceived: Date.now(),
-    gameState: createInitialGameState(),
-  };
   onMount(() => {
     invariant(canvas !== null);
     const context = canvas.getContext("2d");
     invariant(context !== null);
 
-    const websocket = new WebSocket("/ws");
+    const websocket = new WebSocket("http://localhost:3000/ws");
     websocket.addEventListener("message", (message) => {
+      const clientState = useClientState();
+
       const serverMessage = JSON.parse(message.data);
       switch (serverMessage.type) {
-        case "connect":
-          serverState.gameState.playerEntities[serverMessage.data.id] = {
-            x: 0,
-            y: 0,
-          };
-          clientGameState.playerEntities[serverMessage.data.id] = {
-            x: 0,
-            y: 0,
-          };
-          break;
-        case "disconnect":
-          delete clientGameState.playerEntities[serverMessage.data.id];
-          delete serverState.gameState.playerEntities[serverMessage.data.id];
-          break;
-
         case "initialize":
-          serverState = {
+          setServerState({
             timeStateReceived: Date.now(),
             gameState: serverMessage.data.gameState,
-          };
-          clientGameState = structuredClone(serverMessage.data.gameState);
-          clientControlledState.clientEntityID =
-            serverMessage.data.clientEntityID;
+          });
+          setGameState(serverMessage.data.gameState);
+          setClientState({
+            ...clientState,
+            clientEntityID: serverMessage.data.clientEntityID,
+          });
           break;
 
         case "update":
-          serverState = {
+          setServerState({
             timeStateReceived: Date.now(),
             gameState: serverMessage.data.gameState,
-          };
+          });
+          break;
+
+        default:
           break;
       }
-      const clientMessage = JSON.stringify(clientControlledState);
+
+      const clientMessage = JSON.stringify(clientState);
       websocket.send(clientMessage);
     });
 
@@ -109,22 +123,29 @@
       (frameTime: number) => {
         const deltaTime = frameTime - previousFrameTime;
 
-        clientControlledState = updateClientState(
-          clientControlledState,
-          clientGameState,
-          inputMap
-        );
-        const interpTime = Math.sqrt(
+        const inputMap = useInput();
+        const clientState = useClientState();
+        const gameState = useGameState();
+        const serverState = useServerState();
+
+        renderGameState(clientState, gameState, context);
+
+        const interpolationTime = Math.sqrt(
           deltaTime / (clientTime - serverState.timeStateReceived)
         );
-        clientGameState = interpolateGameState(
-          clientGameState,
-          serverState.gameState,
-          Number.isNaN(interpTime) ? 0 : interpTime
+        const interpolatedGameState = interpolateGameState(
+          gameState,
+          serverState,
+          Number.isNaN(interpolationTime) ? 0 : interpolationTime
         );
+        setGameState(interpolatedGameState);
 
-        renderGameState(clientControlledState, clientGameState, context);
-
+        const newClientState = updateClientState(
+          clientState,
+          gameState,
+          inputMap
+        );
+        setClientState(newClientState);
         window.requestAnimationFrame(
           getAnimationFrameCallback(frameTime, clientTime + deltaTime)
         );

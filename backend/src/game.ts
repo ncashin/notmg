@@ -30,9 +30,14 @@ export const update = (gameState: GameState) => ({
     Object.entries(gameState.playerEntities).map((entry) => entry)
   ),
   entities: Object.fromEntries(
-    Object.entries(gameState.entities).map((entry) => entry)
+    Object.entries(gameState.entities).map(([key, value]) => [
+      key,
+      { ...value },
+    ])
   ),
-  projectiles: gameState.projectiles.map((projectile) => projectile),
+  projectiles: gameState.projectiles.map((projectile) =>
+    updateProjectile(projectile)
+  ),
 });
 
 export const updateProjectile = (projectile: Projectile) => {
