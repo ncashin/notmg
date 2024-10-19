@@ -4,7 +4,7 @@ import { drizzle } from "drizzle-orm/bun-sqlite";
 import { update, type GameState } from "./src/game";
 import type { IntializeEvent, UpdateEvent } from "./src/socketEvent";
 
-let gameState = {
+let _gameState = {
   playerEntities: {},
   entities: {
     0: {
@@ -15,19 +15,26 @@ let gameState = {
 
   projectiles: [],
 } as GameState;
+const useGameState = () => structuredClone(_gameState);
+const setGameState = (newGameState: GameState) => {
+  _gameState = structuredClone(newGameState);
+};
 
 type WebSocketData = {
   id: string;
 };
-let openSockets: Record<string, ServerWebSocket<WebSocketData>> = {};
+let _openSockets: Record<string, ServerWebSocket<WebSocketData>> = {};
 
 const tick = () => {
-  gameState = update(gameState);
-  Object.values(openSockets).forEach((websocket) => {
-    websocket.send(
+  const gameState = useGameState();
+  const newGameState = update(gameState);
+  setGameState(newGameState);
+
+  Object.values(_openSockets).forEach((ws) => {
+    ws.send(
       JSON.stringify({
         type: "update",
-        data: { gameState: gameState },
+        data: { gameState: newGameState },
       } satisfies UpdateEvent)
     );
   });
@@ -49,8 +56,8 @@ Bun.serve({
         return new Response(html);
 
       case "/ws":
-        if (Object.values(openSockets).length >= MAX_OPEN_SOCKET_COUNT) {
-          new Response("Upgrade failed", { status: 500 });
+        if (Object.values(_openSockets).length >= MAX_OPEN_SOCKET_COUNT) {
+          return new Response("Upgrade failed", { status: 500 });
         }
         const upgradeSuccessful = server.upgrade<WebSocketData>(request, {
           data: { id: (playerIdCounter++).toString() },
@@ -69,17 +76,33 @@ Bun.serve({
       if (typeof message !== "string") return;
 
       const messageJSON = JSON.parse(message);
-      gameState.playerEntities[ws.data.id] = {
-        ...gameState.playerEntities[ws.data.id],
-        ...messageJSON,
-      };
+      const gameState = useGameState();
+      setGameState({
+        ...gameState,
+        playerEntities: {
+          ...gameState.playerEntities,
+          [ws.data.id]: {
+            ...gameState.playerEntities[ws.data.id],
+            ...messageJSON,
+          },
+        },
+      });
     },
     open(ws: ServerWebSocket<WebSocketData>) {
-      gameState.playerEntities[ws.data.id] = {
-        x: 0,
-        y: 0,
-      };
-      openSockets[ws.data.id] = ws;
+      const gameState = useGameState();
+      setGameState({
+        ...gameState,
+        playerEntities: {
+          ...gameState.playerEntities,
+          [ws.data.id]: {
+            x: 0,
+            y: 0,
+          },
+        },
+      });
+
+      _openSockets[ws.data.id] = ws;
+
       ws.send(
         JSON.stringify({
           type: "initialize",
@@ -88,8 +111,17 @@ Bun.serve({
       );
     },
     close(ws: ServerWebSocket<WebSocketData>, code, message) {
-      delete openSockets[ws.data.id];
-      delete gameState.playerEntities[ws.data.id];
+      delete _openSockets[ws.data.id];
+
+      const gameState = useGameState();
+      setGameState({
+        ...gameState,
+        playerEntities: Object.fromEntries(
+          Object.entries(gameState.playerEntities).filter(
+            ([key, value]) => key !== message
+          )
+        ),
+      });
     },
     drain(ws: ServerWebSocket<WebSocketData>) {},
   },
