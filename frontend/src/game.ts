@@ -34,13 +34,12 @@ export const sprites = {
 };
 
 export const interpolatePlayer = (
-  key: string,
   entity: Entity,
-  serverGameState: GameState,
-  interpTime: number
+  serverEntity: Entity,
+  interpolationTime: number
 ) => ({
-  x: entity.x + (serverGameState.playerEntities[key].x - entity.x) * interpTime,
-  y: entity.y + (serverGameState.playerEntities[key].y - entity.y) * interpTime,
+  x: entity.x + (serverEntity.x - entity.x) * interpolationTime,
+  y: entity.y + (serverEntity.y - entity.y) * interpolationTime,
 });
 
 export const interpolateGameState = (
@@ -60,21 +59,16 @@ export const interpolateGameState = (
 
     return {
       ...accumulator,
-      [key]: gameState.playerEntities[key],
+      [key]: interpolatePlayer(
+        gameState.playerEntities[key],
+        value,
+        interpolationTime
+      ),
     };
   }, {});
 
-  const disconnectionDiff = Object.entries(gameState.playerEntities).filter(
-    ([key, value]) => serverState.gameState.playerEntities[key] === undefined
-  );
-
   return {
-    playerEntities: Object.fromEntries(
-      Object.entries(playerEntities).map(([key, value]) => [
-        key,
-        interpolatePlayer(key, value, serverState.gameState, interpolationTime),
-      ])
-    ),
+    playerEntities,
     entities: gameState.entities,
   } satisfies GameState;
 };
