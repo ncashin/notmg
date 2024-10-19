@@ -2,12 +2,7 @@ import { type ServerWebSocket } from "bun";
 import { Database } from "bun:sqlite";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 import { update, type GameState } from "./src/game";
-import type {
-  ConnectEvent,
-  DisconnectEvent,
-  IntializeEvent,
-  UpdateEvent,
-} from "./src/socketEvent";
+import type { IntializeEvent, UpdateEvent } from "./src/socketEvent";
 
 let gameState = {
   playerEntities: {},
@@ -80,15 +75,6 @@ Bun.serve({
       };
     },
     open(ws: ServerWebSocket<WebSocketData>) {
-      Object.values(openSockets).forEach((websocket) => {
-        websocket.send(
-          JSON.stringify({
-            type: "connect",
-            data: { id: ws.data.id },
-          } satisfies ConnectEvent)
-        );
-      });
-
       gameState.playerEntities[ws.data.id] = {
         x: 0,
         y: 0,
@@ -102,14 +88,6 @@ Bun.serve({
       );
     },
     close(ws: ServerWebSocket<WebSocketData>, code, message) {
-      Object.values(openSockets).forEach((websocket) => {
-        websocket.send(
-          JSON.stringify({
-            type: "disconnect",
-            data: { id: ws.data.id },
-          } satisfies DisconnectEvent)
-        );
-      });
       delete openSockets[ws.data.id];
       delete gameState.playerEntities[ws.data.id];
     },

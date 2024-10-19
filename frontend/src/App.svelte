@@ -96,7 +96,6 @@
             timeStateReceived: Date.now(),
             gameState: serverMessage.data.gameState,
           });
-          setGameState(serverMessage.data.gameState);
           setClientState({
             ...clientState,
             clientEntityID: serverMessage.data.clientEntityID,
