@@ -59,11 +59,11 @@
     deltaTime: number
   ) => {
     const deltaTimeSeconds = deltaTime / 1000;
-    const left = inputMap["d"] ? -5 * deltaTimeSeconds : 0;
-    const right = inputMap["a"] ? 5 * deltaTimeSeconds : 0;
+    const left = inputMap["d"] ? 70 * deltaTimeSeconds : 0;
+    const right = inputMap["a"] ? -70 * deltaTimeSeconds : 0;
 
-    const down = inputMap["w"] ? 5 * deltaTimeSeconds : 0;
-    const up = inputMap["s"] ? -5 * deltaTimeSeconds : 0;
+    const down = inputMap["w"] ? -70 * deltaTimeSeconds : 0;
+    const up = inputMap["s"] ? 70 * deltaTimeSeconds : 0;
 
     const targetedEntity = inputMap["q"]
       ? Object.values(gameState.entities).reduce<{
@@ -97,7 +97,7 @@
     const context = canvas.getContext("2d");
     invariant(context !== null);
 
-    const websocket = new WebSocket("http://localhost:3000/ws");
+    const websocket = new WebSocket("/ws");
     websocket.addEventListener("message", (message) => {
       const clientState = useClientState();
 
