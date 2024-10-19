@@ -53,31 +53,42 @@
   };
 
   const updateClientState = (
-    client: ClientState,
+    clientState: ClientState,
     gameState: GameState,
-    inputMap: any
+    inputMap: any,
+    deltaTime: number
   ) => {
-    return {
-      x: inputMap["d"] ? client.x + 5 : inputMap["a"] ? client.x - 5 : client.x,
-      y: inputMap["s"] ? client.y + 5 : inputMap["w"] ? client.y - 5 : client.y,
-      targetedEntity: inputMap["q"]
-        ? Object.values(gameState.entities).reduce(
-            (accumulator, entity, index) => {
-              const distance = Math.sqrt(
-                ((entity.x - client.x) ^ 2) + ((entity.y - client.y) ^ 2)
-              );
+    const left = inputMap["d"] ? -5 * deltaTime : 0;
+    const right = inputMap["a"] ? 5 * deltaTime : 0;
 
-              return accumulator.distance < distance
-                ? accumulator
-                : {
-                    index,
-                    distance,
-                  };
-            },
-            { index: 0, distance: Number.MAX_SAFE_INTEGER }
-          ).index
-        : client.targetedEntity,
-      clientEntityID: client.clientEntityID,
+    const down = inputMap["w"] ? 5 * deltaTime : 0;
+    const up = inputMap["s"] ? -5 * deltaTime : 0;
+
+    const targetedEntity = inputMap["q"]
+      ? Object.values(gameState.entities).reduce<{
+          index: number | undefined;
+          distance: number;
+        }>(
+          (accumulator, entity, index) => {
+            const distance = Math.sqrt(
+              ((entity.x - clientState.x) ^ 2) +
+                ((entity.y - clientState.y) ^ 2)
+            );
+
+            if (accumulator.distance < distance) return accumulator;
+            return {
+              index,
+              distance,
+            };
+          },
+          { index: undefined, distance: Number.MAX_SAFE_INTEGER }
+        )?.index
+      : clientState.targetedEntity;
+    return {
+      x: clientState.x + left + right,
+      y: clientState.y + up + down,
+      targetedEntity,
+      clientEntityID: clientState.clientEntityID,
     };
   };
   onMount(() => {
@@ -142,7 +153,8 @@
         const newClientState = updateClientState(
           clientState,
           gameState,
-          inputMap
+          inputMap,
+          deltaTime
         );
         setClientState(newClientState);
         window.requestAnimationFrame(

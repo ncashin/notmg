@@ -1,4 +1,5 @@
 export type Entity = {
+  index: any;
   x: number;
   y: number;
 };
