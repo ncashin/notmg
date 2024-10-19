@@ -58,11 +58,12 @@
     inputMap: any,
     deltaTime: number
   ) => {
-    const left = inputMap["d"] ? -5 * deltaTime : 0;
-    const right = inputMap["a"] ? 5 * deltaTime : 0;
+    const deltaTimeSeconds = deltaTime / 1000;
+    const left = inputMap["d"] ? -5 * deltaTimeSeconds : 0;
+    const right = inputMap["a"] ? 5 * deltaTimeSeconds : 0;
 
-    const down = inputMap["w"] ? 5 * deltaTime : 0;
-    const up = inputMap["s"] ? -5 * deltaTime : 0;
+    const down = inputMap["w"] ? 5 * deltaTimeSeconds : 0;
+    const up = inputMap["s"] ? -5 * deltaTimeSeconds : 0;
 
     const targetedEntity = inputMap["q"]
       ? Object.values(gameState.entities).reduce<{
