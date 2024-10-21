@@ -128,7 +128,6 @@ export const renderGameState = (
       context.fillRect(entity.x, entity.y, 48, 48);
     }
     context.drawImage(sprites.leviathan, entity.x, entity.y);
-    console.log(entity);
     context.fillStyle = "blue";
     context.fillRect(entity.x, entity.y, 32, 5);
     context.fillStyle = "green";

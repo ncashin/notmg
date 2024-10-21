@@ -146,7 +146,6 @@
 
         const inputMap = useInput();
         const clientState = useClientState();
-        console.log(clientTime - attackTime);
         const attack =
           inputMap["e"] &&
           clientState.targetedEntity !== undefined &&
