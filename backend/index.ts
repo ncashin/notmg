@@ -8,8 +8,8 @@ let _gameState = {
   playerEntities: {},
   entities: {
     0: {
-      x: 0,
-      y: 0,
+      x: 400,
+      y: 400,
       health: 4,
       maxHealth: 5,
     },
@@ -82,7 +82,6 @@ Bun.serve({
       switch (messageJSON.type) {
         case "ability":
           const messageEntity = gameState.entities[messageJSON.data.entityID];
-          console.log(messageEntity);
           setGameState({
             ...gameState,
             entities: {

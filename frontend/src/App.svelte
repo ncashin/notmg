@@ -98,7 +98,7 @@
     const context = canvas.getContext("2d");
     invariant(context !== null);
 
-    const websocket = new WebSocket("http://localhost:3000/ws");
+    const websocket = new WebSocket("/ws");
     websocket.addEventListener("message", (message) => {
       const clientState = useClientState();
 
@@ -146,10 +146,11 @@
 
         const inputMap = useInput();
         const clientState = useClientState();
+        console.log(clientTime - attackTime);
         const attack =
           inputMap["e"] &&
           clientState.targetedEntity !== undefined &&
-          frameTime - attackTime > 1;
+          clientTime - attackTime > ATTACK_COOLDOWN;
         const newAttackTime = attack ? Date.now() : attackTime;
         if (attack) {
           websocket.send(
