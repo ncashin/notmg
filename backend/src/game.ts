@@ -16,9 +16,12 @@ export type GameState = {
   playerEntities: Record<string, PlayerEntity>;
   entities: Record<string, Entity>;
 
+  projectileIDCounter: number;
+  projectileCount: number;
   projectiles: Record<string, Projectile>;
 };
 
+export const MAX_PROJECTILE_COUNT = 1000;
 export const createInitialGameState = () => {
   return {
     playerEntities: {},
@@ -41,10 +44,6 @@ export const update = (gameState: GameState) => {
     },
     { newProjectiles: [], entities: [] }
   );
-  const maxKey = Object.keys(gameState.projectiles).reduce(
-    (max, key) => (max > key ? max : key),
-    0
-  );
   const projectiles = Object.entries(gameState.projectiles).reduce(
     (accumulator, [key, value]) => ({
       ...accumulator,
@@ -54,19 +53,30 @@ export const update = (gameState: GameState) => {
       ...newProjectiles.reduce(
         (accumulator, projectile, index) => ({
           ...accumulator,
-          [maxKey + index]: projectile,
+          [gameState.projectileIDCounter + index]: projectile,
         }),
         {}
       ),
     }
   );
 
+  const projectileEntries = Object.entries(projectiles);
+  const splicedEntries =
+    projectileEntries.length > MAX_PROJECTILE_COUNT
+      ? projectileEntries.splice(
+          0,
+          projectileEntries.length - MAX_PROJECTILE_COUNT
+        )
+      : projectileEntries;
+
   return {
     playerEntities: Object.fromEntries(
       Object.entries(gameState.playerEntities).map((entry) => entry)
     ),
     entities,
-    projectiles,
+
+    projectileIDCounter: gameState.projectileIDCounter + newProjectiles.length,
+    projectiles: Object.fromEntries(splicedEntries),
   };
 };
 
