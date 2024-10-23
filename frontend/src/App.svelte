@@ -8,6 +8,10 @@
     type GameState,
     type ServerState,
   } from "./game";
+  import type {
+    ClientAbilityMessage,
+    ClientUpdateMessage,
+  } from "./socketEvent";
 
   export let canvas: HTMLCanvasElement;
 
@@ -133,12 +137,10 @@
       const clientMessage = JSON.stringify({
         type: "update",
         data: {
-          clientUpdate: {
-            x: clientState.x,
-            y: clientState.y,
-          },
+          x: clientState.x,
+          y: clientState.y,
         },
-      });
+      } satisfies ClientUpdateMessage);
       websocket.send(clientMessage);
     });
 
@@ -162,7 +164,7 @@
               data: {
                 entityID: clientState.targetedEntity,
               },
-            })
+            } satisfies ClientAbilityMessage)
           );
         }
         const gameState = useGameState();

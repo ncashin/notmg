@@ -1,4 +1,5 @@
 import { updateEntity, type Entity } from "./entity";
+import type { ClientMessage } from "./socketEvent";
 
 export type PlayerEntity = {
   x: number;
@@ -20,7 +21,7 @@ export type GameState = {
   projectiles: Record<string, Projectile>;
 };
 
-export const MAX_PROJECTILE_COUNT = 10;
+export const MAX_PROJECTILE_COUNT = 100;
 export const createInitialGameState = () => {
   return {
     playerEntities: {},
@@ -31,7 +32,43 @@ export const createInitialGameState = () => {
   } satisfies GameState;
 };
 
-export const update = (gameState: GameState, deltaTime: number) => {
+export const integrateReceivedMessages = (
+  gameState: GameState,
+  receivedMessages: ClientMessage[]
+) => {
+  const integratedGameState = receivedMessages.reduce(
+    (accumulator, message) => {
+      switch (message.type) {
+        case "update":
+          return {
+            ...accumulator,
+            playerEntities: {
+              ...accumulator.playerEntities,
+              [message.websocketID]: {
+                ...gameState.playerEntities[message.websocketID],
+                ...message.data,
+              },
+            },
+          };
+        case "ability":
+          const targetedEntity = gameState.entities[message.data.entityID];
+          return {
+            ...accumulator,
+            entities: {
+              ...accumulator.entities,
+              [message.data.entityID]: {
+                ...targetedEntity,
+                health: targetedEntity.health - 1,
+              },
+            },
+          };
+      }
+    },
+    gameState
+  );
+  return integratedGameState;
+};
+export const update = (gameState: GameState) => {
   const { newProjectiles, entities } = Object.entries(
     gameState.entities
   ).reduce<{ newProjectiles: Projectile[]; entities: Record<number, Entity> }>(
@@ -55,7 +92,7 @@ export const update = (gameState: GameState, deltaTime: number) => {
           ...accumulator,
           [gameState.projectileIDCounter + index]: projectile,
         }),
-        {}
+        {} satisfies Record<string, Projectile>
       ),
     }
   );
@@ -64,11 +101,9 @@ export const update = (gameState: GameState, deltaTime: number) => {
   const overflowCount = projectileEntries.length - MAX_PROJECTILE_COUNT;
   const splicedEntries =
     projectileEntries.length > MAX_PROJECTILE_COUNT
-      ? projectileEntries.splice(
-          projectileEntries.length - (overflowCount + 1),
-          projectileEntries.length
-        )
+      ? projectileEntries.splice(0, overflowCount)
       : projectileEntries;
+  const finalProjectiles = Object.fromEntries(splicedEntries);
 
   return {
     playerEntities: Object.fromEntries(
@@ -77,7 +112,7 @@ export const update = (gameState: GameState, deltaTime: number) => {
     entities,
 
     projectileIDCounter: gameState.projectileIDCounter + newProjectiles.length,
-    projectiles: Object.fromEntries(splicedEntries),
+    projectiles: finalProjectiles,
   };
 };
 

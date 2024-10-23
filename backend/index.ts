@@ -1,8 +1,12 @@
 import { type ServerWebSocket } from "bun";
 import { Database } from "bun:sqlite";
 import { drizzle } from "drizzle-orm/bun-sqlite";
-import { update, type GameState } from "./src/game";
-import type { IntializeEvent, UpdateEvent } from "./src/socketEvent";
+import { integrateReceivedMessages, update, type GameState } from "./src/game";
+import type {
+  ClientMessage,
+  IntializeEvent,
+  UpdateEvent,
+} from "./src/socketEvent";
 
 let _gameState = {
   playerEntities: {},
@@ -24,6 +28,12 @@ const setGameState = (newGameState: GameState) => {
   _gameState = structuredClone(newGameState);
 };
 
+let _receivedMessages: ClientMessage[] = [];
+const useReceivedMessages = () => {
+  const receivedMessagesClone = structuredClone(_receivedMessages);
+  _receivedMessages = [] satisfies ClientMessage[];
+  return receivedMessagesClone;
+};
 type WebSocketData = {
   id: string;
 };
@@ -31,7 +41,12 @@ let _openSockets: Record<string, ServerWebSocket<WebSocketData>> = {};
 
 const tick = () => {
   const gameState = useGameState();
-  const newGameState = update(gameState);
+  const receivedMessages = useReceivedMessages();
+  const messageGameState = integrateReceivedMessages(
+    gameState,
+    receivedMessages
+  );
+  const newGameState = update(messageGameState);
   setGameState(newGameState);
 
   Object.values(_openSockets).forEach((ws) => {
@@ -80,47 +95,10 @@ Bun.serve({
       if (typeof message !== "string") return;
       const gameState = useGameState();
       const messageJSON = JSON.parse(message);
-
-      switch (messageJSON.type) {
-        case "ability":
-          const messageEntity = gameState.entities[messageJSON.data.entityID];
-          setGameState({
-            ...gameState,
-            entities: {
-              ...gameState.entities,
-              [messageJSON.data.entityID]: {
-                ...messageEntity,
-                health: messageEntity.health - 1,
-              },
-            },
-          });
-          break;
-        case "update":
-          setGameState({
-            ...gameState,
-            playerEntities: {
-              ...gameState.playerEntities,
-              [ws.data.id]: {
-                ...gameState.playerEntities[ws.data.id],
-                ...messageJSON.data.clientUpdate,
-              },
-            },
-          });
-          break;
-      }
+      _receivedMessages.push({ ...messageJSON, websocketID: ws.data.id });
     },
     open(ws: ServerWebSocket<WebSocketData>) {
       const gameState = useGameState();
-      setGameState({
-        ...gameState,
-        playerEntities: {
-          ...gameState.playerEntities,
-          [ws.data.id]: {
-            x: 0,
-            y: 0,
-          },
-        },
-      });
 
       _openSockets[ws.data.id] = ws;
 

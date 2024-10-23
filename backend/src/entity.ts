@@ -31,9 +31,6 @@ export type Entity = {
   y: number;
   maxHealth: number;
   health: number;
-
-  tickCounter: number;
-  state: number;
 };
 export type EntityDefinition = {
   update: (entity: Entity) => [Entity, Projectile[]];
