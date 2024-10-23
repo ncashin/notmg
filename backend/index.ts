@@ -16,6 +16,7 @@ let _gameState = {
     },
   },
 
+  projectileIDCounter: 0,
   projectiles: {},
 } satisfies GameState;
 const useGameState = () => structuredClone(_gameState);

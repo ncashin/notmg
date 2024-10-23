@@ -17,7 +17,6 @@ export type GameState = {
   entities: Record<string, Entity>;
 
   projectileIDCounter: number;
-  projectileCount: number;
   projectiles: Record<string, Projectile>;
 };
 
@@ -27,6 +26,7 @@ export const createInitialGameState = () => {
     playerEntities: {},
     entities: {},
 
+    projectileIDCounter: 0,
     projectiles: {},
   } satisfies GameState;
 };
