@@ -17,6 +17,7 @@ let _gameState = {
       y: 400,
       health: 4,
       maxHealth: 5,
+      tickCounter: 0,
     },
   },
 
@@ -61,7 +62,7 @@ const tick = () => {
 const TICK_RATE = 1000 / 60;
 setInterval(tick, TICK_RATE);
 
-let playerIdCounter = 0;
+let _playerIDCounter = 0;
 const MAX_OPEN_SOCKET_COUNT = 1000;
 
 const PUBLIC_DIRECTORY = "public";
@@ -79,7 +80,7 @@ Bun.serve({
           return new Response("Upgrade failed", { status: 500 });
         }
         const upgradeSuccessful = server.upgrade<WebSocketData>(request, {
-          data: { id: (playerIdCounter++).toString() },
+          data: { id: (_playerIDCounter++).toString() },
         });
         if (upgradeSuccessful) return;
         return new Response("Upgrade failed", { status: 500 });

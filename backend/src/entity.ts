@@ -6,7 +6,10 @@ export const updateEntity = (entity: Entity) => {
 
 export const entityDefinitions: Record<string, EntityDefinition> = {
   leviathan: {
-    update: (entity: Entity) => {
+    update: (entity: Leviathan) => {
+      if (entity.tickCounter !== 60)
+        return [{ ...entity, tickCounter: entity.tickCounter + 1 }, []];
+
       const newProjectiles: Projectile[] = [
         {
           x: 0,
@@ -16,7 +19,7 @@ export const entityDefinitions: Record<string, EntityDefinition> = {
           collisionRadius: 0.1,
         },
       ];
-      return [entity, newProjectiles];
+      return [{ ...entity, tickCounter: 0 }, newProjectiles];
     },
     stats: {
       maxHealth: 5,
@@ -25,12 +28,17 @@ export const entityDefinitions: Record<string, EntityDefinition> = {
   },
 };
 
-export type Entity = {
+export type Entity = Leviathan;
+export type BaseEntity = {
   type: keyof typeof entityDefinitions;
   x: number;
   y: number;
   maxHealth: number;
   health: number;
+};
+export type Leviathan = BaseEntity & {
+  type: "leviathan";
+  tickCounter: number;
 };
 export type EntityDefinition = {
   update: (entity: Entity) => [Entity, Projectile[]];
