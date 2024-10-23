@@ -20,7 +20,7 @@ export type GameState = {
   projectiles: Record<string, Projectile>;
 };
 
-export const MAX_PROJECTILE_COUNT = 1000;
+export const MAX_PROJECTILE_COUNT = 10;
 export const createInitialGameState = () => {
   return {
     playerEntities: {},
@@ -31,7 +31,7 @@ export const createInitialGameState = () => {
   } satisfies GameState;
 };
 
-export const update = (gameState: GameState) => {
+export const update = (gameState: GameState, deltaTime: number) => {
   const { newProjectiles, entities } = Object.entries(
     gameState.entities
   ).reduce<{ newProjectiles: Projectile[]; entities: Record<number, Entity> }>(
@@ -61,11 +61,12 @@ export const update = (gameState: GameState) => {
   );
 
   const projectileEntries = Object.entries(projectiles);
+  const overflowCount = projectileEntries.length - MAX_PROJECTILE_COUNT;
   const splicedEntries =
     projectileEntries.length > MAX_PROJECTILE_COUNT
       ? projectileEntries.splice(
-          0,
-          projectileEntries.length - MAX_PROJECTILE_COUNT
+          projectileEntries.length - (overflowCount + 1),
+          projectileEntries.length
         )
       : projectileEntries;
 
