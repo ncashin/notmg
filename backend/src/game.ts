@@ -1,13 +1,10 @@
+import { updateEntity, type Entity } from "./entity";
+
 export type PlayerEntity = {
   x: number;
   y: number;
 };
-export type Entity = {
-  x: number;
-  y: number;
-  health: number;
-  maxHealth: number;
-};
+
 export type Projectile = {
   x: number;
   y: number;
@@ -19,7 +16,7 @@ export type GameState = {
   playerEntities: Record<string, PlayerEntity>;
   entities: Record<string, Entity>;
 
-  projectiles: Projectile[];
+  projectiles: Record<string, Projectile>;
 };
 
 export const createInitialGameState = () => {
@@ -27,24 +24,53 @@ export const createInitialGameState = () => {
     playerEntities: {},
     entities: {},
 
-    projectiles: [],
+    projectiles: {},
   } satisfies GameState;
 };
 
-export const update = (gameState: GameState) => ({
-  playerEntities: Object.fromEntries(
-    Object.entries(gameState.playerEntities).map((entry) => entry)
-  ),
-  entities: Object.fromEntries(
-    Object.entries(gameState.entities).map(([key, value]) => [
-      key,
-      { ...value },
-    ])
-  ),
-  projectiles: gameState.projectiles.map((projectile) =>
-    updateProjectile(projectile)
-  ),
-});
+export const update = (gameState: GameState) => {
+  const { newProjectiles, entities } = Object.entries(
+    gameState.entities
+  ).reduce<{ newProjectiles: Projectile[]; entities: Record<number, Entity> }>(
+    (accumulator, [key, value]) => {
+      const [entity, newProjectiles] = updateEntity(value);
+      return {
+        newProjectiles: accumulator.newProjectiles.concat(newProjectiles),
+        entities: { ...accumulator.entities, [key]: entity },
+      };
+    },
+    { newProjectiles: [], entities: [] }
+  );
+  const maxKey = Object.keys(gameState.projectiles).reduce(
+    (max, key) => (max > key ? max : key),
+    0
+  );
+  const projectiles = Object.entries(gameState.projectiles).reduce(
+    (accumulator, [key, value]) => ({
+      ...accumulator,
+      [key]: updateProjectile(value),
+    }),
+    {
+      ...newProjectiles.reduce(
+        (accumulator, projectile, index) => ({
+          ...accumulator,
+          [maxKey + index]: projectile,
+        }),
+        {}
+      ),
+    }
+  );
+
+  return {
+    playerEntities: Object.fromEntries(
+      Object.entries(gameState.playerEntities).map((entry) => entry)
+    ),
+    entities,
+    projectiles,
+  };
+};
+
+export const updateEntitiesAndProjectiles = (gameState: GameState) => {};
 
 export const updateProjectile = (projectile: Projectile) => {
   return {

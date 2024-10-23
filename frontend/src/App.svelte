@@ -36,6 +36,8 @@
     gameState: {
       playerEntities: {},
       entities: {},
+
+      projectiles: {},
     },
   };
   const useServerState = () => structuredClone(_serverState);
@@ -46,6 +48,8 @@
   let _gameState = {
     playerEntities: {},
     entities: {},
+
+    projectiles: {},
   };
   const useGameState = () => structuredClone(_gameState);
   const setGameState = (newGameState: GameState) => {

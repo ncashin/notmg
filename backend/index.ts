@@ -8,6 +8,7 @@ let _gameState = {
   playerEntities: {},
   entities: {
     0: {
+      type: "leviathan",
       x: 400,
       y: 400,
       health: 4,
@@ -15,7 +16,7 @@ let _gameState = {
     },
   },
 
-  projectiles: [],
+  projectiles: {},
 } satisfies GameState;
 const useGameState = () => structuredClone(_gameState);
 const setGameState = (newGameState: GameState) => {
