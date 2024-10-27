@@ -35,6 +35,12 @@ const useReceivedMessages = () => {
   _receivedMessages = [] satisfies ClientMessage[];
   return receivedMessagesClone;
 };
+let _socketStateMessages: ClientSocketMessage[] = [];
+const useSocketStateMessages = () => {
+  const socketStateMessagesClone = structuredClone(_socketStateMessages);
+  _socketStateMessages = [] satisfies ClientMessage[];
+  return socketStateMessagesClone;
+};
 type WebSocketData = {
   id: string;
 };
@@ -43,9 +49,11 @@ let _openSockets: Record<string, ServerWebSocket<WebSocketData>> = {};
 const tick = () => {
   const gameState = useGameState();
   const receivedMessages = useReceivedMessages();
+  const socketStateMessages = useSocketStateMessages();
   const messageGameState = integrateReceivedMessages(
     gameState,
-    receivedMessages
+    receivedMessages,
+    socketStateMessages
   );
   const newGameState = update(messageGameState);
   setGameState(newGameState);
@@ -109,19 +117,11 @@ Bun.serve({
           data: { gameState: gameState, clientEntityID: ws.data.id },
         } satisfies IntializeEvent)
       );
+      _socketStateMessages.push({ type: "open", websocketID: ws.data.id });
     },
     close(ws: ServerWebSocket<WebSocketData>, code, message) {
       delete _openSockets[ws.data.id];
-
-      const gameState = useGameState();
-      setGameState({
-        ...gameState,
-        playerEntities: Object.fromEntries(
-          Object.entries(gameState.playerEntities).filter(
-            ([key, value]) => key !== ws.data.id
-          )
-        ),
-      });
+      _socketStateMessages.push({ type: "close", websocketID: ws.data.id });
     },
     drain(ws: ServerWebSocket<WebSocketData>) {},
   },

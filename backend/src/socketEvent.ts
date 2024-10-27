@@ -30,3 +30,15 @@ export type ClientAbilityMessage = {
     entityID: string;
   };
 };
+
+export type ClientSocketMessage =
+  | ClientSocketOpenMessage
+  | ClientSocketCloseMessage;
+export type ClientSocketOpenMessage = {
+  type: "open";
+  websocketID: number;
+};
+export type ClientSocketCloseMessage = {
+  type: "close";
+  websocketID: number;
+};

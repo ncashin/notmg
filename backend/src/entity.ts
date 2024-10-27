@@ -12,11 +12,11 @@ export const entityDefinitions: Record<string, EntityDefinition> = {
 
       const newProjectiles: Projectile[] = [
         {
-          x: 0,
-          y: 0,
+          x: 30,
+          y: 100,
           dx: 5,
           dy: 0,
-          collisionRadius: 0.1,
+          collisionRadius: 16,
         },
       ];
       return [{ ...entity, tickCounter: 0 }, newProjectiles];
