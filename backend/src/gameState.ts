@@ -1,20 +1,13 @@
-import { updateEntity, type Entity } from "./entity";
+import { updateEntity, updateEntityInGameState, type Entity } from "./entity";
+import {
+  removePlayerEntityFromGameStateByKey,
+  updatePlayerEntity,
+  updatePlayerEntityInGameState,
+  type PlayerEntity,
+} from "./playerEntity";
+import { updateProjectile, type Projectile } from "./projectile";
 import type { ClientMessage, ClientSocketMessage } from "./socketEvent";
 
-export type PlayerEntity = {
-  x: number;
-  y: number;
-  health: number;
-  invulnerabilityTime: number;
-};
-
-export type Projectile = {
-  x: number;
-  y: number;
-  dx: number;
-  dy: number;
-  collisionRadius: number;
-};
 export type GameState = {
   playerEntities: Record<string, PlayerEntity>;
   entities: Record<string, Entity>;
@@ -34,51 +27,12 @@ export const createInitialGameState = () => {
   } satisfies GameState;
 };
 
-export const updatePlayerEntityInGameState = (
-  accumulator: GameState,
-  key: string,
-  playerEntity: Entity
-) => ({
-  ...accumulator,
-  playerEntities: {
-    ...accumulator.playerEntities,
-    [key]: {
-      ...accumulator.playerEntities[key],
-      ...playerEntity,
-    },
-  },
-});
-export const updateEntityInGameState = (
-  accumulator: GameState,
-  key: string,
-  targetedEntity: Entity
-) => ({
-  ...accumulator,
-  entities: {
-    ...accumulator.entities,
-    [key]: {
-      ...targetedEntity,
-      health: targetedEntity.health - 1,
-    },
-  },
-});
-export const removePlayerEntityFromGameStateByKey = (
-  accumulator: GameState,
-  keyToRemove: string
-) => ({
-  ...accumulator,
-  playerEntities: Object.fromEntries(
-    Object.entries(accumulator.playerEntities).filter(
-      ([key, value]) => key !== keyToRemove
-    )
-  ),
-});
 export const integrateReceivedMessages = (
   gameState: GameState,
   receivedMessages: ClientMessage[],
   socketStateMessages: ClientSocketMessage[]
 ) => {
-  const integratedGameState = receivedMessages.reduce(
+  const integratedGameState = receivedMessages.reduce<GameState>(
     (accumulator, message) => {
       switch (message.type) {
         case "update":
@@ -90,7 +44,6 @@ export const integrateReceivedMessages = (
         case "ability":
           const targetedEntity = accumulator.entities[message.data.entityID];
           return updateEntityInGameState(accumulator, message.data.entityID, {
-            ...targetedEntity,
             health: targetedEntity.health - 1,
           });
         default:
@@ -99,23 +52,31 @@ export const integrateReceivedMessages = (
     },
     gameState
   );
-  const finalGameState = socketStateMessages.reduce((accumulator, message) => {
-    switch (message.type) {
-      case "open":
-        return updatePlayerEntityInGameState(accumulator, message.websocketID, {
-          x: 0,
-          y: 0,
-          health: 5,
-        });
-      case "close":
-        return removePlayerEntityFromGameStateByKey(
-          accumulator,
-          message.websocketID
-        );
-      default:
-        return accumulator;
-    }
-  }, integratedGameState);
+  const finalGameState = socketStateMessages.reduce<GameState>(
+    (accumulator, message) => {
+      switch (message.type) {
+        case "open":
+          return updatePlayerEntityInGameState(
+            accumulator,
+            message.websocketID,
+            {
+              x: 0,
+              y: 0,
+              health: 5,
+              invulnerabilityTime: 5,
+            }
+          );
+        case "close":
+          return removePlayerEntityFromGameStateByKey(
+            accumulator,
+            message.websocketID
+          );
+        default:
+          return accumulator;
+      }
+    },
+    integratedGameState
+  );
   return finalGameState;
 };
 export const update = (gameState: GameState) => {
@@ -158,7 +119,7 @@ export const update = (gameState: GameState) => {
   const playerEntities = Object.fromEntries(
     Object.entries(gameState.playerEntities).map(([key, value]) => [
       key,
-      updatePlayerEntity(value, Object.values(finalProjectiles)),
+      updatePlayerEntity(value, finalProjectiles),
     ])
   );
   return {
@@ -167,32 +128,5 @@ export const update = (gameState: GameState) => {
 
     projectileIDCounter: gameState.projectileIDCounter + newProjectiles.length,
     projectiles: finalProjectiles,
-  };
-};
-
-const updatePlayerEntity = (
-  playerEntity: PlayerEntity,
-  projectile: Projectile[]
-) => {
-  const collidingProjectile = projectile.find((projectile) => {
-    const dx = playerEntity.x - projectile.x;
-    const dy = playerEntity.y - projectile.y;
-    const projectileDistance = Math.sqrt(dx * dx + dy * dy);
-    return projectileDistance < projectile.collisionRadius;
-  });
-  const updatedPlayerEntity = {
-    ...playerEntity,
-    health:
-      collidingProjectile === undefined
-        ? playerEntity.health
-        : playerEntity.health - 1,
-  };
-  return updatedPlayerEntity;
-};
-export const updateProjectile = (projectile: Projectile) => {
-  return {
-    ...projectile,
-    x: projectile.x + projectile.dx,
-    y: projectile.y + projectile.dy,
   };
 };

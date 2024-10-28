@@ -1,46 +1,14 @@
 import { type ServerWebSocket } from "bun";
-import { Database } from "bun:sqlite";
-import { drizzle } from "drizzle-orm/bun-sqlite";
-import { integrateReceivedMessages, update, type GameState } from "./src/game";
-import type {
-  ClientMessage,
-  IntializeEvent,
-  UpdateEvent,
+import { integrateReceivedMessages, update } from "./src/gameState";
+import { setGameState, useGameState } from "./src/projectile";
+import {
+  pushReceivedMessages,
+  pushSocketStateMessage,
+  useReceivedMessages,
+  useSocketStateMessages,
+  type UpdateEvent,
 } from "./src/socketEvent";
 
-let _gameState = {
-  playerEntities: {},
-  entities: {
-    0: {
-      type: "leviathan",
-      x: 400,
-      y: 400,
-      health: 4,
-      maxHealth: 5,
-      tickCounter: 0,
-    },
-  },
-
-  projectileIDCounter: 0,
-  projectiles: {},
-} satisfies GameState;
-const useGameState = () => structuredClone(_gameState);
-const setGameState = (newGameState: GameState) => {
-  _gameState = structuredClone(newGameState);
-};
-
-let _receivedMessages: ClientMessage[] = [];
-const useReceivedMessages = () => {
-  const receivedMessagesClone = structuredClone(_receivedMessages);
-  _receivedMessages = [] satisfies ClientMessage[];
-  return receivedMessagesClone;
-};
-let _socketStateMessages: ClientSocketMessage[] = [];
-const useSocketStateMessages = () => {
-  const socketStateMessagesClone = structuredClone(_socketStateMessages);
-  _socketStateMessages = [] satisfies ClientMessage[];
-  return socketStateMessagesClone;
-};
 type WebSocketData = {
   id: string;
 };
@@ -102,30 +70,17 @@ Bun.serve({
   websocket: {
     message(ws: ServerWebSocket<WebSocketData>, message) {
       if (typeof message !== "string") return;
-      const gameState = useGameState();
       const messageJSON = JSON.parse(message);
-      _receivedMessages.push({ ...messageJSON, websocketID: ws.data.id });
+      pushReceivedMessages({ ...messageJSON, websocketID: ws.data.id });
     },
     open(ws: ServerWebSocket<WebSocketData>) {
-      const gameState = useGameState();
-
       _openSockets[ws.data.id] = ws;
-
-      ws.send(
-        JSON.stringify({
-          type: "initialize",
-          data: { gameState: gameState, clientEntityID: ws.data.id },
-        } satisfies IntializeEvent)
-      );
-      _socketStateMessages.push({ type: "open", websocketID: ws.data.id });
+      pushSocketStateMessage({ type: "open", websocketID: ws.data.id });
     },
     close(ws: ServerWebSocket<WebSocketData>, code, message) {
       delete _openSockets[ws.data.id];
-      _socketStateMessages.push({ type: "close", websocketID: ws.data.id });
+      pushSocketStateMessage({ type: "close", websocketID: ws.data.id });
     },
     drain(ws: ServerWebSocket<WebSocketData>) {},
   },
 });
-
-const sqlite = new Database("/app/data/db.sqlite", { create: true });
-export const db = drizzle(sqlite);

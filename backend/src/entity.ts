@@ -1,4 +1,5 @@
-import type { Projectile } from "./game";
+import type { GameState } from "./gameState";
+import type { Projectile } from "./projectile";
 
 export const updateEntity = (entity: Entity) => {
   return entityDefinitions[entity.type].update(entity);
@@ -47,3 +48,19 @@ export type EntityDefinition = {
     health: number;
   };
 };
+
+export const updateEntityInGameState = (
+  gameState: GameState,
+  key: string,
+  entityUpdate: Partial<Entity>
+) =>
+  ({
+    ...gameState,
+    entities: {
+      ...gameState.entities,
+      [key]: {
+        ...gameState.entities[key],
+        ...entityUpdate,
+      },
+    },
+  } satisfies GameState);

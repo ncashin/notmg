@@ -1,4 +1,4 @@
-import type { GameState } from "./game";
+import type { GameState } from "./gameState";
 
 export type IntializeEvent = {
   type: "initialize";
@@ -16,7 +16,7 @@ export type UpdateEvent = {
 
 export type ClientMessage = ClientUpdateMessage | ClientAbilityMessage;
 export type ClientUpdateMessage = {
-  websocketID: number;
+  websocketID: string;
   type: "update";
   data: {
     x: number;
@@ -36,9 +36,29 @@ export type ClientSocketMessage =
   | ClientSocketCloseMessage;
 export type ClientSocketOpenMessage = {
   type: "open";
-  websocketID: number;
+  websocketID: string;
 };
 export type ClientSocketCloseMessage = {
   type: "close";
-  websocketID: number;
+  websocketID: string;
+};
+
+let _receivedMessages: ClientMessage[] = [];
+export const useReceivedMessages = () => {
+  const receivedMessagesClone = structuredClone(_receivedMessages);
+  _receivedMessages = [] satisfies ClientMessage[];
+  return receivedMessagesClone;
+};
+export const pushReceivedMessages = (message: ClientMessage) => {
+  _receivedMessages.push(message);
+};
+
+let _socketStateMessages: ClientSocketMessage[] = [];
+export const useSocketStateMessages = () => {
+  const socketStateMessagesClone = structuredClone(_socketStateMessages);
+  _socketStateMessages = [] satisfies ClientSocketMessage[];
+  return socketStateMessagesClone;
+};
+export const pushSocketStateMessage = (message: ClientSocketMessage) => {
+  _socketStateMessages.push(message);
 };
