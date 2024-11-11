@@ -24,6 +24,8 @@ export const updatePlayerEntity = (
       collidingProjectile === undefined
         ? playerEntity.health
         : playerEntity.health - 1,
+
+    invulnerabilityTime: playerEntity.invulnerabilityTime - 1,
   };
   return updatedPlayerEntity;
 };

@@ -3,6 +3,7 @@ import { entitySprites } from "./entity";
 export type PlayerEntity = {
   x: number;
   y: number;
+  maxHealth: number;
   health: number;
   invulnerabilityTime: number;
 };

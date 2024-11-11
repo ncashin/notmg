@@ -18,6 +18,8 @@
   import type { ClientUpdateMessage } from "./websocket";
 
   export let canvas: HTMLCanvasElement;
+  export let health: number = 1;
+  export let maxHealth: number = 1;
   onMount(() => {
     invariant(canvas !== null);
     const context = canvas.getContext("2d");
@@ -54,7 +56,6 @@
 
         renderGameState(clientState, gameState, context);
 
-        console.log(deltaTime, frameTime, serverState.timeStateReceived);
         const interpolationTime = Math.sqrt(
           deltaTime / (frameTime - serverState.timeStateReceived)
         );
@@ -71,6 +72,11 @@
           deltaTime
         );
         setClientState(newClientState);
+        if (clientState.clientEntityID !== undefined) {
+          health = gameState.playerEntities[clientState.clientEntityID].health;
+          maxHealth =
+            gameState.playerEntities[clientState.clientEntityID].maxHealth;
+        }
         window.requestAnimationFrame(
           getAnimationFrameCallback(frameTime, interpolatedGameState)
         );
@@ -85,7 +91,9 @@
 
 <main class="main">
   <div class="container">
-    <div class="sidebar"></div>
+    <div class="sidebar">
+      <progress class="healthbar" value={health} max={maxHealth} />
+    </div>
     <div class="canvas-container">
       <canvas bind:this={canvas} class="canvas" width="900px" height="600px" />
     </div>
@@ -125,5 +133,9 @@
     height: 100%;
     image-rendering: pixelated;
     image-rendering: crisp-edges;
+  }
+  .healthbar {
+    width: 100%;
+    height: 1rem;
   }
 </style>

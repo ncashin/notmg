@@ -8,7 +8,7 @@ export const updateEntity = (entity: Entity) => {
 export const entityDefinitions: Record<string, EntityDefinition> = {
   leviathan: {
     update: (entity: Leviathan) => {
-      if (entity.tickCounter !== 60)
+      if (entity.tickCounter <= 60)
         return [{ ...entity, tickCounter: entity.tickCounter + 1 }, []];
 
       const newProjectiles: Projectile[] = [
