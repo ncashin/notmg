@@ -1,5 +1,6 @@
 import { drawClientPlayerEntity, type ClientState } from "./clientState";
 import { drawEntity, interpolateEntity, type Entity } from "./entity";
+import { BOUNDS_SIZE } from "./gameConstants";
 import {
   drawPlayerEntity,
   interpolatePlayer,
@@ -113,23 +114,30 @@ export const renderGameState = (
   gameState: GameState,
   context: CanvasRenderingContext2D
 ) => {
+  const offsetX = 100;
+  const offsetY = 100;
   context.fillStyle = "black";
   context.clearRect(0, 0, 900, 600);
+  context.fillStyle = "white";
+  context.fillRect(0, 0, BOUNDS_SIZE[0], BOUNDS_SIZE[1]);
+  context.fillStyle = "black";
+  context.fillRect(BOUNDS_SIZE[0] + 100, 0, BOUNDS_SIZE[0], BOUNDS_SIZE[1]);
+
   context.fillStyle = "red";
   Object.entries(gameState.playerEntities).forEach(([id, player]) => {
     if (id === clientState.clientEntityID) return;
-    drawPlayerEntity(context, player);
+    drawPlayerEntity(context, player, offsetX, offsetY);
   });
   Object.entries(gameState.entities).forEach(([key, entity]) => {
     if (key === clientState.targetedEntity) {
       context.fillStyle = "red";
-      context.fillRect(entity.x, entity.y, 48, 48);
+      context.fillRect(entity.x + offsetX, entity.y + offsetY, 48, 48);
     }
-    drawEntity(context, entity);
+    drawEntity(context, entity, offsetX, offsetY);
   });
   Object.entries(gameState.projectiles).forEach(([key, projectile]) => {
     context.fillStyle = "yellow";
-    context.fillRect(projectile.x, projectile.y, 32, 32);
+    context.fillRect(projectile.x + offsetX, projectile.y + offsetY, 32, 32);
   });
 
   drawClientPlayerEntity(context, clientState);

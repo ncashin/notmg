@@ -112,7 +112,10 @@ export const update = (gameState: GameState) => {
   const overflowCount = projectileEntries.length - MAX_PROJECTILE_COUNT;
   const splicedEntries =
     overflowCount > 0
-      ? projectileEntries.splice(0, overflowCount)
+      ? projectileEntries.splice(
+          projectileEntries.length - (overflowCount + 1),
+          overflowCount
+        )
       : projectileEntries;
   const finalProjectiles = Object.fromEntries(splicedEntries);
 

@@ -13,9 +13,9 @@ export const entityDefinitions: Record<string, EntityDefinition> = {
 
       const newProjectiles: Projectile[] = [
         {
-          x: 30,
-          y: 100,
-          dx: 5,
+          x: entity.x,
+          y: entity.y + (-1 + Math.random() * 2) * 100,
+          dx: -5,
           dy: 0,
           collisionRadius: 16,
         },

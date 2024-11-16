@@ -21,8 +21,8 @@ export let _gameState: GameState = {
   entities: {
     0: {
       type: "leviathan",
-      x: 400,
-      y: 400,
+      x: 700,
+      y: 150,
       health: 4,
       maxHealth: 5,
       tickCounter: 0,

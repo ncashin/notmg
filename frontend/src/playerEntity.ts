@@ -20,8 +20,14 @@ export const interpolatePlayer = (
 
 export const drawPlayerEntity = (
   context: CanvasRenderingContext2D,
-  playerEntity: PlayerEntity
+  playerEntity: PlayerEntity,
+  offsetX: number,
+  offsetY: number
 ) => {
   context.fillText("ID: ", playerEntity.x, playerEntity.y - 5);
-  context.drawImage(entitySprites.littleGuy, playerEntity.x, playerEntity.y);
+  context.drawImage(
+    entitySprites.littleGuy,
+    playerEntity.x + offsetX,
+    playerEntity.y + offsetY
+  );
 };

@@ -1,5 +1,6 @@
 import { entitySprites } from "./entity";
-import type { GameState } from "./gameState";
+import { BOUNDS_SIZE } from "./gameConstants";
+import { type GameState } from "./gameState";
 
 export type AbilityDefinition = {
   type: string;
@@ -14,6 +15,16 @@ export type ClientState = {
   targetedEntity: string | undefined;
   clientEntityID: string | undefined;
 };
+let _clientState: ClientState = {
+  x: 0,
+  y: 0,
+  targetedEntity: undefined,
+  clientEntityID: undefined,
+};
+export const useClientState = () => structuredClone(_clientState);
+export const setClientState = (clientState: ClientState) => {
+  _clientState = structuredClone(clientState);
+};
 
 export const updateClientState = (
   clientState: ClientState,
@@ -27,6 +38,12 @@ export const updateClientState = (
 
   const down = inputMap["w"] ? -200 * deltaTimeSeconds : 0;
   const up = inputMap["s"] ? 200 * deltaTimeSeconds : 0;
+
+  const newX = clientState.x + left + right;
+  const boundedX = newX < 0 ? 0 : newX > BOUNDS_SIZE[0] ? BOUNDS_SIZE[0] : newX;
+
+  const newY = clientState.y + up + down;
+  const boundedY = newY < 0 ? 0 : newY > BOUNDS_SIZE[1] ? BOUNDS_SIZE[1] : newY;
 
   const targetedEntity = inputMap["q"]
     ? Object.entries(gameState.entities).reduce<{
@@ -49,8 +66,8 @@ export const updateClientState = (
     : clientState.targetedEntity;
 
   return {
-    x: clientState.x + left + right,
-    y: clientState.y + up + down,
+    x: boundedX,
+    y: boundedY,
     targetedEntity,
     clientEntityID: clientState.clientEntityID,
   };
@@ -63,15 +80,4 @@ export const drawClientPlayerEntity = (
   context.fillStyle = "red";
   context.fillText("ID: " + "PLAYER", clientState.x, clientState.y - 5);
   context.drawImage(entitySprites.littleGuy, clientState.x, clientState.y);
-};
-
-let _clientState: ClientState = {
-  x: 0,
-  y: 0,
-  targetedEntity: undefined,
-  clientEntityID: undefined,
-};
-export const useClientState = () => structuredClone(_clientState);
-export const setClientState = (newClientState: ClientState) => {
-  _clientState = structuredClone(newClientState);
 };

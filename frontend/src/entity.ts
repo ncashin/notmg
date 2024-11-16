@@ -14,8 +14,9 @@ export const entitySprites = {
   leviathan: loadSprite(128, 128, leviathanURL),
 };
 
+type EntityTypes = keyof typeof entitySprites;
 export type Entity = {
-  type: string;
+  type: EntityTypes;
   x: number;
   y: number;
   maxHealth: number;
@@ -33,7 +34,13 @@ export const interpolateEntity = (
 
 export const drawEntity = (
   context: CanvasRenderingContext2D,
-  entity: Entity
+  entity: Entity,
+  offsetX: number,
+  offsetY: number
 ) => {
-  context.drawImage(entitySprites[entity.type], entity.x, entity.y);
+  context.drawImage(
+    entitySprites[entity.type],
+    entity.x + offsetX,
+    entity.y + offsetY
+  );
 };
