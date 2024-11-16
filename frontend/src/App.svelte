@@ -96,7 +96,7 @@
       <progress class="healthbar" value={health} max={maxHealth} />
     </div>
     <div class="canvas-container">
-      <canvas bind:this={canvas} class="canvas" width="900px" height="600px" />
+      <canvas bind:this={canvas} class="canvas" width="1200px" height="600px" />
     </div>
   </div>
 </main>
