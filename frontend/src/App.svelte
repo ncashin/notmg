@@ -76,6 +76,7 @@
           health = gameState.playerEntities[clientState.clientEntityID].health;
           maxHealth =
             gameState.playerEntities[clientState.clientEntityID].maxHealth;
+          console.log(health, maxHealth);
         }
         window.requestAnimationFrame(
           getAnimationFrameCallback(frameTime, interpolatedGameState)

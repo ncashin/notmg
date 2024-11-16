@@ -69,15 +69,25 @@ export const updateClientState = (
     x: boundedX,
     y: boundedY,
     targetedEntity,
-    clientEntityID: clientState.clientEntityID,
+    clientEntityID: Object.keys(gameState.playerEntities)[0],
   };
 };
 
 export const drawClientPlayerEntity = (
   context: CanvasRenderingContext2D,
-  clientState: ClientState
+  clientState: ClientState,
+  offsetX: number,
+  offsetY: number
 ) => {
   context.fillStyle = "red";
-  context.fillText("ID: " + "PLAYER", clientState.x, clientState.y - 5);
-  context.drawImage(entitySprites.littleGuy, clientState.x, clientState.y);
+  context.fillText(
+    "ID: " + "PLAYER",
+    clientState.x + offsetX,
+    clientState.y - 5 + offsetY
+  );
+  context.drawImage(
+    entitySprites.littleGuy,
+    clientState.x + offsetX,
+    clientState.y + offsetY
+  );
 };

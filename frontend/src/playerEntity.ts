@@ -24,7 +24,11 @@ export const drawPlayerEntity = (
   offsetX: number,
   offsetY: number
 ) => {
-  context.fillText("ID: ", playerEntity.x, playerEntity.y - 5);
+  context.fillText(
+    "ID: ",
+    playerEntity.x + offsetX,
+    playerEntity.y - 5 + offsetY
+  );
   context.drawImage(
     entitySprites.littleGuy,
     playerEntity.x + offsetX,

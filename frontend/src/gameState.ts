@@ -119,9 +119,14 @@ export const renderGameState = (
   context.fillStyle = "black";
   context.clearRect(0, 0, 900, 600);
   context.fillStyle = "white";
-  context.fillRect(0, 0, BOUNDS_SIZE[0], BOUNDS_SIZE[1]);
+  context.fillRect(offsetX, offsetY, BOUNDS_SIZE[0], BOUNDS_SIZE[1]);
   context.fillStyle = "black";
-  context.fillRect(BOUNDS_SIZE[0] + 100, 0, BOUNDS_SIZE[0], BOUNDS_SIZE[1]);
+  context.fillRect(
+    BOUNDS_SIZE[0] + 100 + offsetX,
+    offsetY,
+    BOUNDS_SIZE[0],
+    BOUNDS_SIZE[1]
+  );
 
   context.fillStyle = "red";
   Object.entries(gameState.playerEntities).forEach(([id, player]) => {
@@ -140,5 +145,5 @@ export const renderGameState = (
     context.fillRect(projectile.x + offsetX, projectile.y + offsetY, 32, 32);
   });
 
-  drawClientPlayerEntity(context, clientState);
+  drawClientPlayerEntity(context, clientState, offsetX, offsetY);
 };

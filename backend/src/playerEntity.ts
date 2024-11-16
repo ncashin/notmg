@@ -5,6 +5,7 @@ export type PlayerEntity = {
   x: number;
   y: number;
   health: number;
+  maxHealth: number;
   invulnerabilityTime: number;
 };
 
@@ -18,14 +19,14 @@ export const updatePlayerEntity = (
     const projectileDistance = Math.sqrt(dx * dx + dy * dy);
     return projectileDistance < projectile.collisionRadius;
   });
+  const collision =
+    collidingProjectile !== undefined && playerEntity.invulnerabilityTime <= 0;
+
   const updatedPlayerEntity = {
     ...playerEntity,
-    health:
-      collidingProjectile === undefined
-        ? playerEntity.health
-        : playerEntity.health - 1,
+    health: collision ? playerEntity.health - 1 : playerEntity.health,
 
-    invulnerabilityTime: playerEntity.invulnerabilityTime - 1,
+    invulnerabilityTime: collision ? 120 : playerEntity.invulnerabilityTime - 1,
   };
   return updatedPlayerEntity;
 };

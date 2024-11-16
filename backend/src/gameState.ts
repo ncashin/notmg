@@ -63,6 +63,7 @@ export const integrateReceivedMessages = (
               x: 0,
               y: 0,
               health: 5,
+              maxHealth: 5,
               invulnerabilityTime: 5,
             }
           );
