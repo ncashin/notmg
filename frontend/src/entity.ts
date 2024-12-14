@@ -1,6 +1,6 @@
-import ghoulURL from "../public/ghoul.png";
-import leviathanURL from "../public/leviathan.png";
-import littleGuyURL from "../public/notmglittleguy.png";
+import ghoulURL from "./assets/ghoul.png";
+import leviathanURL from "./assets/leviathan.png";
+import littleGuyURL from "./assets/notmglittleguy.png";
 
 const loadSprite = (x: number, y: number, url: string) => {
   let imageElement = new Image(x, y);
@@ -31,16 +31,3 @@ export const interpolateEntity = (
   x: entity.x + (serverEntity.x - entity.x) * interpolationTime,
   y: entity.y + (serverEntity.y - entity.y) * interpolationTime,
 });
-
-export const drawEntity = (
-  context: CanvasRenderingContext2D,
-  entity: Entity,
-  offsetX: number,
-  offsetY: number
-) => {
-  context.drawImage(
-    entitySprites[entity.type],
-    entity.x + offsetX,
-    entity.y + offsetY
-  );
-};

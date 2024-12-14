@@ -65,6 +65,7 @@ export const integrateReceivedMessages = (
               health: 5,
               maxHealth: 5,
               invulnerabilityTime: 5,
+              collisionRadius: 4,
             }
           );
         case "close":

@@ -1,5 +1,4 @@
 import { entitySprites } from "./entity";
-import { BOUNDS_SIZE } from "./gameConstants";
 import { type GameState } from "./gameState";
 
 export type AbilityDefinition = {
@@ -40,10 +39,8 @@ export const updateClientState = (
   const up = inputMap["s"] ? 200 * deltaTimeSeconds : 0;
 
   const newX = clientState.x + left + right;
-  const boundedX = newX < 0 ? 0 : newX > BOUNDS_SIZE[0] ? BOUNDS_SIZE[0] : newX;
 
   const newY = clientState.y + up + down;
-  const boundedY = newY < 0 ? 0 : newY > BOUNDS_SIZE[1] ? BOUNDS_SIZE[1] : newY;
 
   const targetedEntity = inputMap["q"]
     ? Object.entries(gameState.entities).reduce<{
@@ -66,28 +63,10 @@ export const updateClientState = (
     : clientState.targetedEntity;
 
   return {
-    x: boundedX,
-    y: boundedY,
+    x: newX,
+    y: newY,
     targetedEntity,
     clientEntityID: Object.keys(gameState.playerEntities)[0],
   };
 };
 
-export const drawClientPlayerEntity = (
-  context: CanvasRenderingContext2D,
-  clientState: ClientState,
-  offsetX: number,
-  offsetY: number
-) => {
-  context.fillStyle = "red";
-  context.fillText(
-    "ID: " + "PLAYER",
-    clientState.x + offsetX,
-    clientState.y - 5 + offsetY
-  );
-  context.drawImage(
-    entitySprites.littleGuy,
-    clientState.x + offsetX,
-    clientState.y + offsetY
-  );
-};

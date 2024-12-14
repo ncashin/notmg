@@ -9,12 +9,12 @@
   import {
     createInitialGameState,
     interpolateGameState,
-    renderGameState,
     setServerState,
     useServerState,
     type GameState,
   } from "./gameState";
   import { useInput } from "./inputMap";
+  import { drawGameState } from "./render";
   import type { ClientUpdateMessage } from "./websocket";
 
   export let canvas: HTMLCanvasElement;
@@ -25,8 +25,29 @@
     const context = canvas.getContext("2d");
     invariant(context !== null);
 
+    const updateCanvasSize = () => {
+      invariant(canvas.parentElement !== null);
+
+      canvas.width = 0;
+      canvas.height = 0;
+      canvas.style.width = "0";
+      canvas.style.height = "0";
+
+      const parentWidth = canvas.parentElement.clientWidth;
+      const parentHeight = canvas.parentElement.clientHeight;
+      canvas.width =
+        Math.floor(Number(parentWidth / 2)) * window.devicePixelRatio;
+      canvas.height =
+        Math.floor(Number(parentHeight / 2)) * window.devicePixelRatio;
+
+      canvas.style.width = parentWidth + "px";
+      canvas.style.height = parentHeight + "px";
+    };
+    updateCanvasSize();
+    window.addEventListener("resize", updateCanvasSize);
+
     const startTime = Date.now();
-    const websocket = new WebSocket("/ws");
+    const websocket = new WebSocket("http://localhost:3000/ws");
     websocket.addEventListener("message", (message) => {
       const serverMessage = JSON.parse(message.data);
       setServerState({
@@ -54,7 +75,7 @@
         const clientState = useClientState();
         const serverState = useServerState();
 
-        renderGameState(clientState, gameState, context);
+        drawGameState(clientState, gameState, canvas, context);
 
         const interpolationTime = Math.sqrt(
           deltaTime / (frameTime - serverState.timeStateReceived)
@@ -76,7 +97,6 @@
           health = gameState.playerEntities[clientState.clientEntityID].health;
           maxHealth =
             gameState.playerEntities[clientState.clientEntityID].maxHealth;
-          console.log(health, maxHealth);
         }
         window.requestAnimationFrame(
           getAnimationFrameCallback(frameTime, interpolatedGameState)
@@ -91,13 +111,14 @@
 </script>
 
 <main class="main">
-  <div class="container">
-    <div class="sidebar">
-      <progress class="healthbar" value={health} max={maxHealth} />
-    </div>
-    <div class="canvas-container">
-      <canvas bind:this={canvas} class="canvas" width="1200px" height="600px" />
-    </div>
+  <div class="topBar">
+    <h2>NOTMG</h2>
+  </div>
+  <div class="ui-container">
+    <div class="health">{health} / {maxHealth}</div>
+  </div>
+  <div class="canvas-container">
+    <canvas bind:this={canvas} class="canvas" width="0" height="0" />
   </div>
 </main>
 
@@ -105,38 +126,33 @@
   .main {
     display: flex;
     flex-direction: column;
+
     width: 100vw;
     height: 100vh;
-  }
-  .container {
-    flex-grow: 1;
+    margin: 0;
 
+    background-color: rgb(68, 51, 51);
+  }
+
+  .topBar {
     display: flex;
-    flex-direction: row;
-    padding: 1rem;
-    gap: 1rem;
+    align-items: center;
+
+    height: 2rem;
+    padding-left: 1rem;
+
+    background-color: gray;
   }
-  .sidebar {
-    flex-basis: 15rem;
-    min-width: 15rem;
-    border: 2px solid rgb(255, 255, 255);
-    height: 100%;
-  }
+
   .canvas-container {
-    border: 2px solid rgb(255, 255, 255);
-    flex-grow: 1;
-    align-content: center;
-    justify-content: center;
-    background-color: rgb(48, 48, 48);
+    overflow: hidden;
+    flex: 1 1 auto;
   }
   .canvas {
-    width: 100%;
-    height: 100%;
     image-rendering: pixelated;
     image-rendering: crisp-edges;
   }
-  .healthbar {
-    width: 100%;
+  .health {
     height: 1rem;
   }
 </style>

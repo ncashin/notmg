@@ -7,6 +7,7 @@ export type PlayerEntity = {
   health: number;
   maxHealth: number;
   invulnerabilityTime: number;
+  collisionRadius: number;
 };
 
 export const updatePlayerEntity = (
@@ -17,7 +18,10 @@ export const updatePlayerEntity = (
     const dx = playerEntity.x - projectile.x;
     const dy = playerEntity.y - projectile.y;
     const projectileDistance = Math.sqrt(dx * dx + dy * dy);
-    return projectileDistance < projectile.collisionRadius;
+    return (
+      projectileDistance <
+      projectile.collisionRadius + playerEntity.collisionRadius
+    );
   });
   const collision =
     collidingProjectile !== undefined && playerEntity.invulnerabilityTime <= 0;
