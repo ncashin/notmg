@@ -1,5 +1,5 @@
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif  ;
   line-height: 1.5;
   font-weight: 400;
 
@@ -63,6 +63,24 @@ button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
+
+@font-face {
+  font-family: 'Alagard';
+  font-style: normal;
+  font-weight: 500;
+  src: url('./assets/fonts/alagard.ttf');
+}
+@font-face {
+  font-family: 'Jacquard';
+  font-style: normal;
+  font-weight: 500;
+  src: url('./assets/fonts/Jacquard12-Regular.ttf');
+}
+@font-face {
+  font-family: 'PerfectDOS';
+  src: url('./assets/fonts/PerfectDOSVGA437.ttf');
+}
+
 
 @media (prefers-color-scheme: light) {
   :root {

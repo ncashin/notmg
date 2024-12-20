@@ -27,7 +27,9 @@ export type ClientAbilityMessage = {
   websocketID: number;
   type: "ability";
   data: {
-    entityID: string;
+    x: number;
+    y: number;
+    radians: number;
   };
 };
 

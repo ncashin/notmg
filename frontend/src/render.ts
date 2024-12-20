@@ -50,8 +50,8 @@ export const drawPlayerEntity = (
     context.fillRect(
       playerEntity.x - offsetX - entitySprites.littleGuy.width,
       playerEntity.y - offsetY - entitySprites.littleGuy.height,
-      120,
-      120
+      64,
+      64
     );
   }
   context.globalAlpha = 1;
@@ -72,9 +72,9 @@ export const drawClientPlayerEntity = (
 ) => {
   context.fillStyle = "red";
   context.fillText(
-    "ID: " + "PLAYER",
-    clientState.x - 16 - offsetX,
-    clientState.y - 20 - offsetY
+    "ID: " + "Player",
+    clientState.x - entitySprites.littleGuy.width - offsetX,
+    clientState.y - 40 - offsetY
   );
   context.drawImage(
     entitySprites.littleGuy,
@@ -93,6 +93,14 @@ export const drawGameState = (
   const offsetY = clientState.y - canvas.height / 2.5;
   context.clearRect(0, 0, canvas.width, canvas.height);
 
+  context.fillStyle = "#444444";
+  context.fillRect(100 - offsetX, 100 - offsetY, 300, 300);
+  context.fillStyle = "#aaaaaa";
+  context.fillRect(50 - offsetX, 50 - offsetY, 50, 400);
+  context.fillRect(50 - offsetX, 50 - offsetY, 400, 50);
+
+  context.fillRect(50 - offsetX, 400 - offsetY, 400, 50);
+
   context.fillStyle = "red";
   Object.entries(gameState.playerEntities).forEach(([id, player]) => {
     if (id === clientState.clientEntityID) return;
@@ -101,7 +109,7 @@ export const drawGameState = (
   Object.entries(gameState.entities).forEach(([key, entity]) => {
     if (key === clientState.targetedEntity) {
       context.fillStyle = "red";
-      context.fillRect(entity.x - offsetX, entity.y - offsetY, 48, 48);
+      context.fillRect(entity.x - offsetX, entity.y - offsetY, 32, 32);
     }
     drawEntity(context, entity, offsetX, offsetY);
   });
@@ -111,6 +119,14 @@ export const drawGameState = (
       projectile.x - offsetX,
       projectile.y - offsetY,
       projectile.collisionRadius
+    );
+  });
+  Object.entries(gameState.playerProjectiles).forEach(([key, projectile]) => {
+    drawCollisioRadius(
+      context,
+      projectile.x - offsetX,
+      projectile.y - offsetY,
+      32
     );
   });
   drawClientPlayerEntity(context, clientState, offsetX, offsetY);

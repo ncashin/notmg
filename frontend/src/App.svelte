@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import invariant from "tiny-invariant";
+  import heart from "./assets/heart.png";
   import {
     setClientState,
     updateClientState,
@@ -43,6 +44,7 @@
       canvas.style.width = parentWidth + "px";
       canvas.style.height = parentHeight + "px";
     };
+
     updateCanvasSize();
     window.addEventListener("resize", updateCanvasSize);
 
@@ -90,7 +92,9 @@
           clientState,
           gameState,
           inputMap,
-          deltaTime
+          deltaTime,
+          websocket,
+          canvas
         );
         setClientState(newClientState);
         if (clientState.clientEntityID !== undefined) {
@@ -111,48 +115,66 @@
 </script>
 
 <main class="main">
-  <div class="topBar">
-    <h2>NOTMG</h2>
-  </div>
-  <div class="ui-container">
-    <div class="health">{health} / {maxHealth}</div>
-  </div>
   <div class="canvas-container">
     <canvas bind:this={canvas} class="canvas" width="0" height="0" />
+  </div>
+  <div class="ui-container">
+    <div class="title-container">
+      <img src={heart} alt="HEART" width="150" height="150" />
+      <h2 class="title">NOTMG</h2>
+    </div>
+    <div class="health">
+      <p class="health-text">{health} / {maxHealth}</p>
+    </div>
   </div>
 </main>
 
 <style>
   .main {
-    display: flex;
-    flex-direction: column;
-
     width: 100vw;
     height: 100vh;
+    padding: 0;
     margin: 0;
-
-    background-color: rgb(68, 51, 51);
   }
 
-  .topBar {
+  .title:first-letter {
+    font-family: Jacquard;
+    font-size: 2.75rem;
+  }
+  .title-container {
+    top: 0;
+    left: 0;
+    gap: 0rem;
     display: flex;
+    flex-direction: row;
+    margin-left: -3rem;
+    margin-top: -3rem;
     align-items: center;
-
-    height: 2rem;
-    padding-left: 1rem;
-
-    background-color: gray;
   }
+  .title {
+    margin-left: -1rem;
+    font-size: 1.375rem;
+    font-family: Alagard;
+  }
+  .ui-container {
+    position: absolute;
+    bottom: 0rem;
+    left: 3rem;
 
+    width: 12rem;
+    flex-direction: column-reverse;
+    display: flex;
+    align-items: start;
+  }
   .canvas-container {
     overflow: hidden;
     flex: 1 1 auto;
+    width: 100vw;
+    height: 100vh;
+    background-color: #000000;
   }
   .canvas {
     image-rendering: pixelated;
     image-rendering: crisp-edges;
-  }
-  .health {
-    height: 1rem;
   }
 </style>

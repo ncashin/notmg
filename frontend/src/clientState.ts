@@ -1,4 +1,3 @@
-import { entitySprites } from "./entity";
 import { type GameState } from "./gameState";
 
 export type AbilityDefinition = {
@@ -29,8 +28,11 @@ export const updateClientState = (
   clientState: ClientState,
   gameState: GameState,
   inputMap: any,
-  deltaTime: number
+  deltaTime: number,
+  websocket: WebSocket,
+  canvas: HTMLCanvasElement
 ) => {
+  canvas.width;
   const deltaTimeSeconds = deltaTime / 1000;
   const left = inputMap["d"] ? 200 * deltaTimeSeconds : 0;
   const right = inputMap["a"] ? -200 * deltaTimeSeconds : 0;
@@ -38,8 +40,26 @@ export const updateClientState = (
   const down = inputMap["w"] ? -200 * deltaTimeSeconds : 0;
   const up = inputMap["s"] ? 200 * deltaTimeSeconds : 0;
 
-  const newX = clientState.x + left + right;
+  if (inputMap["p"]) {
+    console.log(inputMap.mousePosition);
+    const midX = canvas.width / 2;
+    const midY = canvas.height / 2;
 
+    const clientMessage = JSON.stringify({
+      type: "ability",
+      data: {
+        x: clientState.x,
+        y: clientState.y,
+        radians: Math.atan2(
+          inputMap.mousePosition.y - midY,
+          inputMap.mousePosition.x - midX
+        ),
+      },
+    } as any);
+    websocket.send(clientMessage);
+  }
+
+  const newX = clientState.x + left + right;
   const newY = clientState.y + up + down;
 
   const targetedEntity = inputMap["q"]
@@ -69,4 +89,3 @@ export const updateClientState = (
     clientEntityID: Object.keys(gameState.playerEntities)[0],
   };
 };
-

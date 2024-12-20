@@ -4,14 +4,16 @@ import { interpolateProjectile, type Projectile } from "./projectile";
 
 export type GameState = {
   playerEntities: Record<string, PlayerEntity>;
-  entities: Record<string, Entity>;
+  playerProjectiles: Record<string, Projectile>;
 
+  entities: Record<string, Entity>;
   projectiles: Record<string, Projectile>;
 };
 export const createInitialGameState = () => ({
   playerEntities: {},
   entities: {},
 
+  playerProjectiles: {},
   projectiles: {},
 });
 
@@ -95,10 +97,31 @@ export const interpolateGameState = (
     {}
   );
 
+  const playerProjectiles = Object.entries(
+    serverState.gameState.playerProjectiles ?? {}
+  ).reduce((accumulator, [key, value]) => {
+    if (gameState.playerProjectiles[key] === undefined) {
+      return {
+        ...accumulator,
+        [key]: value,
+      };
+    }
+
+    return {
+      ...accumulator,
+      [key]: interpolateProjectile(
+        gameState.playerProjectiles[key],
+        value,
+        interpolationTime
+      ),
+    };
+  }, {});
+
   return {
     playerEntities,
     entities,
 
+    playerProjectiles,
     projectiles,
   } satisfies GameState;
 };

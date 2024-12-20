@@ -1,4 +1,4 @@
-import { updateEntity, updateEntityInGameState, type Entity } from "./entity";
+import { updateEntity, type Entity } from "./entity";
 import {
   removePlayerEntityFromGameStateByKey,
   updatePlayerEntity,
@@ -10,23 +10,30 @@ import type { ClientMessage, ClientSocketMessage } from "./socketEvent";
 
 export type GameState = {
   playerEntities: Record<string, PlayerEntity>;
-  entities: Record<string, Entity>;
+  playerProjectileIDCounter: number;
+  playerProjectiles: Record<string, Projectile>;
 
+  entities: Record<string, Entity>;
   projectileIDCounter: number;
   projectiles: Record<string, Projectile>;
 };
 
 export const MAX_PROJECTILE_COUNT = 60;
+export const MAX_PLAYER_PROJECTILE_COUNT = 60;
+
 export const createInitialGameState = () => {
   return {
     playerEntities: {},
-    entities: {},
+    playerProjectileIDCounter: 0,
+    playerProjectiles: {},
 
+    entities: {},
     projectileIDCounter: 0,
     projectiles: {},
   } satisfies GameState;
 };
 
+const playerProjectileSpeed = 3;
 export const integrateReceivedMessages = (
   gameState: GameState,
   receivedMessages: ClientMessage[],
@@ -42,10 +49,22 @@ export const integrateReceivedMessages = (
             message.data
           );
         case "ability":
-          const targetedEntity = accumulator.entities[message.data.entityID];
-          return updateEntityInGameState(accumulator, message.data.entityID, {
-            health: targetedEntity.health - 1,
-          });
+          const targetedEntity = message.data.radians;
+          return {
+            ...gameState,
+            playerProjectiles: {
+              ...gameState.playerProjectiles,
+              [(gameState.playerProjectileIDCounter + 1) %
+              MAX_PLAYER_PROJECTILE_COUNT]: {
+                x: message.data.x,
+                y: message.data.y,
+                dx: Math.cos(message.data.radians) * playerProjectileSpeed,
+                dy: Math.sin(message.data.radians) * playerProjectileSpeed,
+                collisionRadius: 32,
+              },
+            },
+            playerProjectileIDCounter: gameState.playerProjectileIDCounter + 1,
+          };
         default:
           return accumulator;
       }
@@ -109,7 +128,6 @@ export const update = (gameState: GameState) => {
       ),
     }
   );
-
   const projectileEntries = Object.entries<Projectile>(projectiles);
   const overflowCount = projectileEntries.length - MAX_PROJECTILE_COUNT;
   const splicedEntries =
@@ -127,10 +145,19 @@ export const update = (gameState: GameState) => {
       updatePlayerEntity(value, finalProjectiles),
     ])
   );
+  const playerProjectiles = Object.fromEntries(
+    Object.entries(gameState.playerProjectiles).map(([key, value]) => [
+      key,
+      updateProjectile(value),
+    ])
+  );
+
   return {
     playerEntities,
-    entities,
+    playerProjectileIDCounter: gameState.playerProjectileIDCounter,
+    playerProjectiles: playerProjectiles,
 
+    entities,
     projectileIDCounter: gameState.projectileIDCounter + newProjectiles.length,
     projectiles: finalProjectiles,
   };

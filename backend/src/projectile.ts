@@ -18,6 +18,9 @@ export const updateProjectile = (projectile: Projectile) => {
 
 export let _gameState: GameState = {
   playerEntities: {},
+  playerProjectileIDCounter: 0,
+  playerProjectiles: {},
+
   entities: {
     0: {
       type: "leviathan",
@@ -28,7 +31,6 @@ export let _gameState: GameState = {
       tickCounter: 0,
     },
   },
-
   projectileIDCounter: 0,
   projectiles: {},
 };

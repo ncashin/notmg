@@ -2,7 +2,7 @@ import ghoulURL from "./assets/ghoul.png";
 import leviathanURL from "./assets/leviathan.png";
 import littleGuyURL from "./assets/notmglittleguy.png";
 
-const loadSprite = (x: number, y: number, url: string) => {
+export const loadSprite = (x: number, y: number, url: string) => {
   let imageElement = new Image(x, y);
   imageElement.src = url;
   return imageElement;
