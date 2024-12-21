@@ -114,7 +114,17 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       Object.entries(state.projectiles).forEach(([id, projectile]) => {
-        context.drawImage(notmgLittleGuy, projectile.x, projectile.y);
+        context.beginPath();
+        context.moveTo(projectile.x, projectile.y);
+        context.lineTo(projectile.x - projectile.velocity_x, projectile.y - projectile.velocity_y);
+        context.strokeStyle = "red";
+        context.lineWidth = 5;
+        context.stroke();
+
+        context.beginPath();
+        context.arc(projectile.x, projectile.y, 5, 0, 2 * Math.PI, false);
+        context.fillStyle = "red";
+        context.fill();
       });
     }
   };
