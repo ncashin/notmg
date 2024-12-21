@@ -1,6 +1,6 @@
 defmodule Notmg.Room do
   use GenServer
-  alias NotmgWeb.{Presence, Endpoint}
+  alias NotmgWeb.Endpoint
   require Logger
 
   @tick_rate 100
@@ -29,6 +29,7 @@ defmodule Notmg.Room do
     Logger.info("Starting room #{room_id}")
 
     projectile_id = "test_projectile"
+
     projectile = %{
       x: 0,
       y: 0,
@@ -39,9 +40,15 @@ defmodule Notmg.Room do
     Endpoint.subscribe(room_key(room_id))
 
     :timer.send_interval(@tick_rate, :tick)
-    {:ok, %{room_id: room_id, players: %{}, projectiles: %{
-      projectile_id => projectile
-    }}}
+
+    {:ok,
+     %{
+       room_id: room_id,
+       players: %{},
+       projectiles: %{
+         projectile_id => projectile
+       }
+     }}
   end
 
   @impl true
@@ -70,25 +77,28 @@ defmodule Notmg.Room do
 
   @impl true
   def handle_info(:tick, state) do
-    players = Enum.map(state.players, fn {player_id, player} ->
-      #player = %{
-      #  player |
-      #  x: player.x + player.velocity_x,
-      #  y: player.y + player.velocity_y
-      #}
-      {player_id, player}
-    end)
-    |> Map.new()
+    players =
+      Enum.map(state.players, fn {player_id, player} ->
+        # player = %{
+        #  player |
+        #  x: player.x + player.velocity_x,
+        #  y: player.y + player.velocity_y
+        # }
+        {player_id, player}
+      end)
+      |> Map.new()
 
-    projectiles = Enum.map(state.projectiles, fn {projectile_id, projectile} ->
-      projectile = %{
-        projectile |
-        x: rem(projectile.x + projectile.velocity_x, 400),
-        y: rem(projectile.y + projectile.velocity_y, 400)
-      }
-      {projectile_id, projectile}
-    end)
-    |> Map.new()
+    projectiles =
+      Enum.map(state.projectiles, fn {projectile_id, projectile} ->
+        projectile = %{
+          projectile
+          | x: rem(projectile.x + projectile.velocity_x, 400),
+            y: rem(projectile.y + projectile.velocity_y, 400)
+        }
+
+        {projectile_id, projectile}
+      end)
+      |> Map.new()
 
     state = %{state | players: players, projectiles: projectiles}
 
