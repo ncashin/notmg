@@ -1,1 +1,0 @@
-Legally distinct from realm of the mad god
