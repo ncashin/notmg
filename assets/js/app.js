@@ -20,6 +20,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let velocityX = 0;
   let velocityY = 0;
 
+  let tickRate = 0;
+
   channel
     .join()
     .receive("ok", (resp) => {
@@ -27,6 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
       x = resp.x;
       y = resp.y;
 
+      tickRate = resp.tick_rate;
       setInterval(() => {
         const update = {
           x: x,
@@ -35,7 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
           velocity_y: velocityY,
         };
         channel.push("update", update);
-      }, resp.tick_rate);
+      }, tickRate);
 
       console.log("Joined successfully", resp);
     })
@@ -43,11 +46,20 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("Unable to join", resp);
     });
 
-  let state;
+  let state = {
+    players: {},
+    projectiles: {},
+  };
+  let timeStateReceived;
+
+  let oldPlayers;
 
   channel.on("state", (newState) => {
+    oldPlayers = state.players;
+
     window.state = newState;
     state = newState;
+    timeStateReceived = Date.now();
   });
 
   presence.onSync(() => {
@@ -82,7 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const clearCanvas = () => {
     context.clearRect(0, 0, canvas.width, canvas.height);
   };
-  const draw = () => {
+  const draw = (interpolationTime) => {
     clearCanvas();
     if (state !== undefined && state.players !== undefined) {
       Object.entries(state.players).forEach(([id, player]) => {
@@ -90,7 +102,19 @@ document.addEventListener("DOMContentLoaded", () => {
           context.drawImage(notmgLittleGuy, x, y);
           return;
         }
-        context.drawImage(notmgLittleGuy, player.x, player.y);
+
+        const oldPlayer = oldPlayers[id];
+        if (oldPlayer === undefined) return;
+
+        context.drawImage(
+          notmgLittleGuy,
+          oldPlayer.x + (player.x - oldPlayer.x) * interpolationTime,
+          oldPlayer.y + (player.y - oldPlayer.y) * interpolationTime,
+        );
+      });
+
+      Object.entries(state.projectiles).forEach(([id, projectile]) => {
+        context.drawImage(notmgLittleGuy, projectile.x, projectile.y);
       });
     }
   };
@@ -99,8 +123,6 @@ document.addEventListener("DOMContentLoaded", () => {
     canvas.height = window.innerHeight;
     canvas.style.width = window.innerWidth + "px";
     canvas.style.height = window.innerHeight + "px";
-
-    draw();
   };
   window.addEventListener("resize", updateCanvasSize);
   updateCanvasSize();
@@ -108,23 +130,25 @@ document.addEventListener("DOMContentLoaded", () => {
   let previousFrameTime = Date.now();
   const playerSpeed = 200;
   const animationFrame = (frameTime) => {
-    draw();
-
     const deltaTime = (frameTime - previousFrameTime) / 1000;
     previousFrameTime = frameTime;
 
+    const interpolationTime = tickRate / (frameTime - timeStateReceived);
+
+    draw(interpolationTime);
+
     let newVelocityX = 0;
-    newVelocityX += inputMap["d"] ? playerSpeed * deltaTime : 0;
-    newVelocityX -= inputMap["a"] ? playerSpeed * deltaTime : 0;
+    newVelocityX += inputMap["d"] ? playerSpeed : 0;
+    newVelocityX -= inputMap["a"] ? playerSpeed : 0;
     velocityX = newVelocityX;
 
-    newVelocityY = 0;
-    newVelocityY -= inputMap["w"] ? playerSpeed * deltaTime : 0;
-    newVelocityY += inputMap["s"] ? playerSpeed * deltaTime : 0;
+    let newVelocityY = 0;
+    newVelocityY -= inputMap["w"] ? playerSpeed : 0;
+    newVelocityY += inputMap["s"] ? playerSpeed : 0;
     velocityY = newVelocityY;
 
-    x += velocityX;
-    y += velocityY;
+    x += velocityX * deltaTime;
+    y += velocityY * deltaTime;
 
     window.requestAnimationFrame(animationFrame);
   };
