@@ -18,7 +18,10 @@ defmodule Notmg.Application do
       # Start a worker by calling: Notmg.Worker.start_link(arg)
       # {Notmg.Worker, arg},
       # Start to serve requests, typically the last entry
-      NotmgWeb.Endpoint
+      NotmgWeb.Endpoint,
+      {Registry, keys: :unique, name: Notmg.RoomRegistry},
+      {DynamicSupervisor, strategy: :one_for_one, name: Notmg.RoomSupervisor},
+      NotmgWeb.Presence
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
