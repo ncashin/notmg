@@ -175,10 +175,27 @@ defmodule Notmg.Room do
             enemy
           end
 
+        enemy =
+          Enum.reduce(projectiles, enemy, fn {_projectile_id, projectile}, acc_enemy ->
+            if circle_collision?(projectile, acc_enemy) do
+              %{acc_enemy | health: acc_enemy.health - 5}
+            else
+              acc_enemy
+            end
+          end)
+
         {enemy_id, enemy}
       end)
       |> Enum.filter(fn {_enemy_id, enemy} ->
         enemy.health > 0
+      end)
+      |> Map.new()
+
+    projectiles =
+      Enum.filter(projectiles, fn {_projectile_id, projectile} ->
+        not Enum.any?(enemies, fn {_enemy_id, enemy} ->
+          circle_collision?(projectile, enemy)
+        end)
       end)
       |> Map.new()
 
@@ -210,5 +227,10 @@ defmodule Notmg.Room do
 
   defp via_tuple(room_id) do
     {:via, Registry, {Notmg.RoomRegistry, room_id}}
+  end
+
+  defp circle_collision?(obj1, obj2) do
+    distance = :math.sqrt(:math.pow(obj1.x - obj2.x, 2) + :math.pow(obj1.y - obj2.y, 2))
+    distance < (obj1.radius + obj2.radius)
   end
 end

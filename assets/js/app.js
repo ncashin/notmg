@@ -208,7 +208,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  const inventoryOpen = true;
+  const inventoryOpen = false;
   const inventoryGridX = 10;
   const inventoryGridY = 5;
 
