@@ -1,0 +1,12 @@
+html,
+body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #000000;
+}
+
+canvas {
+    display: block;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
