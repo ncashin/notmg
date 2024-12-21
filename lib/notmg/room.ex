@@ -34,6 +34,7 @@ defmodule Notmg.Room do
     projectile_id = "test_projectile"
 
     projectile = %{
+      radius: 16,
       x: 0,
       y: 0,
       velocity_x: 200,
@@ -44,6 +45,7 @@ defmodule Notmg.Room do
 
     enemy = %{
       type: :leviathan,
+      radius: 64,
       max_health: 50,
       health: 50,
       x: 200,
@@ -72,6 +74,7 @@ defmodule Notmg.Room do
   @impl true
   def handle_call({:join, player_id}, _from, state) do
     player = %{
+      radius: 48,
       max_health: 100,
       health: 100,
       x: 0,
@@ -108,6 +111,7 @@ defmodule Notmg.Room do
     speed = 500
 
     projectile = %{
+      radius: 16,
       x: player.x,
       y: player.y,
       velocity_x: :math.cos(radians) * speed,
@@ -172,6 +176,9 @@ defmodule Notmg.Room do
           end
 
         {enemy_id, enemy}
+      end)
+      |> Enum.filter(fn {_enemy_id, enemy} ->
+        enemy.health > 0
       end)
       |> Map.new()
 

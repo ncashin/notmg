@@ -15,6 +15,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let userId;
 
+  let cameraX = 0;
+  let cameraY = 0;
   let x;
   let y;
   let velocityX = 0;
@@ -104,7 +106,10 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   document.addEventListener("mousedown", function (event) {
-    const radians = Math.atan2(event.clientY - y, event.clientX - x);
+    const radians = Math.atan2(
+      event.clientY - y + cameraY,
+      event.clientX - x + cameraX,
+    );
     channel.push("shoot", { radians });
   });
 
@@ -123,23 +128,33 @@ document.addEventListener("DOMContentLoaded", () => {
     context.clearRect(0, 0, canvas.width, canvas.height);
   };
   const drawImageCentered = (image, x, y) => {
-    context.drawImage(image, x - image.width / 2, y - image.height / 2);
+    context.drawImage(
+      image,
+      x - image.width / 2 - cameraX,
+      y - image.height / 2 - cameraY,
+    );
   };
   const drawHealthBar = (image, entity) => {
     context.fillRect(
-      entity.x - image.width / 2,
-      entity.y - image.height / 2 + image.height,
+      entity.x - image.width / 2 - cameraX,
+      entity.y - image.height / 2 + image.height - cameraY,
       image.width,
       5,
     );
     context.fillStyle = "green";
     context.fillRect(
-      entity.x - image.width / 2,
-      entity.y - image.height / 2 + image.height,
+      entity.x - image.width / 2 - cameraX,
+      entity.y - image.height / 2 + image.height - cameraY,
       image.width * (entity.health / entity.max_health),
       5,
     );
     context.fillStyle = "red";
+  };
+  const drawDebugCircle = (radius, x, y) => {
+    context.beginPath();
+    context.arc(x - cameraX, y - cameraY, radius, 0, 2 * Math.PI);
+    context.strokeStyle = "red";
+    context.stroke();
   };
   const draw = (interpolationTime) => {
     clearCanvas();
@@ -148,6 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (id === userId) {
           drawImageCentered(notmgLittleGuyImage, x, y);
           drawHealthBar(notmgLittleGuyImage, { ...player, x, y });
+          drawDebugCircle(player.radius, x, y);
           return;
         }
 
@@ -160,6 +176,7 @@ document.addEventListener("DOMContentLoaded", () => {
         oldPlayer.y += dy * interpolationTime;
         drawImageCentered(notmgLittleGuyImage, oldPlayer.x, oldPlayer.y);
         drawHealthBar(notmgLittleGuyImage, oldPlayer);
+        drawDebugCircle(player.radius, oldPlayer.x, oldPlayer.y);
       });
 
       Object.entries(state.enemies).forEach(([id, enemy]) => {
@@ -172,6 +189,7 @@ document.addEventListener("DOMContentLoaded", () => {
         oldEnemy.y += veloY * interpolationTime;
         drawImageCentered(leviathanImage, oldEnemy.x, oldEnemy.y);
         drawHealthBar(leviathanImage, oldEnemy);
+        drawDebugCircle(enemy.radius, oldEnemy.x, oldEnemy.y);
       });
 
       Object.entries(state.projectiles).forEach(([id, projectile]) => {
@@ -183,18 +201,50 @@ document.addEventListener("DOMContentLoaded", () => {
         oldProjectile.x += veloX * interpolationTime;
         oldProjectile.y += veloY * interpolationTime;
 
-        context.beginPath();
-        context.arc(oldProjectile.x, oldProjectile.y, 16, 0, 2 * Math.PI);
-        context.fillStyle = "red";
+        drawDebugCircle(projectile.radius, oldProjectile.x, oldProjectile.y);
+        context.fillStyle = "white";
         context.fill();
       });
     }
   };
+
+  let inventoryOpen = true;
+  let inventoryX = 10;
+  let inventoryY = 10;
+
+  let items = [];
+
+  const drawUI = () => {
+    if (!inventoryOpen) return;
+
+    context.fillStyle = "gray";
+    context.fillRect(25, 25, 500, 500);
+    context.fillStyle = "white";
+    context.fillRect(50, 50, 450, 450);
+
+    context.fillStyle = "black";
+    for (let i = 0; i < inventoryX; i++) {
+      context.fillRect(50 + i * 50, 50, 1, 450);
+    }
+    for (let i = 0; i < inventoryY; i++) {
+      context.fillRect(50, 50 + i * 50, 450, 1);
+    }
+
+    items.forEach((item) => {
+      context.fillStyle = "red";
+    });
+
+    context.fillStyle = "red";
+    context.fillText(25, 25, "Inventory");
+  };
+
   const updateCanvasSize = () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     canvas.style.width = window.innerWidth + "px";
     canvas.style.height = window.innerHeight + "px";
+
+    draw(0);
   };
   window.addEventListener("resize", updateCanvasSize);
   updateCanvasSize();
@@ -204,11 +254,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const animationFrame = (frameTime) => {
     const deltaTime = (frameTime - previousFrameTime) / 1000;
     previousFrameTime = frameTime;
-
-    const rawInterp = (Date.now() - timeStateReceived) / tickRate / 1000;
-    const interpolationTime = Math.cbrt(rawInterp);
-
-    draw(interpolationTime);
 
     let newVelocityX = 0;
     newVelocityX += inputMap["d"] ? playerSpeed : 0;
@@ -222,6 +267,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     x += velocityX * deltaTime;
     y += velocityY * deltaTime;
+
+    cameraX = x - canvas.width / 2;
+    cameraY = y - canvas.height / 2;
+
+    canvas.style.backgroundPosition = -cameraX + "px " + -cameraY + "px";
+
+    const rawInterp = (Date.now() - timeStateReceived) / tickRate / 1000;
+    const interpolationTime = Math.cbrt(rawInterp);
+
+    draw(interpolationTime);
+    drawUI();
 
     window.requestAnimationFrame(animationFrame);
   };
