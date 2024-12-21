@@ -1,0 +1,3 @@
+- [ ] players shooting projectiles
+- [ ] enemies
+- [ ] projectiles hitting enemies
