@@ -3,7 +3,7 @@ defmodule Notmg.Room do
   alias NotmgWeb.Endpoint
   require Logger
 
-  @tick_rate 100
+  @tick_rate 32
 
   def tick_rate, do: @tick_rate
 
@@ -19,12 +19,15 @@ defmodule Notmg.Room do
     GenServer.call(via_tuple(room_id), {:update, player_id, payload})
   end
 
+  def shoot(room_id, player_id, payload) do
+    GenServer.call(via_tuple(room_id), {:shoot, player_id, payload})
+  end
+
   def get_state(room_id) do
     GenServer.call(via_tuple(room_id), :get_state)
   end
 
   @impl true
-  @spec init(any()) :: {:ok, %{players: %{}, room_id: any()}}
   def init(room_id) do
     Logger.info("Starting room #{room_id}")
 
@@ -33,8 +36,20 @@ defmodule Notmg.Room do
     projectile = %{
       x: 0,
       y: 0,
-      velocity_x: 10,
-      velocity_y: 10
+      velocity_x: 200,
+      velocity_y: 200
+    }
+
+    enemy_id = "test_gremlin"
+
+    enemy = %{
+      type: :leviathan,
+      max_health: 50,
+      health: 50,
+      x: 200,
+      y: 200,
+      velocity_x: 0,
+      velocity_y: 200
     }
 
     Endpoint.subscribe(room_key(room_id))
@@ -47,6 +62,9 @@ defmodule Notmg.Room do
        players: %{},
        projectiles: %{
          projectile_id => projectile
+       },
+       enemies: %{
+         enemy_id => enemy
        }
      }}
   end
@@ -54,6 +72,8 @@ defmodule Notmg.Room do
   @impl true
   def handle_call({:join, player_id}, _from, state) do
     player = %{
+      max_health: 100,
+      health: 100,
       x: 0,
       y: 0,
       velocity_x: 0,
@@ -66,8 +86,39 @@ defmodule Notmg.Room do
 
   @impl true
   def handle_call({:update, player_id, payload}, _from, state) do
-    state = put_in(state.players[player_id], payload)
+    player = get_in(state.players, [player_id])
+
+    player = %{
+      player
+      | x: payload["x"],
+        y: payload["y"],
+        velocity_x: payload["velocity_x"],
+        velocity_y: payload["velocity_y"]
+    }
+
+    state = put_in(state.players[player_id], player)
     {:reply, {:ok, payload}, state}
+  end
+
+  @impl true
+  def handle_call({:shoot, player_id, payload}, _from, state) do
+    player = get_in(state.players, [player_id])
+
+    radians = payload["radians"]
+    speed = 500
+
+    projectile = %{
+      x: player.x,
+      y: player.y,
+      velocity_x: :math.cos(radians) * speed,
+      velocity_y: :math.sin(radians) * speed,
+      creation_time: System.system_time(:second)
+    }
+
+    projectile_id = :crypto.strong_rand_bytes(16) |> Base.encode64()
+    state = put_in(state.projectiles[projectile_id], projectile)
+
+    {:reply, {:ok, projectile_id}, state}
   end
 
   @impl true
@@ -77,30 +128,54 @@ defmodule Notmg.Room do
 
   @impl true
   def handle_info(:tick, state) do
-    players =
-      Enum.map(state.players, fn {player_id, player} ->
-        # player = %{
-        #  player |
-        #  x: player.x + player.velocity_x,
-        #  y: player.y + player.velocity_y
-        # }
-        {player_id, player}
-      end)
-      |> Map.new()
+    delta_time = 1 / @tick_rate
 
     projectiles =
       Enum.map(state.projectiles, fn {projectile_id, projectile} ->
         projectile = %{
           projectile
-          | x: rem(projectile.x + projectile.velocity_x, 400),
-            y: rem(projectile.y + projectile.velocity_y, 400)
+          | x: projectile.x + projectile.velocity_x * delta_time,
+            y: projectile.y + projectile.velocity_y * delta_time
         }
 
         {projectile_id, projectile}
       end)
+      |> Enum.filter(fn {_projectile_id, projectile} ->
+        if Map.has_key?(projectile, :creation_time) do
+          projectile.creation_time + 3 > System.system_time(:second)
+        else
+          true
+        end
+      end)
       |> Map.new()
 
-    state = %{state | players: players, projectiles: projectiles}
+    enemies =
+      Enum.map(state.enemies, fn {enemy_id, enemy} ->
+        enemy = %{
+          enemy
+          | x: enemy.x + enemy.velocity_x * delta_time,
+            y: enemy.y + enemy.velocity_y * delta_time
+        }
+
+        enemy =
+          if enemy.x > 400 do
+            %{enemy | x: 0}
+          else
+            enemy
+          end
+
+        enemy =
+          if enemy.y > 400 do
+            %{enemy | y: 0}
+          else
+            enemy
+          end
+
+        {enemy_id, enemy}
+      end)
+      |> Map.new()
+
+    state = %{state | projectiles: projectiles, enemies: enemies}
 
     Endpoint.broadcast!(room_key(state.room_id), "state", state)
     {:noreply, state}

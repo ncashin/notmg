@@ -40,14 +40,13 @@ defmodule NotmgWeb.RoomChannel do
 
   @impl true
   def handle_in("update", payload, socket) do
-    player = %{
-      x: payload["x"],
-      y: payload["y"],
-      velocity_x: payload["velocity_x"],
-      velocity_y: payload["velocity_y"]
-    }
+    Room.update(socket.assigns.room_id, socket.assigns.user_id, payload)
+    {:reply, {:ok, nil}, socket}
+  end
 
-    Room.update(socket.assigns.room_id, socket.assigns.user_id, player)
+  @impl true
+  def handle_in("shoot", payload, socket) do
+    Room.shoot(socket.assigns.room_id, socket.assigns.user_id, payload)
     {:reply, {:ok, nil}, socket}
   end
 
