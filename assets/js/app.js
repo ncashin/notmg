@@ -208,30 +208,83 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  let inventoryOpen = true;
-  let inventoryX = 10;
-  let inventoryY = 10;
+  const inventoryOpen = true;
+  const inventoryGridX = 10;
+  const inventoryGridY = 5;
 
-  let items = [];
-
+  const cellSize = 50;
+  const inventoryWidth = cellSize * (inventoryGridX + 1);
+  const inventoryHeight = cellSize * (inventoryGridY + 1);
+  // item props: x, y, width, height
+  const items = [
+    {
+      x: 0,
+      y: 0,
+      width: 1,
+      height: 2,
+    },
+  ];
+  let itemSelected = false;
+  const getClickedInventoryCell = (mouseX, mouseY) => {
+    if (mouseX < cellSize || mouseX > inventoryWidth - cellSize) return;
+    if (mouseY < cellSize || mouseY > inventoryHeight - cellSize) return;
+    return [
+      Math.floor((mouseX - cellSize) / cellSize),
+      Math.floor((mouseY - cellSize) / cellSize),
+    ];
+  };
+  const selectItem = (x, y) => {
+    /*items.find((item) => {
+      cellSize + item.x * cellSize,
+      cellSize + item.y * cellSize,
+      item.width * cellSize,
+      item.height * cellSize,
+    });*/
+  };
   const drawUI = () => {
     if (!inventoryOpen) return;
 
     context.fillStyle = "gray";
-    context.fillRect(25, 25, 500, 500);
+    context.fillRect(
+      cellSize / 2,
+      cellSize / 2,
+      inventoryWidth,
+      inventoryHeight,
+    );
     context.fillStyle = "white";
-    context.fillRect(50, 50, 450, 450);
+    context.fillRect(
+      cellSize,
+      cellSize,
+      inventoryWidth - cellSize,
+      inventoryHeight - cellSize,
+    );
 
     context.fillStyle = "black";
-    for (let i = 0; i < inventoryX; i++) {
-      context.fillRect(50 + i * 50, 50, 1, 450);
+    for (let i = 0; i < inventoryGridX + 1; i++) {
+      context.fillRect(
+        cellSize + i * cellSize,
+        cellSize,
+        1,
+        inventoryHeight - cellSize,
+      );
     }
-    for (let i = 0; i < inventoryY; i++) {
-      context.fillRect(50, 50 + i * 50, 450, 1);
+    for (let i = 0; i < inventoryGridY + 1; i++) {
+      context.fillRect(
+        cellSize,
+        cellSize + i * cellSize,
+        inventoryWidth - cellSize,
+        1,
+      );
     }
 
+    context.fillStyle = "red";
     items.forEach((item) => {
-      context.fillStyle = "red";
+      context.fillRect(
+        cellSize + item.x * cellSize,
+        cellSize + item.y * cellSize,
+        item.width * cellSize,
+        item.height * cellSize,
+      );
     });
 
     context.fillStyle = "red";
