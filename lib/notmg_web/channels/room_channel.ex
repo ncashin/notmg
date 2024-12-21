@@ -24,6 +24,7 @@ defmodule NotmgWeb.RoomChannel do
           init_message = Map.put(player, :user_id, socket.assigns.user_id)
           init_message = Map.put(init_message, :tick_rate, Room.tick_rate())
           {:ok, init_message, socket}
+
         {:error, reason} ->
           {:error, %{reason: reason}}
       end
@@ -45,6 +46,7 @@ defmodule NotmgWeb.RoomChannel do
       velocity_x: payload["velocity_x"],
       velocity_y: payload["velocity_y"]
     }
+
     Room.update(socket.assigns.room_id, socket.assigns.user_id, player)
     {:reply, {:ok, nil}, socket}
   end

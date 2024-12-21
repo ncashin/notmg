@@ -11,8 +11,7 @@ defmodule Notmg.Application do
       NotmgWeb.Telemetry,
       Notmg.Repo,
       {Ecto.Migrator,
-        repos: Application.fetch_env!(:notmg, :ecto_repos),
-        skip: skip_migrations?()},
+       repos: Application.fetch_env!(:notmg, :ecto_repos), skip: skip_migrations?()},
       {DNSCluster, query: Application.get_env(:notmg, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Notmg.PubSub},
       # Start a worker by calling: Notmg.Worker.start_link(arg)
