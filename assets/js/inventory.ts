@@ -1,12 +1,8 @@
 import { context, inputMap } from "./app";
 
 const inventoryOpen = true;
-const inventoryGridX = 10;
-const inventoryGridY = 5;
-
 const cellSize = 50;
-const inventoryWidth = cellSize * (inventoryGridX + 1);
-const inventoryHeight = cellSize * (inventoryGridY + 1);
+
 // item props: x, y, width, height
 const items = [
   {
@@ -28,7 +24,7 @@ const items = [
     ],
   },
   {
-    x: 4,
+    x: 3,
     y: 1,
     colliders: [
       {
@@ -45,8 +41,20 @@ const inventory = {
     {
       x: 0,
       y: 0,
-      width: 10,
-      height: 5,
+      width: 4,
+      height: 3,
+    },
+    {
+      x: 3,
+      y: 3,
+      width: 1,
+      height: 2,
+    },
+    {
+      x: 6,
+      y: 3,
+      width: 3,
+      height: 3,
     },
   ],
   items,
@@ -54,11 +62,9 @@ const inventory = {
 
 let itemSelected = false;
 const getInventoryCellFromMousePosition = (mouseX, mouseY) => {
-  if (mouseX < cellSize || mouseX > inventoryWidth) return;
-  if (mouseY < cellSize || mouseY > inventoryHeight) return;
   return [
-    Math.floor((mouseX - cellSize) / cellSize),
-    Math.floor((mouseY - cellSize) / cellSize),
+    Math.floor((mouseX) / cellSize),
+    Math.floor((mouseY) / cellSize),
   ];
 };
 let selectedItem;
@@ -79,17 +85,26 @@ const selectItem = (inventory, x, y) => {
   pickupOffset = [selectedItem.x - x, selectedItem.y - y];
   ghostItem = structuredClone(selectedItem);
 };
-const inventorySlotCheck = (inventory, itemToCollide) => {
-  return inventory.slots.reduce((item) => {
-    const noXOverlap =
-      item.x + item.width - 1 < itemToCollide.x ||
-      item.x > itemToCollide.x + itemToCollide.width - 1;
-    const noYOverlap =
-      item.y + item.height - 1 < itemToCollide.y ||
-      item.y > itemToCollide.y + itemToCollide.height - 1;
+const inventorySlotCheck = (inventory, x, y) => {
+  return inventory.slots.reduce((slotExists, slot) => {
+    const overlapX =
+    slot.x <= x && x < slot.x + slot.width;
+    const overlapY = slot.y <= y && y < slot.y + slot.height;
 
-    return !(noXOverlap || noYOverlap);
-  });
+    return slotExists || overlapX && overlapY;
+  }, false);
+};
+const inventoryItemCheck = (inventory, item, x, y) => {
+  return item.colliders.reduce((slotsExist, collider) => {
+    for(let dx = 0; dx < collider.width; dx++){
+      for(let dy = 0; dy < collider.height; dy++){
+        const slotExists = inventorySlotCheck(inventory, x + collider.offsetX + dx, y + collider.offsetY + dy);
+        if(!slotExists) 
+          return false;
+      }
+    }
+    return slotsExist;
+  }, true)
 };
 const getCollidingItem = (inventory, itemToCollide, x, y) =>
   itemToCollide.colliders.find((collider) => {
@@ -98,7 +113,6 @@ const getCollidingItem = (inventory, itemToCollide, x, y) =>
     return (
       inventory.items.find((item) => {
         if (item === selectedItem) return false;
-        console.log(item, collider);
 
         return (
           item.colliders.find((ccollider) => {
@@ -108,7 +122,6 @@ const getCollidingItem = (inventory, itemToCollide, x, y) =>
               ccx + ccollider.width - 1 < cx || ccx > cx + collider.width - 1;
             const noYOverlap =
               ccy + ccollider.height - 1 < cy || ccy > cy + collider.height - 1;
-            console.log(ccx, ccy, cx, cy);
 
             return !(noXOverlap || noYOverlap);
           }) !== undefined
@@ -126,7 +139,9 @@ export const handleInventoryMouseDown = (event) => {
 
   if (selectedItem) {
     const [pickupX, pickupY] = pickupOffset;
-    if (getCollidingItem(inventory, selectedItem, x + pickupX, y + pickupY))
+    const slotCheck = !inventoryItemCheck(inventory, selectedItem, x + pickupX, y + pickupY);
+    const collisionCheck = getCollidingItem(inventory, selectedItem, x + pickupX, y + pickupY);
+    if (slotCheck || collisionCheck)
       return true;
 
     selectedItem.x = x + pickupX;
@@ -157,36 +172,34 @@ const drawItemColliders = (item, x, y) => {
     );
   });
 };
+const drawInventorySlots = (inventory) => {
+  inventory.slots.forEach((slot) => {
+    context.fillStyle = "white";
+
+    context.fillRect(slot.x * cellSize, slot.y * cellSize, slot.width * cellSize, slot.height * cellSize)
+    context.fillStyle = "black"
+    for (let i = 0; i < slot.width + 1; i++) {
+      context.fillRect(
+        slot.x * cellSize + i * cellSize,
+        slot.y * cellSize ,
+        1,
+        slot.height * cellSize,
+      );
+    }
+    for (let i = 0; i < slot.height + 1; i++) {
+      context.fillRect(
+        slot.x * cellSize,
+        slot.y * cellSize + i * cellSize,
+        slot.width * cellSize,
+        1,
+      );
+    }
+  })
+}
 export const drawUI = () => {
   if (!inventoryOpen) return;
 
-  context.fillStyle = "gray";
-  context.fillRect(cellSize / 2, cellSize / 2, inventoryWidth, inventoryHeight);
-  context.fillStyle = "white";
-  context.fillRect(
-    cellSize,
-    cellSize,
-    inventoryWidth - cellSize,
-    inventoryHeight - cellSize,
-  );
-
-  context.fillStyle = "black";
-  for (let i = 0; i < inventoryGridX + 1; i++) {
-    context.fillRect(
-      cellSize + i * cellSize,
-      cellSize,
-      1,
-      inventoryHeight - cellSize,
-    );
-  }
-  for (let i = 0; i < inventoryGridY + 1; i++) {
-    context.fillRect(
-      cellSize,
-      cellSize + i * cellSize,
-      inventoryWidth - cellSize,
-      1,
-    );
-  }
+  drawInventorySlots(inventory);
 
   items.forEach((item) => {
     context.fillStyle = "red";
@@ -195,8 +208,8 @@ export const drawUI = () => {
     }
     drawItemColliders(
       item,
-      cellSize + cellSize * item.x,
-      cellSize + cellSize * item.y,
+      cellSize * item.x,
+      cellSize * item.y,
     );
   });
   if (selectedItem) {
@@ -205,13 +218,17 @@ export const drawUI = () => {
 
     const cellPos = getInventoryCellFromMousePosition(x, y);
     if (cellPos) {
-      [cellX, cellY] = cellPos;
+      const [cellX, cellY] = cellPos;
+      const slotCheck = !inventoryItemCheck(inventory, selectedItem, cellX + pickupX, cellY + pickupY);
+    const collisionCheck = getCollidingItem(inventory, selectedItem, cellX + pickupX, cellY + pickupY);
+    if (!slotCheck && !collisionCheck){
       context.fillStyle = "yellow";
       drawItemColliders(
         selectedItem,
-        cellSize + cellSize * (cellX + pickupX),
-        cellSize + cellSize * (cellY + pickupY),
+         cellSize * (cellX + pickupX),
+         cellSize * (cellY + pickupY),
       );
+    }
     }
     context.fillStyle = "purple";
     drawItemColliders(
