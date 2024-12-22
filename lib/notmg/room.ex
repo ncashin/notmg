@@ -1,10 +1,11 @@
 defmodule Notmg.Room do
   use GenServer
-  alias Notmg.{Player, Enemy, Projectile}
+  alias Notmg.{Player, Enemy, Projectile, Entity, Inventory}
   alias NotmgWeb.Endpoint
   require Logger
 
   @tick_rate 32
+  @enemy_spawn_rate 1000 * 3
 
   def tick_rate, do: @tick_rate
 
@@ -32,11 +33,8 @@ defmodule Notmg.Room do
     GenServer.call(via_tuple(room_id), :get_state)
   end
 
-  @impl true
-  def init(room_id) do
-    Logger.info("Starting room #{room_id}")
-
-    enemy_id = "test_gremlin"
+  def create_enemy(room_id) do
+    enemy_id = Entity.generate_id()
 
     enemy = %Enemy{
       id: enemy_id,
@@ -52,20 +50,24 @@ defmodule Notmg.Room do
 
     {:ok, enemy_ai_pid} = Notmg.EnemyAI.start_link(enemy_id, enemy, room_id)
 
-    enemy = %{enemy | ai_pid: enemy_ai_pid}
+    %{enemy | ai_pid: enemy_ai_pid}
+  end
+
+  @impl true
+  def init(room_id) do
+    Logger.info("Starting room #{room_id}")
 
     Endpoint.subscribe(room_key(room_id))
 
     :timer.send_interval(@tick_rate, :tick)
+    :timer.send_interval(@enemy_spawn_rate, :spawn_enemy)
 
     {:ok,
      %{
        room_id: room_id,
        players: %{},
        projectiles: %{},
-       enemies: %{
-         enemy_id => enemy
-       }
+       enemies: %{}
      }}
   end
 
@@ -79,7 +81,8 @@ defmodule Notmg.Room do
       y: 0,
       radius: 48,
       velocity_x: 0,
-      velocity_y: 0
+      velocity_y: 0,
+      inventory: Inventory.new() |> Inventory.populate_with_test_data()
     }
 
     state = put_in(state.players[player_id], player)
@@ -127,7 +130,7 @@ defmodule Notmg.Room do
     radians = payload["radians"]
     speed = 500
 
-    projectile_id = :crypto.strong_rand_bytes(16) |> Base.encode64()
+    projectile_id = Entity.generate_id()
 
     projectile = %Projectile{
       id: projectile_id,
@@ -204,6 +207,18 @@ defmodule Notmg.Room do
 
     Endpoint.broadcast!(room_key(state.room_id), "state", state)
     {:noreply, state}
+  end
+
+  @impl true
+  def handle_info(:spawn_enemy, state) do
+    if map_size(state.enemies) < 5 do
+      enemy = create_enemy(state.room_id)
+      state = put_in(state.enemies[enemy.id], enemy)
+      {:noreply, state}
+    else
+      Logger.info("Not spawning enemy, too many enemies")
+      {:noreply, state}
+    end
   end
 
   @impl true

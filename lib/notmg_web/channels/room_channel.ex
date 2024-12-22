@@ -1,11 +1,11 @@
 defmodule NotmgWeb.RoomChannel do
   use NotmgWeb, :channel
-  alias Notmg.Room
+  alias Notmg.{Room, Entity}
   alias NotmgWeb.Presence
   require Logger
 
   def setup_user_id(socket) do
-    user_id = :crypto.strong_rand_bytes(16) |> Base.encode64()
+    user_id = Entity.generate_id()
     assign(socket, :user_id, user_id)
   end
 

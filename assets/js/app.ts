@@ -1,9 +1,22 @@
 import { Socket, Presence } from "phoenix";
+import {
+  drawUI,
+  handleInventoryMouseDown,
+  handleInventoryMouseMove,
+} from "./inventory";
 
 let socket = new Socket("/socket", { params: { token: window.userToken } });
 
+export let canvas: HTMLCanvasElement;
+export let context: CanvasRenderingContext2D;
+
+export let inputMap: any = {};
+
 document.addEventListener("DOMContentLoaded", () => {
   socket.connect();
+
+  canvas = document.getElementById("canvas") as HTMLCanvasElement;
+  context = canvas.getContext("2d") as CanvasRenderingContext2D;
 
   let urlParams = new URLSearchParams(window.location.search);
   let room = urlParams.has("room") ? urlParams.get("room") : "lobby";
@@ -97,7 +110,6 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("presence", presence.list());
   });
 
-  let inputMap = {};
   document.addEventListener("keydown", (event) => {
     inputMap[event.key] = true;
   });
@@ -116,6 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
     channel.push("shoot", { radians });
   });
   document.addEventListener("mousemove", function (event) {
+    inputMap.mousePosition = [event.clientX, event.clientY];
     const isHandled = handleInventoryMouseMove(event);
   });
 
@@ -126,9 +139,6 @@ document.addEventListener("DOMContentLoaded", () => {
   };
   const notmgLittleGuyImage = loadImage("/assets/notmglittleguy.png");
   const leviathanImage = loadImage("/assets/leviathan.png");
-
-  const canvas = document.getElementById("canvas");
-  const context = canvas.getContext("2d");
 
   const clearCanvas = () => {
     context.clearRect(0, 0, canvas.width, canvas.height);
@@ -212,165 +222,6 @@ document.addEventListener("DOMContentLoaded", () => {
         context.fill();
       });
     }
-  };
-
-  const inventoryOpen = true;
-  const inventoryGridX = 10;
-  const inventoryGridY = 5;
-
-  const cellSize = 50;
-  const inventoryWidth = cellSize * (inventoryGridX + 1);
-  const inventoryHeight = cellSize * (inventoryGridY + 1);
-  // item props: x, y, width, height
-  const items = [
-    {
-      x: 0,
-      y: 0,
-      width: 1,
-      height: 2,
-    },
-    {
-      x: 3,
-      y: 1,
-      width: 2,
-      height: 1,
-    },
-  ];
-  let itemSelected = false;
-  const getInventoryCellFromMousePosition = (mouseX, mouseY) => {
-    if (mouseX < cellSize || mouseX > inventoryWidth - cellSize) return;
-    if (mouseY < cellSize || mouseY > inventoryHeight - cellSize) return;
-    return [
-      Math.floor((mouseX - cellSize) / cellSize),
-      Math.floor((mouseY - cellSize) / cellSize),
-    ];
-  };
-  let selectedItem;
-  let ghostItem;
-  const selectItem = (x, y) => {
-    selectedItem = items.find((item) => {
-      const xOverlap = item.x <= x && x < item.x + item.width;
-      const yOverlap = item.y <= y && y < item.y + item.height;
-
-      return xOverlap && yOverlap;
-    });
-    ghostItem = structuredClone(selectedItem);
-  };
-  const getCollidingItem = (itemToCollide) => {
-    return items.find((item) => {
-      if (item === itemToCollide) return false;
-      const noXOverlap =
-        (item.x < itemToCollide.x && item.x + item.width < itemToCollide.x) ||
-        (item.x > itemToCollide.x && item.x + item.width > itemToCollide.x);
-      const noYOverlap =
-        (item.y < itemToCollide.y && item.y + item.height < itemToCollide.y) ||
-        (item.y > itemToCollide.y && item.y + item.height > itemToCollide.y);
-
-      return !(noXOverlap || noYOverlap);
-    });
-  };
-  const handleInventoryMouseDown = (event) => {
-    const clickedCell = getInventoryCellFromMousePosition(
-      event.clientX,
-      event.clientY,
-    );
-    if (!clickedCell) return false;
-    const [x, y] = clickedCell;
-
-    if (selectedItem) {
-      if (getCollidingItem(ghostItem)) return true;
-      selectedItem.x = x;
-      selectedItem.y = y;
-      selectedItem = undefined;
-      ghostItem = undefined;
-      return true;
-    }
-
-    selectItem(x, y);
-    return true;
-  };
-  const handleInventoryMouseMove = (event) => {
-    const hoveredCell = getInventoryCellFromMousePosition(
-      event.clientX,
-      event.clientY,
-    );
-    if (!hoveredCell) return false;
-    const [x, y] = hoveredCell;
-
-    if (ghostItem) {
-      ghostItem.x = x;
-      ghostItem.y = y;
-    }
-  };
-  const drawUI = () => {
-    if (!inventoryOpen) return;
-
-    context.fillStyle = "gray";
-    context.fillRect(
-      cellSize / 2,
-      cellSize / 2,
-      inventoryWidth,
-      inventoryHeight,
-    );
-    context.fillStyle = "white";
-    context.fillRect(
-      cellSize,
-      cellSize,
-      inventoryWidth - cellSize,
-      inventoryHeight - cellSize,
-    );
-
-    context.fillStyle = "black";
-    for (let i = 0; i < inventoryGridX + 1; i++) {
-      context.fillRect(
-        cellSize + i * cellSize,
-        cellSize,
-        1,
-        inventoryHeight - cellSize,
-      );
-    }
-    for (let i = 0; i < inventoryGridY + 1; i++) {
-      context.fillRect(
-        cellSize,
-        cellSize + i * cellSize,
-        inventoryWidth - cellSize,
-        1,
-      );
-    }
-
-    context.fillStyle = "red";
-    items.forEach((item) => {
-      if (item === selectedItem) {
-        context.fillStyle = "blue";
-        context.fillRect(
-          cellSize + item.x * cellSize,
-          cellSize + item.y * cellSize,
-          item.width * cellSize,
-          item.height * cellSize,
-        );
-        context.fillStyle = "red";
-        return;
-      }
-
-      context.fillRect(
-        cellSize + item.x * cellSize,
-        cellSize + item.y * cellSize,
-        item.width * cellSize,
-        item.height * cellSize,
-      );
-    });
-    if (ghostItem) {
-      context.fillStyle = "yellow";
-      context.fillRect(
-        cellSize + ghostItem.x * cellSize,
-        cellSize + ghostItem.y * cellSize,
-        ghostItem.width * cellSize,
-        ghostItem.height * cellSize,
-      );
-    }
-
-    context.fillStyle = "red";
-    context.fillText(25, 25, "Inventory");
   };
 
   const updateCanvasSize = () => {
