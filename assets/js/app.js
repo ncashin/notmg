@@ -30,9 +30,9 @@ document.addEventListener("DOMContentLoaded", () => {
   channel
     .join()
     .receive("ok", (resp) => {
-      userId = resp.user_id;
-      x = resp.x;
-      y = resp.y;
+      userId = resp.player.id;
+      x = resp.player.x;
+      y = resp.player.y;
 
       tickRate = resp.tick_rate;
       setInterval(() => {
@@ -167,7 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        var oldPlayer = oldPlayers[id];
+        let oldPlayer = oldPlayers[id];
         if (oldPlayer === undefined) return;
 
         const dx = player.x - oldPlayer.x;
@@ -180,7 +180,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       Object.entries(state.enemies).forEach(([id, enemy]) => {
-        var oldEnemy = oldEnemies[id];
+        let oldEnemy = oldEnemies[id];
         if (oldEnemy === undefined) return;
 
         veloX = enemy.x - oldEnemy.x;
@@ -193,7 +193,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       Object.entries(state.projectiles).forEach(([id, projectile]) => {
-        var oldProjectile = oldProjectiles[id];
+        let oldProjectile = oldProjectiles[id];
         if (oldProjectile === undefined) return;
 
         veloX = projectile.x - oldProjectile.x;

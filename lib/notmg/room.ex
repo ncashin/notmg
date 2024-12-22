@@ -1,5 +1,6 @@
 defmodule Notmg.Room do
   use GenServer
+  alias Notmg.{Player, Enemy, Projectile}
   alias NotmgWeb.Endpoint
   require Logger
 
@@ -31,27 +32,18 @@ defmodule Notmg.Room do
   def init(room_id) do
     Logger.info("Starting room #{room_id}")
 
-    projectile_id = "test_projectile"
-
-    projectile = %{
-      radius: 16,
-      x: 0,
-      y: 0,
-      velocity_x: 200,
-      velocity_y: 200
-    }
-
     enemy_id = "test_gremlin"
 
-    enemy = %{
+    enemy = %Enemy{
+      id: enemy_id,
       type: :leviathan,
-      radius: 64,
       max_health: 50,
       health: 50,
-      x: 200,
-      y: 200,
+      x: 400,
+      y: 400,
+      radius: 64,
       velocity_x: 0,
-      velocity_y: 200
+      velocity_y: 0
     }
 
     Endpoint.subscribe(room_key(room_id))
@@ -62,9 +54,7 @@ defmodule Notmg.Room do
      %{
        room_id: room_id,
        players: %{},
-       projectiles: %{
-         projectile_id => projectile
-       },
+       projectiles: %{},
        enemies: %{
          enemy_id => enemy
        }
@@ -73,12 +63,13 @@ defmodule Notmg.Room do
 
   @impl true
   def handle_call({:join, player_id}, _from, state) do
-    player = %{
-      radius: 48,
+    player = %Player{
+      id: player_id,
       max_health: 100,
       health: 100,
       x: 0,
       y: 0,
+      radius: 48,
       velocity_x: 0,
       velocity_y: 0
     }
@@ -91,7 +82,7 @@ defmodule Notmg.Room do
   def handle_call({:update, player_id, payload}, _from, state) do
     player = get_in(state.players, [player_id])
 
-    player = %{
+    player = %Player{
       player
       | x: payload["x"],
         y: payload["y"],
@@ -110,16 +101,18 @@ defmodule Notmg.Room do
     radians = payload["radians"]
     speed = 500
 
-    projectile = %{
-      radius: 16,
+    projectile_id = :crypto.strong_rand_bytes(16) |> Base.encode64()
+
+    projectile = %Projectile{
+      id: projectile_id,
+      creation_time: System.system_time(:second),
       x: player.x,
       y: player.y,
+      radius: 16,
       velocity_x: :math.cos(radians) * speed,
-      velocity_y: :math.sin(radians) * speed,
-      creation_time: System.system_time(:second)
+      velocity_y: :math.sin(radians) * speed
     }
 
-    projectile_id = :crypto.strong_rand_bytes(16) |> Base.encode64()
     state = put_in(state.projectiles[projectile_id], projectile)
 
     {:reply, {:ok, projectile_id}, state}
@@ -136,7 +129,7 @@ defmodule Notmg.Room do
 
     projectiles =
       Enum.map(state.projectiles, fn {projectile_id, projectile} ->
-        projectile = %{
+        projectile = %Projectile{
           projectile
           | x: projectile.x + projectile.velocity_x * delta_time,
             y: projectile.y + projectile.velocity_y * delta_time
@@ -145,40 +138,22 @@ defmodule Notmg.Room do
         {projectile_id, projectile}
       end)
       |> Enum.filter(fn {_projectile_id, projectile} ->
-        if Map.has_key?(projectile, :creation_time) do
-          projectile.creation_time + 3 > System.system_time(:second)
-        else
-          true
-        end
+        projectile.creation_time + 3 > System.system_time(:second)
       end)
       |> Map.new()
 
     enemies =
       Enum.map(state.enemies, fn {enemy_id, enemy} ->
-        enemy = %{
+        enemy = %Enemy{
           enemy
           | x: enemy.x + enemy.velocity_x * delta_time,
             y: enemy.y + enemy.velocity_y * delta_time
         }
 
         enemy =
-          if enemy.x > 400 do
-            %{enemy | x: 0}
-          else
-            enemy
-          end
-
-        enemy =
-          if enemy.y > 400 do
-            %{enemy | y: 0}
-          else
-            enemy
-          end
-
-        enemy =
           Enum.reduce(projectiles, enemy, fn {_projectile_id, projectile}, acc_enemy ->
             if circle_collision?(projectile, acc_enemy) do
-              %{acc_enemy | health: acc_enemy.health - 5}
+              %Enemy{acc_enemy | health: acc_enemy.health - 5}
             else
               acc_enemy
             end
@@ -231,6 +206,6 @@ defmodule Notmg.Room do
 
   defp circle_collision?(obj1, obj2) do
     distance = :math.sqrt(:math.pow(obj1.x - obj2.x, 2) + :math.pow(obj1.y - obj2.y, 2))
-    distance < (obj1.radius + obj2.radius)
+    distance < obj1.radius + obj2.radius
   end
 end
