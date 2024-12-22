@@ -19,6 +19,7 @@ defmodule Notmg.Application do
       # Start to serve requests, typically the last entry
       NotmgWeb.Endpoint,
       {Registry, keys: :unique, name: Notmg.RoomRegistry},
+      {Registry, keys: :unique, name: Notmg.EnemyRegistry},
       {DynamicSupervisor, strategy: :one_for_one, name: Notmg.RoomSupervisor},
       NotmgWeb.Presence
     ]

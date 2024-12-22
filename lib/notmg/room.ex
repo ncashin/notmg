@@ -16,8 +16,12 @@ defmodule Notmg.Room do
     GenServer.call(via_tuple(room_id), {:join, player_id})
   end
 
-  def update(room_id, player_id, payload) do
-    GenServer.call(via_tuple(room_id), {:update, player_id, payload})
+  def update_player(room_id, player_id, payload) do
+    GenServer.call(via_tuple(room_id), {:update_player, player_id, payload})
+  end
+
+  def update_enemy(room_id, enemy) do
+    GenServer.call(via_tuple(room_id), {:update_enemy, enemy})
   end
 
   def shoot(room_id, player_id, payload) do
@@ -45,6 +49,10 @@ defmodule Notmg.Room do
       velocity_x: 0,
       velocity_y: 0
     }
+
+    {:ok, enemy_ai_pid} = Notmg.EnemyAI.start_link(enemy_id, enemy, room_id)
+
+    enemy = %{enemy | ai_pid: enemy_ai_pid}
 
     Endpoint.subscribe(room_key(room_id))
 
@@ -79,7 +87,7 @@ defmodule Notmg.Room do
   end
 
   @impl true
-  def handle_call({:update, player_id, payload}, _from, state) do
+  def handle_call({:update_player, player_id, payload}, _from, state) do
     player = get_in(state.players, [player_id])
 
     player = %Player{
@@ -92,6 +100,24 @@ defmodule Notmg.Room do
 
     state = put_in(state.players[player_id], player)
     {:reply, {:ok, payload}, state}
+  end
+
+  @impl true
+  def handle_call({:update_enemy, updated_enemy}, _from, state) do
+    enemy_id = updated_enemy.id
+    case state.enemies[enemy_id] do
+      nil ->
+        {:reply, {:ok, nil}, state}
+      enemy ->
+        enemy = %{enemy |
+          velocity_x: updated_enemy.velocity_x,
+          velocity_y: updated_enemy.velocity_y,
+          x: updated_enemy.x,
+          y: updated_enemy.y
+        }
+        state = put_in(state.enemies[enemy_id], enemy)
+        {:reply, {:ok, nil}, state}
+    end
   end
 
   @impl true
@@ -144,12 +170,6 @@ defmodule Notmg.Room do
 
     enemies =
       Enum.map(state.enemies, fn {enemy_id, enemy} ->
-        enemy = %Enemy{
-          enemy
-          | x: enemy.x + enemy.velocity_x * delta_time,
-            y: enemy.y + enemy.velocity_y * delta_time
-        }
-
         enemy =
           Enum.reduce(projectiles, enemy, fn {_projectile_id, projectile}, acc_enemy ->
             if circle_collision?(projectile, acc_enemy) do
@@ -162,7 +182,13 @@ defmodule Notmg.Room do
         {enemy_id, enemy}
       end)
       |> Enum.filter(fn {_enemy_id, enemy} ->
-        enemy.health > 0
+        if enemy.health <= 0 do
+          Logger.info("Stopping enemy AI for #{enemy.id}")
+          Notmg.EnemyAI.stop(enemy.id)
+          false
+        else
+          true
+        end
       end)
       |> Map.new()
 

@@ -68,7 +68,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const oldPlayer = oldPlayers[id];
         if (oldPlayer === undefined)
           return { ...acc, [id]: structuredClone(player) };
-        return { ...acc, [id]: oldPlayer };
+        return { ...acc, [id]: { ...player, x: oldPlayer.x, y: oldPlayer.y } };
       },
       {},
     );
@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const oldEnemy = oldEnemies[id];
       if (oldEnemy === undefined)
         return { ...acc, [id]: structuredClone(enemy) };
-      return { ...acc, [id]: oldEnemy };
+      return { ...acc, [id]: { ...enemy, x: oldEnemy.x, y: oldEnemy.y } };
     }, {});
     oldProjectiles = Object.entries(newState.projectiles).reduce(
       (acc, [id, projectile]) => {
@@ -106,11 +106,17 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   document.addEventListener("mousedown", function (event) {
+    const isHandled = handleInventoryMouseDown(event);
+    if (isHandled) return;
+
     const radians = Math.atan2(
       event.clientY - y + cameraY,
       event.clientX - x + cameraX,
     );
     channel.push("shoot", { radians });
+  });
+  document.addEventListener("mousemove", function (event) {
+    const isHandled = handleInventoryMouseMove(event);
   });
 
   const loadImage = (source) => {
@@ -208,7 +214,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  const inventoryOpen = false;
+  const inventoryOpen = true;
   const inventoryGridX = 10;
   const inventoryGridY = 5;
 
@@ -223,9 +229,15 @@ document.addEventListener("DOMContentLoaded", () => {
       width: 1,
       height: 2,
     },
+    {
+      x: 3,
+      y: 1,
+      width: 2,
+      height: 1,
+    },
   ];
   let itemSelected = false;
-  const getClickedInventoryCell = (mouseX, mouseY) => {
+  const getInventoryCellFromMousePosition = (mouseX, mouseY) => {
     if (mouseX < cellSize || mouseX > inventoryWidth - cellSize) return;
     if (mouseY < cellSize || mouseY > inventoryHeight - cellSize) return;
     return [
@@ -233,13 +245,62 @@ document.addEventListener("DOMContentLoaded", () => {
       Math.floor((mouseY - cellSize) / cellSize),
     ];
   };
+  let selectedItem;
+  let ghostItem;
   const selectItem = (x, y) => {
-    /*items.find((item) => {
-      cellSize + item.x * cellSize,
-      cellSize + item.y * cellSize,
-      item.width * cellSize,
-      item.height * cellSize,
-    });*/
+    selectedItem = items.find((item) => {
+      const xOverlap = item.x <= x && x < item.x + item.width;
+      const yOverlap = item.y <= y && y < item.y + item.height;
+
+      return xOverlap && yOverlap;
+    });
+    ghostItem = structuredClone(selectedItem);
+  };
+  const getCollidingItem = (itemToCollide) => {
+    return items.find((item) => {
+      if (item === itemToCollide) return false;
+      const noXOverlap =
+        (item.x < itemToCollide.x && item.x + item.width < itemToCollide.x) ||
+        (item.x > itemToCollide.x && item.x + item.width > itemToCollide.x);
+      const noYOverlap =
+        (item.y < itemToCollide.y && item.y + item.height < itemToCollide.y) ||
+        (item.y > itemToCollide.y && item.y + item.height > itemToCollide.y);
+
+      return !(noXOverlap || noYOverlap);
+    });
+  };
+  const handleInventoryMouseDown = (event) => {
+    const clickedCell = getInventoryCellFromMousePosition(
+      event.clientX,
+      event.clientY,
+    );
+    if (!clickedCell) return false;
+    const [x, y] = clickedCell;
+
+    if (selectedItem) {
+      if (getCollidingItem(ghostItem)) return true;
+      selectedItem.x = x;
+      selectedItem.y = y;
+      selectedItem = undefined;
+      ghostItem = undefined;
+      return true;
+    }
+
+    selectItem(x, y);
+    return true;
+  };
+  const handleInventoryMouseMove = (event) => {
+    const hoveredCell = getInventoryCellFromMousePosition(
+      event.clientX,
+      event.clientY,
+    );
+    if (!hoveredCell) return false;
+    const [x, y] = hoveredCell;
+
+    if (ghostItem) {
+      ghostItem.x = x;
+      ghostItem.y = y;
+    }
   };
   const drawUI = () => {
     if (!inventoryOpen) return;
@@ -279,6 +340,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     context.fillStyle = "red";
     items.forEach((item) => {
+      if (item === selectedItem) {
+        context.fillStyle = "blue";
+        context.fillRect(
+          cellSize + item.x * cellSize,
+          cellSize + item.y * cellSize,
+          item.width * cellSize,
+          item.height * cellSize,
+        );
+        context.fillStyle = "red";
+        return;
+      }
+
       context.fillRect(
         cellSize + item.x * cellSize,
         cellSize + item.y * cellSize,
@@ -286,6 +359,15 @@ document.addEventListener("DOMContentLoaded", () => {
         item.height * cellSize,
       );
     });
+    if (ghostItem) {
+      context.fillStyle = "yellow";
+      context.fillRect(
+        cellSize + ghostItem.x * cellSize,
+        cellSize + ghostItem.y * cellSize,
+        ghostItem.width * cellSize,
+        ghostItem.height * cellSize,
+      );
+    }
 
     context.fillStyle = "red";
     context.fillText(25, 25, "Inventory");

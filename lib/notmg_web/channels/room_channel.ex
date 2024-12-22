@@ -42,7 +42,7 @@ defmodule NotmgWeb.RoomChannel do
 
   @impl true
   def handle_in("update", payload, socket) do
-    Room.update(socket.assigns.room_id, socket.assigns.user_id, payload)
+    Room.update_player(socket.assigns.room_id, socket.assigns.user_id, payload)
     {:reply, {:ok, nil}, socket}
   end
 
