@@ -1,7 +1,7 @@
 import { context, inputMap } from "./app";
 
 const inventoryOpen = true;
-const cellSize = 50;
+const cellSize = 64;
 
 // item props: x, y, width, height
 const items = [
@@ -61,12 +61,6 @@ const inventory = {
 };
 
 let itemSelected = false;
-const getInventoryCellFromMousePosition = (mouseX, mouseY) => {
-  return [
-    Math.floor((mouseX) / cellSize),
-    Math.floor((mouseY) / cellSize),
-  ];
-};
 let selectedItem;
 let ghostItem;
 let pickupOffset;
@@ -106,6 +100,15 @@ const inventoryItemCheck = (inventory, item, x, y) => {
     return slotsExist;
   }, true)
 };
+const getInventoryCellFromMousePosition = (inventory, mouseX, mouseY) => {
+  const gridX = Math.floor((mouseX) / cellSize);
+  const gridY = Math.floor((mouseY) / cellSize)
+  if(!inventorySlotCheck(inventory, gridX, gridY)) return;
+  return [
+    gridX,
+    gridY,
+  ];
+};
 const getCollidingItem = (inventory, itemToCollide, x, y) =>
   itemToCollide.colliders.find((collider) => {
     const cx = x + collider.offsetX;
@@ -131,6 +134,7 @@ const getCollidingItem = (inventory, itemToCollide, x, y) =>
   }) !== undefined;
 export const handleInventoryMouseDown = (event) => {
   const clickedCell = getInventoryCellFromMousePosition(
+    inventory,
     event.clientX,
     event.clientY,
   );
@@ -156,6 +160,7 @@ export const handleInventoryMouseDown = (event) => {
 };
 export const handleInventoryMouseMove = (event) => {
   const hoveredCell = getInventoryCellFromMousePosition(
+    inventory,
     event.clientX,
     event.clientY,
   );
@@ -216,7 +221,7 @@ export const drawUI = () => {
     const [x, y] = inputMap.mousePosition;
     const [pickupX, pickupY] = pickupOffset;
 
-    const cellPos = getInventoryCellFromMousePosition(x, y);
+    const cellPos = getInventoryCellFromMousePosition(inventory, x, y);
     if (cellPos) {
       const [cellX, cellY] = cellPos;
       const slotCheck = !inventoryItemCheck(inventory, selectedItem, cellX + pickupX, cellY + pickupY);
