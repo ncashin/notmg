@@ -9,7 +9,9 @@ defmodule Notmg.EnemyAI do
   @bounds %{x_min: 0, x_max: 400, y_min: 0, y_max: 400}
 
   def start_link(enemy_id, initial_state, room_id) do
-    GenServer.start_link(__MODULE__, {enemy_id, initial_state, room_id}, name: via_tuple(enemy_id))
+    GenServer.start_link(__MODULE__, {enemy_id, initial_state, room_id},
+      name: via_tuple(enemy_id)
+    )
   end
 
   def stop(enemy_id) do

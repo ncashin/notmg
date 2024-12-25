@@ -21,10 +21,12 @@ defmodule NotmgWeb.RoomChannel do
       case Room.join(room_id, socket.assigns.user_id) do
         {:ok, player} ->
           socket = assign(socket, :room_id, room_id)
+
           init_message = %{
             player: player,
             tick_rate: Room.tick_rate()
           }
+
           {:ok, init_message, socket}
 
         {:error, reason} ->

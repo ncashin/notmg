@@ -44,7 +44,7 @@ defmodule Notmg.Room do
       health: 50,
       x: 400,
       y: 400,
-      radius: 64,
+      radius: 64
     }
 
     {:ok, enemy_ai_pid} = Notmg.EnemyAI.start_link(enemy_id, enemy, room_id)
@@ -65,7 +65,7 @@ defmodule Notmg.Room do
      %{
        room_id: room_id,
        entities: %{},
-       projectiles: %{},
+       projectiles: %{}
      }}
   end
 
@@ -104,14 +104,13 @@ defmodule Notmg.Room do
   @impl true
   def handle_call({:update_entity_server, updated_enemy}, _from, state) do
     enemy_id = updated_enemy.id
+
     case state.entities[enemy_id] do
       nil ->
         {:reply, {:ok, nil}, state}
+
       enemy ->
-        enemy = %{enemy |
-          x: updated_enemy.x,
-          y: updated_enemy.y
-        }
+        enemy = %{enemy | x: updated_enemy.x, y: updated_enemy.y}
         state = put_in(state.entities[enemy_id], enemy)
         {:reply, {:ok, nil}, state}
     end
@@ -133,7 +132,7 @@ defmodule Notmg.Room do
       y: player.y,
       radius: 16,
       radians: radians,
-      speed: 500,
+      speed: 500
     }
 
     state = put_in(state.projectiles[projectile_id], projectile)
@@ -153,7 +152,8 @@ defmodule Notmg.Room do
     projectiles =
       Enum.map(state.projectiles, fn {projectile_id, projectile} ->
         velocity_x = :math.cos(projectile.radians) * projectile.speed
-        velocity_y =  :math.sin(projectile.radians) * projectile.speed
+        velocity_y = :math.sin(projectile.radians) * projectile.speed
+
         projectile = %Projectile{
           projectile
           | x: projectile.x + velocity_x * delta_time,
@@ -167,7 +167,7 @@ defmodule Notmg.Room do
       end)
       |> Map.new()
 
-      entities =
+    entities =
       Enum.map(state.entities, fn {entity_id, entity} ->
         entity =
           Enum.reduce(projectiles, entity, fn {_projectile_id, projectile}, acc_entity ->
