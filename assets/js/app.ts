@@ -1,9 +1,39 @@
-import { Socket, Presence } from "phoenix";
+import { Socket, Presence, Channel } from "phoenix";
 import {
   drawUI,
   handleInventoryMouseDown,
   handleInventoryMouseMove,
 } from "./inventory";
+
+type Entity = {
+  type: string;
+  x: number;
+  y: number;
+  radius: number;
+  velocity_x: number;
+  velocity_y: number;
+};
+
+type Projectile = {
+  x: number;
+  y: number;
+  radius: number;
+  velocity_x: number;
+  velocity_y: number;
+};
+
+type State = {
+  entities: Record<string, Entity>;
+  projectiles: Record<string, Projectile>;
+};
+
+declare global {
+  interface Window {
+    state: State;
+    channel: Channel;
+    userToken: string;
+  }
+}
 
 let socket = new Socket("/socket", { params: { token: window.userToken } });
 
@@ -45,10 +75,10 @@ document.addEventListener("DOMContentLoaded", () => {
     image.src = source;
     return image;
   };
-const sprites = {
-  player: loadImage("/assets/notmglittleguy.png"),
-  leviathan: loadImage("/assets/leviathan.png"),
-};
+  const sprites = {
+    player: loadImage("/assets/notmglittleguy.png"),
+    leviathan: loadImage("/assets/leviathan.png"),
+  };
   channel
     .join()
     .receive("ok", (resp) => {
@@ -71,7 +101,7 @@ const sprites = {
       console.log("Unable to join", resp);
     });
 
-  let state = {
+  let state: State = {
     entities: {},
     projectiles: {},
   };
@@ -79,8 +109,8 @@ const sprites = {
 
   let oldEntities = {};
   let oldProjectiles = {};
-  
-  channel.on("state", (newState) => {
+
+  channel.on("state", (newState: State) => {
     oldEntities = Object.entries(newState.entities).reduce(
       (acc, [id, player]) => {
         const oldPlayer = oldEntities[id];
@@ -88,9 +118,9 @@ const sprites = {
           return { ...acc, [id]: structuredClone(player) };
         return { ...acc, [id]: { ...player, x: oldPlayer.x, y: oldPlayer.y } };
       },
-      {},
+      {}
     );
-    
+
     oldProjectiles = Object.entries(newState.projectiles).reduce(
       (acc, [id, projectile]) => {
         const oldProjectile = oldProjectiles[id];
@@ -98,10 +128,11 @@ const sprites = {
           return { ...acc, [id]: structuredClone(projectile) };
         return { ...acc, [id]: oldProjectile };
       },
-      {},
+      {}
     );
 
     window.state = newState;
+
     state = newState;
     timeStateReceived = Date.now();
   });
@@ -123,7 +154,7 @@ const sprites = {
 
     const radians = Math.atan2(
       event.clientY - y + cameraY,
-      event.clientX - x + cameraX,
+      event.clientX - x + cameraX
     );
     channel.push("shoot", { radians });
   });
@@ -139,7 +170,7 @@ const sprites = {
     context.drawImage(
       image,
       x - image.width / 2 - cameraX,
-      y - image.height / 2 - cameraY,
+      y - image.height / 2 - cameraY
     );
   };
   const drawHealthBar = (image, entity) => {
@@ -147,14 +178,14 @@ const sprites = {
       entity.x - image.width / 2 - cameraX,
       entity.y - image.height / 2 + image.height - cameraY,
       image.width,
-      5,
+      5
     );
     context.fillStyle = "green";
     context.fillRect(
       entity.x - image.width / 2 - cameraX,
       entity.y - image.height / 2 + image.height - cameraY,
       image.width * (entity.health / entity.max_health),
-      5,
+      5
     );
     context.fillStyle = "red";
   };
@@ -186,13 +217,13 @@ const sprites = {
         drawHealthBar(sprites[entity.type], oldEntity);
         drawDebugCircle(entity.radius, oldEntity.x, oldEntity.y);
       });
-      
+
       Object.entries(state.projectiles).forEach(([id, projectile]) => {
         let oldProjectile = oldProjectiles[id];
         if (oldProjectile === undefined) return;
 
-        veloX = projectile.x - oldProjectile.x;
-        veloY = projectile.y - oldProjectile.y;
+        const veloX = projectile.x - oldProjectile.x;
+        const veloY = projectile.y - oldProjectile.y;
         oldProjectile.x += veloX * interpolationTime;
         oldProjectile.y += veloY * interpolationTime;
 
