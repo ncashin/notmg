@@ -39,15 +39,11 @@ defmodule Notmg.EnemyAI do
     velocity_x = :math.cos(state.angle) * @speed
     velocity_y = :math.sin(state.angle) * @speed
 
-    enemy = %Enemy{
-      state.enemy
-      | velocity_x: velocity_x,
-        velocity_y: velocity_y
-    }
+    enemy = state.enemy
 
     delta_time = @update_rate / 1000
-    new_x = enemy.x + enemy.velocity_x * delta_time
-    new_y = enemy.y + enemy.velocity_y * delta_time
+    new_x = enemy.x + velocity_x * delta_time
+    new_y = enemy.y + velocity_y * delta_time
 
     new_x = max(min(new_x, @bounds.x_max), @bounds.x_min)
     new_y = max(min(new_y, @bounds.y_max), @bounds.y_min)

@@ -40,6 +40,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let tickRate = 0;
 
+  const loadImage = (source) => {
+    let image = new Image();
+    image.src = source;
+    return image;
+  };
+const sprites = {
+  player: loadImage("/assets/notmglittleguy.png"),
+  leviathan: loadImage("/assets/leviathan.png"),
+};
   channel
     .join()
     .receive("ok", (resp) => {
@@ -52,8 +61,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const update = {
           x: x,
           y: y,
-          velocity_x: velocityX,
-          velocity_y: velocityY,
         };
         channel.push("update", update);
       }, tickRate);
@@ -65,32 +72,25 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
   let state = {
-    players: {},
+    entities: {},
     projectiles: {},
-    enemies: {},
   };
   let timeStateReceived;
 
-  let oldPlayers = {};
-  let oldEnemies = {};
+  let oldEntities = {};
   let oldProjectiles = {};
-
+  
   channel.on("state", (newState) => {
-    oldPlayers = Object.entries(newState.players).reduce(
+    oldEntities = Object.entries(newState.entities).reduce(
       (acc, [id, player]) => {
-        const oldPlayer = oldPlayers[id];
+        const oldPlayer = oldEntities[id];
         if (oldPlayer === undefined)
           return { ...acc, [id]: structuredClone(player) };
         return { ...acc, [id]: { ...player, x: oldPlayer.x, y: oldPlayer.y } };
       },
       {},
     );
-    oldEnemies = Object.entries(newState.enemies).reduce((acc, [id, enemy]) => {
-      const oldEnemy = oldEnemies[id];
-      if (oldEnemy === undefined)
-        return { ...acc, [id]: structuredClone(enemy) };
-      return { ...acc, [id]: { ...enemy, x: oldEnemy.x, y: oldEnemy.y } };
-    }, {});
+    
     oldProjectiles = Object.entries(newState.projectiles).reduce(
       (acc, [id, projectile]) => {
         const oldProjectile = oldProjectiles[id];
@@ -132,14 +132,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const isHandled = handleInventoryMouseMove(event);
   });
 
-  const loadImage = (source) => {
-    let image = new Image();
-    image.src = source;
-    return image;
-  };
-  const notmgLittleGuyImage = loadImage("/assets/notmglittleguy.png");
-  const leviathanImage = loadImage("/assets/leviathan.png");
-
   const clearCanvas = () => {
     context.clearRect(0, 0, canvas.width, canvas.height);
   };
@@ -174,40 +166,27 @@ document.addEventListener("DOMContentLoaded", () => {
   };
   const draw = (interpolationTime) => {
     clearCanvas();
-    if (state !== undefined && state.players !== undefined) {
-      Object.entries(state.players).forEach(([id, player]) => {
+    if (state !== undefined && state.entities !== undefined) {
+      Object.entries(state.entities).forEach(([id, entity]) => {
         if (id === userId) {
-          drawImageCentered(notmgLittleGuyImage, x, y);
-          drawHealthBar(notmgLittleGuyImage, { ...player, x, y });
-          drawDebugCircle(player.radius, x, y);
+          drawImageCentered(sprites[entity.type], x, y);
+          drawHealthBar(sprites[entity.type], { ...entity, x, y });
+          drawDebugCircle(entity.radius, x, y);
           return;
         }
 
-        let oldPlayer = oldPlayers[id];
-        if (oldPlayer === undefined) return;
+        let oldEntity = oldEntities[id];
+        if (oldEntity === undefined) return;
 
-        const dx = player.x - oldPlayer.x;
-        const dy = player.y - oldPlayer.y;
-        oldPlayer.x += dx * interpolationTime;
-        oldPlayer.y += dy * interpolationTime;
-        drawImageCentered(notmgLittleGuyImage, oldPlayer.x, oldPlayer.y);
-        drawHealthBar(notmgLittleGuyImage, oldPlayer);
-        drawDebugCircle(player.radius, oldPlayer.x, oldPlayer.y);
+        const dx = entity.x - oldEntity.x;
+        const dy = entity.y - oldEntity.y;
+        oldEntity.x += dx * interpolationTime;
+        oldEntity.y += dy * interpolationTime;
+        drawImageCentered(sprites[entity.type], oldEntity.x, oldEntity.y);
+        drawHealthBar(sprites[entity.type], oldEntity);
+        drawDebugCircle(entity.radius, oldEntity.x, oldEntity.y);
       });
-
-      Object.entries(state.enemies).forEach(([id, enemy]) => {
-        let oldEnemy = oldEnemies[id];
-        if (oldEnemy === undefined) return;
-
-        veloX = enemy.x - oldEnemy.x;
-        veloY = enemy.y - oldEnemy.y;
-        oldEnemy.x += veloX * interpolationTime;
-        oldEnemy.y += veloY * interpolationTime;
-        drawImageCentered(leviathanImage, oldEnemy.x, oldEnemy.y);
-        drawHealthBar(leviathanImage, oldEnemy);
-        drawDebugCircle(enemy.radius, oldEnemy.x, oldEnemy.y);
-      });
-
+      
       Object.entries(state.projectiles).forEach(([id, projectile]) => {
         let oldProjectile = oldProjectiles[id];
         if (oldProjectile === undefined) return;
