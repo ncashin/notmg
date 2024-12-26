@@ -79,7 +79,6 @@ document.addEventListener("DOMContentLoaded", () => {
     player: loadImage("/assets/notmglittleguy.png"),
     leviathan: loadImage("/assets/leviathan.png"),
     button: loadImage("/assets/notmglittleguy.png"),
-
   };
   channel
     .join()
@@ -117,10 +116,23 @@ document.addEventListener("DOMContentLoaded", () => {
       (acc, [id, entity]) => {
         const oldEntity = oldEntities[id];
         if (oldEntity === undefined)
-          return { ...acc, [id]: {...structuredClone(entity), healthAccumulator: 0} };
-        return { ...acc, [id]: { ...entity, x: oldEntity.x, y: oldEntity.y, healthAccumulator: oldEntity.healthAccumulator + (oldEntity?.health  - entity?.health)} };
+          return {
+            ...acc,
+            [id]: { ...structuredClone(entity), healthAccumulator: 0 },
+          };
+        return {
+          ...acc,
+          [id]: {
+            ...entity,
+            x: oldEntity.x,
+            y: oldEntity.y,
+            healthAccumulator:
+              oldEntity.healthAccumulator +
+              (oldEntity?.health - entity?.health),
+          },
+        };
       },
-      {}
+      {},
     );
 
     oldProjectiles = Object.entries(newState.projectiles).reduce(
@@ -130,7 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
           return { ...acc, [id]: structuredClone(projectile) };
         return { ...acc, [id]: oldProjectile };
       },
-      {}
+      {},
     );
 
     window.state = newState;
@@ -144,11 +156,13 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   document.addEventListener("keydown", (event) => {
-    if(event.key === "p"){
+    if (event.key === "p") {
       const interact_id = Object.values(state.entities).find((entity) => {
-        const distance = Math.sqrt(Math.pow(entity.x - x, 2) + Math.pow(entity.y - y, 2))
-        return distance < entity.radius
-      })?.id
+        const distance = Math.sqrt(
+          Math.pow(entity.x - x, 2) + Math.pow(entity.y - y, 2),
+        );
+        return distance < entity.radius;
+      })?.id;
       if (interact_id === undefined) return;
       channel.push("interact", { interact_id });
     }
@@ -176,14 +190,9 @@ document.addEventListener("DOMContentLoaded", () => {
     context.clearRect(0, 0, canvas.width, canvas.height);
   };
   const drawImageCentered = (image, x, y, rotation = 0) => {
-    context.translate(x - cameraX,
-      y  - cameraY);
+    context.translate(x - cameraX, y - cameraY);
     context.rotate(rotation);
-    context.drawImage(
-      image,
-      -image.width / 2,
-      -image.height / 2
-    );
+    context.drawImage(image, -image.width / 2, -image.height / 2);
     context.setTransform(1, 0, 0, 1, 0, 0);
   };
   const drawHealthBar = (image, entity) => {
@@ -192,14 +201,15 @@ document.addEventListener("DOMContentLoaded", () => {
       entity.x - image.width / 2 - cameraX,
       entity.y - image.height / 2 + image.height - cameraY + 4,
       image.width,
-      5
+      5,
     );
     context.fillStyle = "orange";
     context.fillRect(
       entity.x - image.width / 2 - cameraX,
       entity.y - image.height / 2 + image.height - cameraY + 4,
-      image.width * ((entity.health + entity.healthAccumulator) / entity.max_health),
-      5
+      image.width *
+        ((entity.health + entity.healthAccumulator) / entity.max_health),
+      5,
     );
 
     context.fillStyle = "green";
@@ -207,7 +217,7 @@ document.addEventListener("DOMContentLoaded", () => {
       entity.x - image.width / 2 - cameraX,
       entity.y - image.height / 2 + image.height - cameraY + 4,
       image.width * (entity.health / entity.max_health),
-      5
+      5,
     );
     context.fillStyle = "red";
   };
@@ -227,10 +237,20 @@ document.addEventListener("DOMContentLoaded", () => {
         if (oldEntity === undefined) return;
 
         if (id === userId) {
-          drawImageCentered(sprites[entity.type], x, y, velocityX / playerSpeed * (Math.PI * 2) / 60);
-          drawHealthBar(sprites[entity.type], { ...entity, x, y, healthAccumulator: 0 });
+          drawImageCentered(
+            sprites[entity.type],
+            x,
+            y,
+            ((velocityX / playerSpeed) * (Math.PI * 2)) / 60,
+          );
+          drawHealthBar(sprites[entity.type], {
+            ...entity,
+            x,
+            y,
+            healthAccumulator: 0,
+          });
           drawDebugCircle(entity.radius, x, y);
-          if(!inputMap.leftmouse || Date.now() - shootTime < timeBetweenShoot)
+          if (!inputMap.leftmouse || Date.now() - shootTime < timeBetweenShoot)
             return;
 
           return;
@@ -275,26 +295,24 @@ document.addEventListener("DOMContentLoaded", () => {
   let previousFrameTime = Date.now();
   const playerSpeed = 200;
   const handlePlayerInput = () => {
-    console.log(inputMap.leftmouse )
+    console.log(inputMap.leftmouse);
     const currentTime = Date.now();
-    if(!inputMap.leftmouse || currentTime - shootTime < timeBetweenShoot) return;
+    if (!inputMap.leftmouse || currentTime - shootTime < timeBetweenShoot)
+      return;
     shootTime = currentTime;
     const [mouseX, mouseY] = inputMap.mousePosition;
-    const radians = Math.atan2(
-      mouseY - y + cameraY,
-      mouseX - x + cameraX
-    );
+    const radians = Math.atan2(mouseY - y + cameraY, mouseX - x + cameraX);
     channel.push("shoot", { radians });
-  }
+  };
   const healthAccumulatorDegredationPercent = 10;
   const animationFrame = (frameTime) => {
     const deltaTime = (frameTime - previousFrameTime) / 1000;
     previousFrameTime = frameTime;
 
     Object.entries(oldEntities).forEach(([id, oldEntity]) => {
-      oldEntity.healthAccumulator -= oldEntity.healthAccumulator * (5 / 100)
+      oldEntity.healthAccumulator -= oldEntity.healthAccumulator * (5 / 100);
     });
-    
+
     let newVelocityX = 0;
     newVelocityX += inputMap["d"] ? playerSpeed : 0;
     newVelocityX -= inputMap["a"] ? playerSpeed : 0;

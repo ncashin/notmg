@@ -51,7 +51,7 @@ defmodule Notmg.Room do
       radius: 48
     }
 
-    {:ok, enemy_ai_pid} = apply(enemy.ai,  :start_link, [enemy_id, enemy, room_id])
+    {:ok, enemy_ai_pid} = apply(enemy.ai, :start_link, [enemy_id, enemy, room_id])
 
     %{enemy | ai_pid: enemy_ai_pid}
   end
@@ -66,6 +66,7 @@ defmodule Notmg.Room do
     :timer.send_interval(@enemy_spawn_rate, :spawn_enemy)
 
     button_id = Entity.generate_id()
+
     button = %{
       id: button_id,
       type: :button,
@@ -74,7 +75,7 @@ defmodule Notmg.Room do
       y: 0,
       radius: 400,
       health: 0,
-      max_health: 1,
+      max_health: 1
     }
 
     {:ok,
@@ -202,7 +203,8 @@ defmodule Notmg.Room do
       Enum.map(state.entities, fn {entity_id, entity} ->
         entity =
           Enum.reduce(projectiles, entity, fn {_projectile_id, projectile}, acc_entity ->
-            if entity.max_health != nil && projectile.shooter_id != entity_id && circle_collision?(projectile, acc_entity) do
+            if entity.max_health != nil && projectile.shooter_id != entity_id &&
+                 circle_collision?(projectile, acc_entity) do
               %{acc_entity | health: acc_entity.health - 5}
             else
               acc_entity
@@ -214,7 +216,7 @@ defmodule Notmg.Room do
       |> Enum.filter(fn {_entity_id, entity} ->
         if entity.health != nil && entity.health <= 0 && entity.ai != nil do
           Logger.info("Stopping enemy AI for #{entity.id}")
-         apply(entity.ai, :stop, entity.id)
+          apply(entity.ai, :stop, entity.id)
           false
         else
           true
