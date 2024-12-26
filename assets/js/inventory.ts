@@ -1,7 +1,13 @@
 import { context, inputMap } from "./app";
 
-const inventoryOpen = true;
+let inventoryOpen = false;
 const cellSize = 64;
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "i") {
+    inventoryOpen = !inventoryOpen;
+  }
+});
 
 // item props: x, y, width, height
 const items = [
@@ -41,20 +47,8 @@ const inventory = {
     {
       x: 0,
       y: 0,
-      width: 4,
-      height: 3,
-    },
-    {
-      x: 3,
-      y: 3,
-      width: 1,
-      height: 2,
-    },
-    {
-      x: 6,
-      y: 3,
-      width: 3,
-      height: 3,
+      width: 6,
+      height: 4,
     },
   ],
   items,
