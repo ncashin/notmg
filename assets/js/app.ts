@@ -6,15 +6,20 @@ import {
 } from "./inventory";
 
 type Entity = {
+  id: string;
   type: string;
   x: number;
   y: number;
   radius: number;
   velocity_x: number;
   velocity_y: number;
+  health: number;
+  max_health: number;
+  health_accumulator: number;
 };
 
 type Projectile = {
+  id: string;
   x: number;
   y: number;
   radius: number;
@@ -108,8 +113,8 @@ document.addEventListener("DOMContentLoaded", () => {
   };
   let timeStateReceived;
 
-  let oldEntities = {};
-  let oldProjectiles = {};
+  let oldEntities: Record<string, Entity> = {};
+  let oldProjectiles: Record<string, Projectile> = {};
 
   channel.on("state", (newState: State) => {
     oldEntities = Object.entries(newState.entities).reduce(
@@ -118,7 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (oldEntity === undefined)
           return {
             ...acc,
-            [id]: { ...structuredClone(entity), healthAccumulator: 0 },
+            [id]: { ...structuredClone(entity), health_accumulator: 0 },
           };
         return {
           ...acc,
@@ -126,8 +131,8 @@ document.addEventListener("DOMContentLoaded", () => {
             ...entity,
             x: oldEntity.x,
             y: oldEntity.y,
-            healthAccumulator:
-              oldEntity.healthAccumulator +
+            health_accumulator:
+              oldEntity.health_accumulator +
               (oldEntity?.health - entity?.health),
           },
         };
@@ -208,7 +213,7 @@ document.addEventListener("DOMContentLoaded", () => {
       entity.x - image.width / 2 - cameraX,
       entity.y - image.height / 2 + image.height - cameraY + 4,
       image.width *
-        ((entity.health + entity.healthAccumulator) / entity.max_health),
+        ((entity.health + entity.health_accumulator) / entity.max_health),
       5,
     );
 
@@ -247,7 +252,7 @@ document.addEventListener("DOMContentLoaded", () => {
             ...entity,
             x,
             y,
-            healthAccumulator: 0,
+            health_accumulator: 0,
           });
           drawDebugCircle(entity.radius, x, y);
           if (!inputMap.leftmouse || Date.now() - shootTime < timeBetweenShoot)
@@ -304,13 +309,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const radians = Math.atan2(mouseY - y + cameraY, mouseX - x + cameraX);
     channel.push("shoot", { radians });
   };
-  const healthAccumulatorDegredationPercent = 10;
   const animationFrame = (frameTime) => {
     const deltaTime = (frameTime - previousFrameTime) / 1000;
     previousFrameTime = frameTime;
 
     Object.entries(oldEntities).forEach(([id, oldEntity]) => {
-      oldEntity.healthAccumulator -= oldEntity.healthAccumulator * (5 / 100);
+      oldEntity.health_accumulator -= oldEntity.health_accumulator * (5 / 100);
     });
 
     let newVelocityX = 0;

@@ -216,7 +216,7 @@ defmodule Notmg.Room do
       |> Enum.filter(fn {_entity_id, entity} ->
         if entity.health != nil && entity.health <= 0 && entity.ai != nil do
           Logger.info("Stopping enemy AI for #{entity.id}")
-          apply(entity.ai, :stop, entity.id)
+          apply(entity.ai, :stop, [entity.id])
           false
         else
           true
