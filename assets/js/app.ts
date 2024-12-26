@@ -78,6 +78,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const sprites = {
     player: loadImage("/assets/notmglittleguy.png"),
     leviathan: loadImage("/assets/leviathan.png"),
+    button: loadImage("/assets/notmglittleguy.png"),
+
   };
   channel
     .join()
@@ -142,6 +144,14 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   document.addEventListener("keydown", (event) => {
+    if(event.key === "p"){
+      const interact_id = Object.values(state.entities).find((entity) => {
+        const distance = Math.sqrt(Math.pow(entity.x - x, 2) + Math.pow(entity.y - y, 2))
+        return distance < entity.radius
+      })?.id
+      if (interact_id === undefined) return;
+      channel.push("interact", { interact_id });
+    }
     inputMap[event.key] = true;
   });
   document.addEventListener("keyup", (event) => {

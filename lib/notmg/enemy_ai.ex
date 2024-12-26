@@ -6,7 +6,7 @@ defmodule Notmg.EnemyAI do
   @thinking_rate 1000
   @update_rate 100
   @speed 100
-  @bounds %{x_min: 0, x_max: 400, y_min: 0, y_max: 400}
+  @bounds %{x_min: -10000, x_max: 10000, y_min: -10000, y_max: 10000}
 
   def start_link(enemy_id, initial_state, room_id) do
     GenServer.start_link(__MODULE__, {enemy_id, initial_state, room_id},
