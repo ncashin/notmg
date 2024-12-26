@@ -65,23 +65,24 @@ defmodule Notmg.Room do
     :timer.send_interval(@tick_rate, :tick)
     :timer.send_interval(@enemy_spawn_rate, :spawn_enemy)
 
-    button_id = Entity.generate_id()
+    # button_id = Entity.generate_id()
 
-    button = %{
-      id: button_id,
-      type: :button,
-      ai: nil,
-      x: 0,
-      y: 0,
-      radius: 400,
-      health: 0,
-      max_health: 1
-    }
+    # button = %{
+    #   id: button_id,
+    #   type: :button,
+    #   ai: nil,
+    #   x: 0,
+    #   y: 0,
+    #   radius: 400,
+    #   health: 0,
+    #   max_health: 1
+    # }
 
     {:ok,
      %{
        room_id: room_id,
-       entities: %{button_id => button},
+       # entities: %{button_id => button},
+       entities: %{},
        projectiles: %{}
      }}
   end
