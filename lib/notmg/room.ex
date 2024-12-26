@@ -44,7 +44,7 @@ defmodule Notmg.Room do
       health: 50,
       x: 400,
       y: 400,
-      radius: 64
+      radius: 48
     }
 
     {:ok, enemy_ai_pid} = Notmg.EnemyAI.start_link(enemy_id, enemy, room_id)
@@ -79,7 +79,7 @@ defmodule Notmg.Room do
       health: 100,
       x: 0,
       y: 0,
-      radius: 48,
+      radius: 24,
       inventory: Inventory.new() |> Inventory.populate_with_test_data()
     }
 

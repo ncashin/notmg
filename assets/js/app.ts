@@ -66,7 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let velocityY = 0;
 
   let shootTime = Date.now();
-  let timeBetweenShoot = 1000;
+  let timeBetweenShoot = 250;
 
   let tickRate = 0;
 
@@ -112,11 +112,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   channel.on("state", (newState: State) => {
     oldEntities = Object.entries(newState.entities).reduce(
-      (acc, [id, player]) => {
-        const oldPlayer = oldEntities[id];
-        if (oldPlayer === undefined)
-          return { ...acc, [id]: structuredClone(player) };
-        return { ...acc, [id]: { ...player, x: oldPlayer.x, y: oldPlayer.y } };
+      (acc, [id, entity]) => {
+        const oldEntity = oldEntities[id];
+        if (oldEntity === undefined)
+          return { ...acc, [id]: {...structuredClone(entity), healthAccumulator: 0} };
+        return { ...acc, [id]: { ...entity, x: oldEntity.x, y: oldEntity.y, healthAccumulator: oldEntity.healthAccumulator + (oldEntity?.health  - entity?.health)} };
       },
       {}
     );
@@ -152,11 +152,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const isHandled = handleInventoryMouseDown(event);
     if (isHandled) return;
 
-    const radians = Math.atan2(
-      event.clientY - y + cameraY,
-      event.clientX - x + cameraX
-    );
-    channel.push("shoot", { radians });
+    inputMap["leftmouse"] = true;
+  });
+  document.addEventListener("mouseup", function (event) {
+    inputMap["leftmouse"] = false;
   });
   document.addEventListener("mousemove", function (event) {
     inputMap.mousePosition = [event.clientX, event.clientY];
@@ -166,30 +165,45 @@ document.addEventListener("DOMContentLoaded", () => {
   const clearCanvas = () => {
     context.clearRect(0, 0, canvas.width, canvas.height);
   };
-  const drawImageCentered = (image, x, y) => {
+  const drawImageCentered = (image, x, y, rotation = 0) => {
+    context.translate(x - cameraX,
+      y  - cameraY);
+    context.rotate(rotation);
     context.drawImage(
       image,
-      x - image.width / 2 - cameraX,
-      y - image.height / 2 - cameraY
+      -image.width / 2,
+      -image.height / 2
     );
+    context.setTransform(1, 0, 0, 1, 0, 0);
   };
   const drawHealthBar = (image, entity) => {
+    context.fillStyle = "red";
     context.fillRect(
       entity.x - image.width / 2 - cameraX,
-      entity.y - image.height / 2 + image.height - cameraY,
+      entity.y - image.height / 2 + image.height - cameraY + 4,
       image.width,
       5
     );
+    context.fillStyle = "orange";
+    context.fillRect(
+      entity.x - image.width / 2 - cameraX,
+      entity.y - image.height / 2 + image.height - cameraY + 4,
+      image.width * ((entity.health + entity.healthAccumulator) / entity.max_health),
+      5
+    );
+
     context.fillStyle = "green";
     context.fillRect(
       entity.x - image.width / 2 - cameraX,
-      entity.y - image.height / 2 + image.height - cameraY,
+      entity.y - image.height / 2 + image.height - cameraY + 4,
       image.width * (entity.health / entity.max_health),
       5
     );
     context.fillStyle = "red";
   };
   const drawDebugCircle = (radius, x, y) => {
+    context.lineWidth = 1;
+
     context.beginPath();
     context.arc(x - cameraX, y - cameraY, radius, 0, 2 * Math.PI);
     context.strokeStyle = "red";
@@ -199,15 +213,18 @@ document.addEventListener("DOMContentLoaded", () => {
     clearCanvas();
     if (state !== undefined && state.entities !== undefined) {
       Object.entries(state.entities).forEach(([id, entity]) => {
-        if (id === userId) {
-          drawImageCentered(sprites[entity.type], x, y);
-          drawHealthBar(sprites[entity.type], { ...entity, x, y });
-          drawDebugCircle(entity.radius, x, y);
-          return;
-        }
-
         let oldEntity = oldEntities[id];
         if (oldEntity === undefined) return;
+
+        if (id === userId) {
+          drawImageCentered(sprites[entity.type], x, y, velocityX / playerSpeed * (Math.PI * 2) / 60);
+          drawHealthBar(sprites[entity.type], { ...entity, x, y, healthAccumulator: 0 });
+          drawDebugCircle(entity.radius, x, y);
+          if(!inputMap.leftmouse || Date.now() - shootTime < timeBetweenShoot)
+            return;
+
+          return;
+        }
 
         const dx = entity.x - oldEntity.x;
         const dy = entity.y - oldEntity.y;
@@ -247,21 +264,38 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let previousFrameTime = Date.now();
   const playerSpeed = 200;
+  const handlePlayerInput = () => {
+    console.log(inputMap.leftmouse )
+    const currentTime = Date.now();
+    if(!inputMap.leftmouse || currentTime - shootTime < timeBetweenShoot) return;
+    shootTime = currentTime;
+    const [mouseX, mouseY] = inputMap.mousePosition;
+    const radians = Math.atan2(
+      mouseY - y + cameraY,
+      mouseX - x + cameraX
+    );
+    channel.push("shoot", { radians });
+  }
+  const healthAccumulatorDegredationPercent = 10;
   const animationFrame = (frameTime) => {
     const deltaTime = (frameTime - previousFrameTime) / 1000;
     previousFrameTime = frameTime;
 
+    Object.entries(oldEntities).forEach(([id, oldEntity]) => {
+      oldEntity.healthAccumulator -= oldEntity.healthAccumulator * (5 / 100)
+    });
+    
     let newVelocityX = 0;
     newVelocityX += inputMap["d"] ? playerSpeed : 0;
     newVelocityX -= inputMap["a"] ? playerSpeed : 0;
-    velocityX = newVelocityX;
+    velocityX = (velocityX + newVelocityX) / 2;
 
     let newVelocityY = 0;
     newVelocityY -= inputMap["w"] ? playerSpeed : 0;
     newVelocityY += inputMap["s"] ? playerSpeed : 0;
     velocityY = newVelocityY;
 
-    x += velocityX * deltaTime;
+    x += newVelocityX * deltaTime;
     y += velocityY * deltaTime;
 
     cameraX = x - canvas.width / 2;
@@ -274,6 +308,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     draw(interpolationTime);
     drawUI();
+
+    handlePlayerInput();
 
     window.requestAnimationFrame(animationFrame);
   };
