@@ -166,7 +166,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const distance = Math.sqrt(
           Math.pow(entity.x - x, 2) + Math.pow(entity.y - y, 2),
         );
-        return distance < entity.radius;
+        return entity.id !== userId && distance < entity.radius;
       })?.id;
       if (interact_id === undefined) return;
       channel.push("interact", { interact_id });

@@ -48,7 +48,8 @@ defmodule Notmg.Room do
       health: 50,
       x: x,
       y: y,
-      radius: 48
+      radius: 48,
+      collision_mask: 2,
     }
 
     {:ok, enemy_ai_pid} = apply(enemy.ai, :start_link, [enemy_id, enemy, room_id])
@@ -65,24 +66,25 @@ defmodule Notmg.Room do
     :timer.send_interval(@tick_rate, :tick)
     :timer.send_interval(@enemy_spawn_rate, :spawn_enemy)
 
-    # button_id = Entity.generate_id()
+    button_id = Entity.generate_id()
 
-    # button = %{
-    #   id: button_id,
-    #   type: :button,
-    #   ai: nil,
-    #   x: 0,
-    #   y: 0,
-    #   radius: 400,
-    #   health: 0,
-    #   max_health: 1
-    # }
+    button = %{
+      id: button_id,
+      type: :button,
+      ai: nil,
+      x: 0,
+      y: 0,
+      radius: 400,
+      health: 0,
+      max_health: 1,
+      collision_mask: 4
+    }
 
     {:ok,
      %{
        room_id: room_id,
-       # entities: %{button_id => button},
-       entities: %{},
+       entities: %{button_id => button},
+       #entities: %{},
        projectiles: %{}
      }}
   end
@@ -98,7 +100,8 @@ defmodule Notmg.Room do
       x: 0,
       y: 0,
       radius: 24,
-      inventory: Inventory.new() |> Inventory.populate_with_test_data()
+      inventory: Inventory.new() |> Inventory.populate_with_test_data(),
+      collision_mask: 5,
     }
 
     state = put_in(state.entities[player_id], player)
@@ -146,6 +149,7 @@ defmodule Notmg.Room do
       id: projectile_id,
       shooter_id: player_id,
       creation_time: System.system_time(:second),
+      collision_mask: 2,
       x: player.x,
       y: player.y,
       radius: 16,
@@ -277,6 +281,6 @@ defmodule Notmg.Room do
 
   defp circle_collision?(obj1, obj2) do
     distance = :math.sqrt(:math.pow(obj1.x - obj2.x, 2) + :math.pow(obj1.y - obj2.y, 2))
-    distance < obj1.radius + obj2.radius
+    Bitwise.band(obj1.collision_mask, obj2.collision_mask) > 0 && distance < obj1.radius + obj2.radius
   end
 end
