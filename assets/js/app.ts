@@ -26,18 +26,8 @@ type Entity = {
   chat_messages?: ChatMessage[];
 };
 
-type Projectile = {
-  id: string;
-  x: number;
-  y: number;
-  radius: number;
-  velocity_x: number;
-  velocity_y: number;
-};
-
 type State = {
   entities: Record<string, Entity>;
-  projectiles: Record<string, Projectile>;
 };
 
 declare global {
@@ -92,6 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
     player: loadImage("/assets/notmglittleguy.png"),
     leviathan: loadImage("/assets/leviathan.png"),
     button: loadImage("/assets/notmglittleguy.png"),
+    projectile: loadImage("/assets/notmglittleguy.png"),
   };
   channel
     .join()
@@ -117,12 +108,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let state: State = {
     entities: {},
-    projectiles: {},
   };
   let timeStateReceived;
 
   let oldEntities: Record<string, Entity> = {};
-  let oldProjectiles: Record<string, Projectile> = {};
 
   channel.on("state", (newState: State) => {
     oldEntities = Object.entries(newState.entities).reduce(
@@ -151,18 +140,6 @@ document.addEventListener("DOMContentLoaded", () => {
       {},
     );
 
-    oldProjectiles = Object.entries(newState.projectiles).reduce(
-      (acc, [id, projectile]) => {
-        const oldProjectile = oldProjectiles[id];
-
-        if (oldProjectile === undefined) {
-          return { ...acc, [id]: structuredClone(projectile) };
-        }
-
-        return { ...acc, [id]: oldProjectile };
-      },
-      {},
-    );
 
     window.state = newState;
 
@@ -364,20 +341,6 @@ document.addEventListener("DOMContentLoaded", () => {
         drawImageCentered(sprites[entity.type], oldEntity.x, oldEntity.y);
         drawHealthBar(sprites[entity.type], oldEntity);
         drawDebugCircle(entity.radius, oldEntity.x, oldEntity.y);
-      });
-
-      Object.entries(state.projectiles).forEach(([id, projectile]) => {
-        let oldProjectile = oldProjectiles[id];
-        if (oldProjectile === undefined) return;
-
-        const veloX = projectile.x - oldProjectile.x;
-        const veloY = projectile.y - oldProjectile.y;
-        oldProjectile.x += veloX * interpolationTime;
-        oldProjectile.y += veloY * interpolationTime;
-
-        drawDebugCircle(projectile.radius, oldProjectile.x, oldProjectile.y);
-        context.fillStyle = "white";
-        context.fill();
       });
     }
   };
