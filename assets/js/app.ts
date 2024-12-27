@@ -3,7 +3,13 @@ import {
   drawUI,
   handleInventoryMouseDown,
   handleInventoryMouseMove,
+  toggleInventory,
 } from "./inventory";
+
+type ChatMessage = {
+  content: string;
+  sent_at: number;
+};
 
 type Entity = {
   id: string;
@@ -16,6 +22,8 @@ type Entity = {
   health: number;
   max_health: number;
   health_accumulator: number;
+  wip_message?: string;
+  chat_messages?: ChatMessage[];
 };
 
 type Projectile = {
@@ -120,11 +128,14 @@ document.addEventListener("DOMContentLoaded", () => {
     oldEntities = Object.entries(newState.entities).reduce(
       (acc, [id, entity]) => {
         const oldEntity = oldEntities[id];
-        if (oldEntity === undefined)
+
+        if (oldEntity === undefined) {
           return {
             ...acc,
             [id]: { ...structuredClone(entity), health_accumulator: 0 },
           };
+        }
+
         return {
           ...acc,
           [id]: {
@@ -143,8 +154,11 @@ document.addEventListener("DOMContentLoaded", () => {
     oldProjectiles = Object.entries(newState.projectiles).reduce(
       (acc, [id, projectile]) => {
         const oldProjectile = oldProjectiles[id];
-        if (oldProjectile === undefined)
+
+        if (oldProjectile === undefined) {
           return { ...acc, [id]: structuredClone(projectile) };
+        }
+
         return { ...acc, [id]: oldProjectile };
       },
       {},
@@ -157,10 +171,48 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   presence.onSync(() => {
-    console.log("presence", presence.list());
+    console.log("Presence", presence.list());
   });
 
+  let isChatting = false;
+  let chatMessage: string | undefined = undefined;
+
   document.addEventListener("keydown", (event) => {
+    if (isChatting) {
+      if (event.key === "Enter" || event.key === "Escape") {
+        if (chatMessage === undefined) return;
+
+        console.log("Sending chat message", chatMessage);
+        channel.push("finalize_chat", { message: chatMessage });
+        if (state.entities[userId]) {
+          state.entities[userId].wip_message = undefined;
+          state.entities[userId].chat_messages = [
+            { content: chatMessage, sent_at: Math.floor(Date.now() / 1000) },
+            ...(state.entities[userId].chat_messages || []).slice(0, 2)
+          ];
+        }
+        isChatting = false;
+        chatMessage = undefined;
+        return;
+      }
+
+      if (event.key === "Backspace") {
+        chatMessage = chatMessage?.slice(0, -1);
+      } else {
+        if (event.key.length === 1) {
+          chatMessage = chatMessage ? chatMessage + event.key : event.key;
+        }
+      }
+
+      channel.push("chat", { message: chatMessage });
+
+      return;
+    }
+
+    if (event.key === "t") {
+      isChatting = !isChatting;
+    }
+
     if (event.key === "p") {
       const interact_id = Object.values(state.entities).find((entity) => {
         const distance = Math.sqrt(
@@ -171,6 +223,11 @@ document.addEventListener("DOMContentLoaded", () => {
       if (interact_id === undefined) return;
       channel.push("interact", { interact_id });
     }
+
+    if (event.key === "i") {
+      toggleInventory();
+    }
+
     inputMap[event.key] = true;
   });
   document.addEventListener("keyup", (event) => {
@@ -226,6 +283,41 @@ document.addEventListener("DOMContentLoaded", () => {
     );
     context.fillStyle = "red";
   };
+  const drawChatMessages = (entity: Entity) => {
+    context.font = "14px Arial";
+    context.fillStyle = "white";
+    context.textAlign = "center";
+
+    if (entity.wip_message) {
+      let content = entity.wip_message;
+
+      if (entity.id === userId) {
+        content = chatMessage ?? "";
+      }
+
+      context.fillText(
+        content,
+        entity.x - cameraX,
+        entity.y - 60 - cameraY
+      );
+    }
+
+    entity.chat_messages?.forEach((message, index) => {
+      let baseY = entity.y - cameraY;
+      
+      if (entity.wip_message) {
+        baseY -= 80;
+      } else {
+        baseY -= 60;
+      }
+
+      context.fillText(
+        message.content,
+        entity.x - cameraX,
+        baseY - (index * 20)
+      );
+    });
+  };
   const drawDebugCircle = (radius, x, y) => {
     context.lineWidth = 1;
 
@@ -255,8 +347,11 @@ document.addEventListener("DOMContentLoaded", () => {
             health_accumulator: 0,
           });
           drawDebugCircle(entity.radius, x, y);
-          if (!inputMap.leftmouse || Date.now() - shootTime < timeBetweenShoot)
+          drawChatMessages({ ...entity, x, y });
+
+          if (!inputMap.leftmouse || Date.now() - shootTime < timeBetweenShoot) {
             return;
+          }
 
           return;
         }
@@ -265,6 +360,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const dy = entity.y - oldEntity.y;
         oldEntity.x += dx * interpolationTime;
         oldEntity.y += dy * interpolationTime;
+        drawChatMessages(oldEntity);
         drawImageCentered(sprites[entity.type], oldEntity.x, oldEntity.y);
         drawHealthBar(sprites[entity.type], oldEntity);
         drawDebugCircle(entity.radius, oldEntity.x, oldEntity.y);
@@ -300,7 +396,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let previousFrameTime = Date.now();
   const playerSpeed = 200;
   const handlePlayerInput = () => {
-    console.log(inputMap.leftmouse);
     const currentTime = Date.now();
     if (!inputMap.leftmouse || currentTime - shootTime < timeBetweenShoot)
       return;

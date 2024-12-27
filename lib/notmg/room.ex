@@ -33,6 +33,14 @@ defmodule Notmg.Room do
     GenServer.call(via_tuple(room_id), {:interact, player_id, payload})
   end
 
+  def chat(room_id, player_id, payload) do
+    GenServer.call(via_tuple(room_id), {:chat, player_id, payload})
+  end
+
+  def finalize_chat(room_id, player_id, payload) do
+    GenServer.call(via_tuple(room_id), {:finalize_chat, player_id, payload})
+  end
+
   def get_state(room_id) do
     GenServer.call(via_tuple(room_id), :get_state)
   end
@@ -171,6 +179,28 @@ defmodule Notmg.Room do
     else
       {:reply, {:ok, interact_id}, state}
     end
+  end
+
+  @impl true
+  def handle_call({:chat, player_id, payload}, _from, state) do
+    player = get_in(state.entities, [player_id])
+    player = %{player | wip_message: payload["message"], chat_messages: Enum.take(player.chat_messages, 2)}
+    state = put_in(state.entities[player_id], player)
+    {:reply, {:ok, nil}, state}
+  end
+
+  @impl true
+  def handle_call({:finalize_chat, player_id, _payload}, _from, state) do
+    player = get_in(state.entities, [player_id])
+
+    player = %{
+      player
+      | wip_message: "",
+        chat_messages: [Player.ChatMessage.new(player.wip_message) | player.chat_messages] |> Enum.take(3)
+    }
+
+    state = put_in(state.entities[player_id], player)
+    {:reply, {:ok, nil}, state}
   end
 
   @impl true

@@ -1,13 +1,12 @@
 import { context, inputMap } from "./app";
 
-let inventoryOpen = false;
-const cellSize = 64;
+export let inventoryOpen = false;
 
-document.addEventListener("keydown", (event) => {
-  if (event.key === "i") {
-    inventoryOpen = !inventoryOpen;
-  }
-});
+export const toggleInventory = () => {
+  inventoryOpen = !inventoryOpen;
+};
+
+const cellSize = 64;
 
 // item props: x, y, width, height
 const items = [
