@@ -29,7 +29,6 @@ type Projectile = {
 
 type State = {
   entities: Record<string, Entity>;
-  projectiles: Record<string, Projectile>;
 };
 
 declare global {
@@ -111,12 +110,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let state: State = {
     entities: {},
-    projectiles: {},
   };
   let timeStateReceived;
 
   let oldEntities: Record<string, Entity> = {};
-  let oldProjectiles: Record<string, Projectile> = {};
 
   channel.on("state", (newState: State) => {
     oldEntities = Object.entries(newState.entities).reduce(
@@ -138,16 +135,6 @@ document.addEventListener("DOMContentLoaded", () => {
               (oldEntity?.health - entity?.health),
           },
         };
-      },
-      {},
-    );
-
-    oldProjectiles = Object.entries(newState.projectiles).reduce(
-      (acc, [id, projectile]) => {
-        const oldProjectile = oldProjectiles[id];
-        if (oldProjectile === undefined)
-          return { ...acc, [id]: structuredClone(projectile) };
-        return { ...acc, [id]: oldProjectile };
       },
       {},
     );
@@ -272,7 +259,7 @@ document.addEventListener("DOMContentLoaded", () => {
         drawDebugCircle(entity.radius, oldEntity.x, oldEntity.y);
       });
 
-      Object.entries(state.projectiles).forEach(([id, projectile]) => {
+      /*Object.entries(state.projectiles).forEach(([id, projectile]) => {
         let oldProjectile = oldProjectiles[id];
         if (oldProjectile === undefined) return;
 
@@ -284,7 +271,7 @@ document.addEventListener("DOMContentLoaded", () => {
         drawDebugCircle(projectile.radius, oldProjectile.x, oldProjectile.y);
         context.fillStyle = "white";
         context.fill();
-      });
+      });*/
     }
   };
 

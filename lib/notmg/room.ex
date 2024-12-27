@@ -103,8 +103,6 @@ defmodule Notmg.Room do
      %{
        room_id: room_id,
        entities: %{button_id => button},
-       #entities: %{},
-       projectiles: %{}
      }}
   end
 
@@ -204,60 +202,6 @@ defmodule Notmg.Room do
 
   @impl true
   def handle_info(:tick, state) do
-    delta_time = 1 / @tick_rate
-
-    projectiles =
-      Enum.map(state.projectiles, fn {projectile_id, projectile} ->
-        velocity_x = :math.cos(projectile.radians) * projectile.speed
-        velocity_y = :math.sin(projectile.radians) * projectile.speed
-
-        projectile = %Projectile{
-          projectile
-          | x: projectile.x + velocity_x * delta_time,
-            y: projectile.y + velocity_y * delta_time
-        }
-
-        {projectile_id, projectile}
-      end)
-      |> Enum.filter(fn {_projectile_id, projectile} ->
-        projectile.creation_time + 3 > System.system_time(:second)
-      end)
-      |> Map.new()
-
-    "entities =
-      Enum.map(state.entities, fn {entity_id, entity} ->
-        entity =
-          Enum.reduce(projectiles, entity, fn {_projectile_id, projectile}, acc_entity ->
-            if entity.max_health != nil &&
-                 circle_collision?(projectile, acc_entity) do
-              %{acc_entity | health: acc_entity.health - 5}
-            else
-              acc_entity
-            end
-          end)
-
-        {entity_id, entity}
-      end)
-      |> Enum.filter(fn {_entity_id, entity} ->
-        if entity.health != nil && entity.health <= 0 && entity.ai != nil do
-          destroy_entity(entity)
-          false
-        else
-          true
-        end
-      end)
-      |> Map.new()"
-
-    projectiles =
-      Enum.filter(projectiles, fn {_projectile_id, projectile} ->
-        not Enum.any?(state.entities, fn {_entity_id, entity} ->
-          circle_collision?(projectile, entity)
-        end)
-      end)
-      |> Map.new()
-
-    state = %{state | projectiles: projectiles, entities: state.entities}
-
     Endpoint.broadcast!(room_key(state.room_id), "state", state)
     {:noreply, state}
   end
