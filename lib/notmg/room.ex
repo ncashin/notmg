@@ -49,24 +49,20 @@ defmodule Notmg.Room do
     GenServer.call(via_tuple(room_id), :get_state)
   end
 
-  def create_enemy(room_id, x, y) do
-    enemy_id = Entity.generate_id()
 
-    enemy = %Enemy{
+  def create_enemy(x, y) do
+    enemy_id = Entity.generate_id()
+    %Enemy{
       id: enemy_id,
       type: :leviathan,
-      ai: Notmg.EnemyAI,
       max_health: 50,
       health: 50,
       x: x,
       y: y,
       radius: 48,
       collision_mask: 2,
+      speed: 500,
     }
-
-    {:ok, enemy_ai_pid} = apply(enemy.ai, :start_link, [enemy_id, enemy, room_id])
-
-    %{enemy | ai_pid: enemy_ai_pid}
   end
 
   @impl true
@@ -83,7 +79,8 @@ defmodule Notmg.Room do
     button = %{
       id: button_id,
       type: :button,
-      ai: nil,
+      update: nil,
+      interact: nil,
       x: 0,
       y: 0,
       radius: 400,
@@ -96,8 +93,6 @@ defmodule Notmg.Room do
      %{
        room_id: room_id,
        entities: %{button_id => button},
-       #entities: %{},
-       projectiles: %{}
      }}
   end
 
@@ -106,7 +101,6 @@ defmodule Notmg.Room do
     player = %Player{
       id: player_id,
       type: :player,
-      ai: nil,
       max_health: 100,
       health: 100,
       x: 0,
@@ -114,6 +108,7 @@ defmodule Notmg.Room do
       radius: 24,
       inventory: Inventory.new() |> Inventory.populate_with_test_data(),
       collision_mask: @collision_mask_player + @collision_mask_player_interactable,
+
     }
 
     state = put_in(state.entities[player_id], player)
@@ -135,40 +130,23 @@ defmodule Notmg.Room do
   end
 
   @impl true
-  def handle_call({:update_entity_server, updated_enemy}, _from, state) do
-    enemy_id = updated_enemy.id
-
-    case state.entities[enemy_id] do
-      nil ->
-        {:reply, {:ok, nil}, state}
-
-      enemy ->
-        enemy = %{enemy | x: updated_enemy.x, y: updated_enemy.y}
-        state = put_in(state.entities[enemy_id], enemy)
-        {:reply, {:ok, nil}, state}
-    end
-  end
-
-  @impl true
   def handle_call({:shoot, player_id, payload}, _from, state) do
     player = get_in(state.entities, [player_id])
-
     radians = payload["radians"]
 
     projectile_id = Entity.generate_id()
-
     projectile = %Projectile{
       id: projectile_id,
-      creation_time: System.system_time(:second),
+      type: :projectile,
       collision_mask: @collision_mask_enemy,
       x: player.x,
       y: player.y,
       radius: 16,
       radians: radians,
-      speed: 500
+      speed: 500,
     }
 
-    state = put_in(state.projectiles[projectile_id], projectile)
+    state = put_in(state.entities[projectile_id], projectile)
 
     {:reply, {:ok, projectile_id}, state}
   end
@@ -180,7 +158,7 @@ defmodule Notmg.Room do
     interactable = get_in(state.entities, [interact_id])
 
     if circle_collision?(player, interactable) do
-      enemy = create_enemy(state.room_id, interactable.x, interactable.y)
+      enemy = create_enemy(interactable.x, interactable.y)
       state = put_in(state.entities[enemy.id], enemy)
       {:reply, {:ok, interact_id}, state}
     else
@@ -219,67 +197,27 @@ defmodule Notmg.Room do
   def handle_info(:tick, state) do
     delta_time = 1 / @tick_rate
 
-    projectiles =
-      Enum.map(state.projectiles, fn {projectile_id, projectile} ->
-        velocity_x = :math.cos(projectile.radians) * projectile.speed
-        velocity_y = :math.sin(projectile.radians) * projectile.speed
+    update_map = %{
+      :leviathan => &Notmg.Enemy.update/3,
+      :projectile => &Notmg.Projectile.update/3,
+    }
 
-        projectile = %Projectile{
-          projectile
-          | x: projectile.x + velocity_x * delta_time,
-            y: projectile.y + velocity_y * delta_time
-        }
+    new_state = state.entities |> Enum.reduce(state, fn {_id, entity}, state ->
+      if update_map[entity.type]!= nil do
+        state |> update_map[entity.type].(delta_time, entity)
+      else
+        state
+      end
+    end)
 
-        {projectile_id, projectile}
-      end)
-      |> Enum.filter(fn {_projectile_id, projectile} ->
-        projectile.creation_time + 3 > System.system_time(:second)
-      end)
-      |> Map.new()
-
-    entities =
-      Enum.map(state.entities, fn {entity_id, entity} ->
-        entity =
-          Enum.reduce(projectiles, entity, fn {_projectile_id, projectile}, acc_entity ->
-            if entity.max_health != nil &&
-                 circle_collision?(projectile, acc_entity) do
-              %{acc_entity | health: acc_entity.health - 5}
-            else
-              acc_entity
-            end
-          end)
-
-        {entity_id, entity}
-      end)
-      |> Enum.filter(fn {_entity_id, entity} ->
-        if entity.health != nil && entity.health <= 0 && entity.ai != nil do
-          Logger.info("Stopping enemy AI for #{entity.id}")
-          apply(entity.ai, :stop, [entity.id])
-          false
-        else
-          true
-        end
-      end)
-      |> Map.new()
-
-    projectiles =
-      Enum.filter(projectiles, fn {_projectile_id, projectile} ->
-        not Enum.any?(entities, fn {entity_id, entity} ->
-          circle_collision?(projectile, entity)
-        end)
-      end)
-      |> Map.new()
-
-    state = %{state | projectiles: projectiles, entities: entities}
-
-    Endpoint.broadcast!(room_key(state.room_id), "state", state)
-    {:noreply, state}
+    Endpoint.broadcast!(room_key(state.room_id), "state", new_state)
+    {:noreply, new_state}
   end
 
   @impl true
   def handle_info(:spawn_enemy, state) do
     if map_size(state.entities) < 5 do
-      enemy = create_enemy(state.room_id, 400, 400)
+      enemy = create_enemy( 400, 400)
       state = put_in(state.entities[enemy.id], enemy)
       {:noreply, state}
     else
@@ -312,7 +250,7 @@ defmodule Notmg.Room do
     {:via, Registry, {Notmg.RoomRegistry, room_id}}
   end
 
-  defp circle_collision?(obj1, obj2) do
+  def circle_collision?(obj1, obj2) do
     distance = :math.sqrt(:math.pow(obj1.x - obj2.x, 2) + :math.pow(obj1.y - obj2.y, 2))
     Bitwise.band(obj1.collision_mask, obj2.collision_mask) > 0 && distance < obj1.radius + obj2.radius
   end

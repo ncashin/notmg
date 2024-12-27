@@ -1,6 +1,17 @@
 defmodule Notmg.Player do
   alias Notmg.{Entity, Inventory}
 
+  @derive Jason.Encoder
+  defstruct ([
+               max_health: 100,
+               health: 100,
+               inventory: %Inventory{},
+               chat_messages: [],
+               wip_message: ""
+             ] ++
+               Map.keys(%Entity{}))
+            |> Enum.reject(&(&1 == :__struct__))
+
   defmodule ChatMessage do
     @derive Jason.Encoder
     defstruct [:content, :sent_at]
@@ -12,16 +23,4 @@ defmodule Notmg.Player do
       }
     end
   end
-
-  @derive Jason.Encoder
-  defstruct ([
-               ai_entity: false,
-               max_health: 100,
-               health: 100,
-               inventory: %Inventory{},
-               chat_messages: [],
-               wip_message: ""
-             ] ++
-               Map.keys(%Entity{}))
-            |> Enum.reject(&(&1 == :__struct__))
 end
