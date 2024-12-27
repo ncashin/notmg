@@ -18,6 +18,10 @@ defmodule Notmg.Enemy do
 
     enemy = %{entity | x: new_x, y: new_y}
 
-    put_in(state.entities[entity.id], enemy)
+    if enemy.health <= 0 do
+      put_in(state.entities, state.entities |> Map.delete(entity.id))
+    else
+      put_in(state.entities[entity.id], enemy)
+    end
   end
 end

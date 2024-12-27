@@ -202,7 +202,8 @@ defmodule Notmg.Room do
       :projectile => &Notmg.Projectile.update/3,
     }
 
-    new_state = state.entities |> Enum.reduce(state, fn {_id, entity}, state ->
+    new_state = state.entities |> Enum.reduce(state, fn {id, _entity}, state ->
+      entity = state.entities[id]
       if update_map[entity.type]!= nil do
         state |> update_map[entity.type].(delta_time, entity)
       else
