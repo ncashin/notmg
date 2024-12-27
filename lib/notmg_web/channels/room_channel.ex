@@ -61,6 +61,18 @@ defmodule NotmgWeb.RoomChannel do
   end
 
   @impl true
+  def handle_in("chat", payload, socket) do
+    Room.chat(socket.assigns.room_id, socket.assigns.user_id, payload)
+    {:reply, {:ok, nil}, socket}
+  end
+
+  @impl true
+  def handle_in("finalize_chat", payload, socket) do
+    Room.finalize_chat(socket.assigns.room_id, socket.assigns.user_id, payload)
+    {:reply, {:ok, nil}, socket}
+  end
+
+  @impl true
   def handle_info(:after_join, socket) do
     {:ok, _} =
       Presence.track(socket, socket.assigns.user_id, %{
