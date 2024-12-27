@@ -7,6 +7,10 @@ defmodule Notmg.Room do
   @tick_rate 32
   @enemy_spawn_rate 1000 * 3
 
+  @collision_mask_player 1
+  @collision_mask_enemy 2
+  @collision_mask_player_interactable 4
+
   def tick_rate, do: @tick_rate
 
   def start_link(room_id) do
@@ -77,7 +81,7 @@ defmodule Notmg.Room do
       radius: 400,
       health: 0,
       max_health: 1,
-      collision_mask: 4
+      collision_mask: @collision_mask_player_interactable
     }
 
     {:ok,
@@ -101,7 +105,7 @@ defmodule Notmg.Room do
       y: 0,
       radius: 24,
       inventory: Inventory.new() |> Inventory.populate_with_test_data(),
-      collision_mask: 5,
+      collision_mask: @collision_mask_player + @collision_mask_player_interactable,
     }
 
     state = put_in(state.entities[player_id], player)
@@ -147,9 +151,8 @@ defmodule Notmg.Room do
 
     projectile = %Projectile{
       id: projectile_id,
-      shooter_id: player_id,
       creation_time: System.system_time(:second),
-      collision_mask: 2,
+      collision_mask: @collision_mask_enemy,
       x: player.x,
       y: player.y,
       radius: 16,
@@ -208,7 +211,7 @@ defmodule Notmg.Room do
       Enum.map(state.entities, fn {entity_id, entity} ->
         entity =
           Enum.reduce(projectiles, entity, fn {_projectile_id, projectile}, acc_entity ->
-            if entity.max_health != nil && projectile.shooter_id != entity_id &&
+            if entity.max_health != nil &&
                  circle_collision?(projectile, acc_entity) do
               %{acc_entity | health: acc_entity.health - 5}
             else
@@ -232,7 +235,7 @@ defmodule Notmg.Room do
     projectiles =
       Enum.filter(projectiles, fn {_projectile_id, projectile} ->
         not Enum.any?(entities, fn {entity_id, entity} ->
-          projectile.shooter_id != entity_id && circle_collision?(projectile, entity)
+          circle_collision?(projectile, entity)
         end)
       end)
       |> Map.new()
