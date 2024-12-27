@@ -55,6 +55,8 @@ defmodule Notmg.Room do
     %Enemy{
       id: enemy_id,
       type: :leviathan,
+      update_fn: &Enemy.update/3,
+      interact_fn: nil,
       max_health: 50,
       health: 50,
       x: x,
@@ -79,8 +81,8 @@ defmodule Notmg.Room do
     button = %{
       id: button_id,
       type: :button,
-      update: nil,
-      interact: nil,
+      update_fn: nil,
+      interact_fn: nil,
       x: 0,
       y: 0,
       radius: 400,
@@ -138,6 +140,7 @@ defmodule Notmg.Room do
     projectile = %Projectile{
       id: projectile_id,
       type: :projectile,
+      update_fn: &Projectile.update/3,
       collision_mask: @collision_mask_enemy,
       x: player.x,
       y: player.y,
@@ -204,18 +207,13 @@ defmodule Notmg.Room do
   def handle_info(:tick, state) do
     delta_time = 1 / @tick_rate
 
-    update_map = %{
-      :leviathan => &Notmg.Enemy.update/3,
-      :projectile => &Notmg.Projectile.update/3
-    }
-
     new_state =
       state.entities
       |> Enum.reduce(state, fn {id, _entity}, state ->
         entity = state.entities[id]
 
-        if update_map[entity.type] != nil do
-          state |> update_map[entity.type].(delta_time, entity)
+        if entity.update_fn != nil do
+          state |> entity.update_fn.(delta_time, entity)
         else
           state
         end
