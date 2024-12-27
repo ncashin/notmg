@@ -52,12 +52,24 @@ defmodule Notmg.EnemyAI do
 
     enemy = %Enemy{enemy | x: new_x, y: new_y}
 
-    Room.update_enemy(state.room_id, enemy)
+    {_id, colliding_projectile} =
+      Room.get_state(state.room_id).entities
+      |> Enum.find({nil, nil}, fn {_id, entity} ->
+        entity.type == :projectile && Room.circle_collision?(entity, enemy)
+      end)
 
-    {:noreply, %{state | enemy: enemy}}
+    if colliding_projectile != nil do
+      updated_enemy = %{enemy | health: enemy.health - 5}
+      Room.update_entity(state.room_id, updated_enemy)
+      {:noreply, %{state | enemy: updated_enemy}}
+
+    else
+      Room.update_enemy(state.room_id, enemy)
+      {:noreply, %{state | enemy: enemy}}
+    end
   end
 
   defp via_tuple(enemy_id) do
-    {:via, Registry, {Notmg.EnemyRegistry, enemy_id}}
+    {:via, Registry, {Notmg.EntityRegistry, enemy_id}}
   end
 end

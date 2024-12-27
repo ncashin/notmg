@@ -84,6 +84,8 @@ document.addEventListener("DOMContentLoaded", () => {
     player: loadImage("/assets/notmglittleguy.png"),
     leviathan: loadImage("/assets/leviathan.png"),
     button: loadImage("/assets/notmglittleguy.png"),
+    projectile: loadImage("/assets/notmglittleguy.png"),
+
   };
   channel
     .join()
