@@ -1,5 +1,4 @@
 defmodule Notmg.Projectile do
-  alias Notmg.Enemy
   alias Notmg.Entity
   alias Notmg.Room
 
@@ -20,13 +19,17 @@ defmodule Notmg.Projectile do
 
     {_id, colliding_entity} =
       state.entities
-      |> Enum.find({nil, nil}, fn {_id, entity} -> entity.type != :projectile && Room.circle_collision?(entity, projectile) end)
+      |> Enum.find({nil, nil}, fn {_id, entity} ->
+        entity.type != :projectile && Room.circle_collision?(entity, projectile)
+      end)
 
     if colliding_entity != nil do
-      state = put_in(state.entities[colliding_entity.id], %{
-        colliding_entity
-        | health: colliding_entity.health - 5
-      })
+      state =
+        put_in(state.entities[colliding_entity.id], %{
+          colliding_entity
+          | health: colliding_entity.health - 5
+        })
+
       put_in(state.entities, state.entities |> Map.delete(projectile.id))
     else
       put_in(state.entities[entity.id], projectile)

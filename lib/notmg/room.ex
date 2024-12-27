@@ -49,9 +49,9 @@ defmodule Notmg.Room do
     GenServer.call(via_tuple(room_id), :get_state)
   end
 
-
   def create_enemy(x, y) do
     enemy_id = Entity.generate_id()
+
     %Enemy{
       id: enemy_id,
       type: :leviathan,
@@ -61,7 +61,7 @@ defmodule Notmg.Room do
       y: y,
       radius: 48,
       collision_mask: 2,
-      speed: 500,
+      speed: 500
     }
   end
 
@@ -92,7 +92,7 @@ defmodule Notmg.Room do
     {:ok,
      %{
        room_id: room_id,
-       entities: %{button_id => button},
+       entities: %{button_id => button}
      }}
   end
 
@@ -107,8 +107,7 @@ defmodule Notmg.Room do
       y: 0,
       radius: 24,
       inventory: Inventory.new() |> Inventory.populate_with_test_data(),
-      collision_mask: @collision_mask_player + @collision_mask_player_interactable,
-
+      collision_mask: @collision_mask_player + @collision_mask_player_interactable
     }
 
     state = put_in(state.entities[player_id], player)
@@ -135,6 +134,7 @@ defmodule Notmg.Room do
     radians = payload["radians"]
 
     projectile_id = Entity.generate_id()
+
     projectile = %Projectile{
       id: projectile_id,
       type: :projectile,
@@ -143,7 +143,7 @@ defmodule Notmg.Room do
       y: player.y,
       radius: 16,
       radians: radians,
-      speed: 500,
+      speed: 500
     }
 
     state = put_in(state.entities[projectile_id], projectile)
@@ -169,7 +169,13 @@ defmodule Notmg.Room do
   @impl true
   def handle_call({:chat, player_id, payload}, _from, state) do
     player = get_in(state.entities, [player_id])
-    player = %{player | wip_message: payload["message"], chat_messages: Enum.take(player.chat_messages, 2)}
+
+    player = %{
+      player
+      | wip_message: payload["message"],
+        chat_messages: Enum.take(player.chat_messages, 2)
+    }
+
     state = put_in(state.entities[player_id], player)
     {:reply, {:ok, nil}, state}
   end
@@ -181,7 +187,8 @@ defmodule Notmg.Room do
     player = %{
       player
       | wip_message: "",
-        chat_messages: [Player.ChatMessage.new(player.wip_message) | player.chat_messages] |> Enum.take(3)
+        chat_messages:
+          [Player.ChatMessage.new(player.wip_message) | player.chat_messages] |> Enum.take(3)
     }
 
     state = put_in(state.entities[player_id], player)
@@ -199,17 +206,20 @@ defmodule Notmg.Room do
 
     update_map = %{
       :leviathan => &Notmg.Enemy.update/3,
-      :projectile => &Notmg.Projectile.update/3,
+      :projectile => &Notmg.Projectile.update/3
     }
 
-    new_state = state.entities |> Enum.reduce(state, fn {id, _entity}, state ->
-      entity = state.entities[id]
-      if update_map[entity.type]!= nil do
-        state |> update_map[entity.type].(delta_time, entity)
-      else
-        state
-      end
-    end)
+    new_state =
+      state.entities
+      |> Enum.reduce(state, fn {id, _entity}, state ->
+        entity = state.entities[id]
+
+        if update_map[entity.type] != nil do
+          state |> update_map[entity.type].(delta_time, entity)
+        else
+          state
+        end
+      end)
 
     Endpoint.broadcast!(room_key(state.room_id), "state", new_state)
     {:noreply, new_state}
@@ -218,7 +228,7 @@ defmodule Notmg.Room do
   @impl true
   def handle_info(:spawn_enemy, state) do
     if map_size(state.entities) < 5 do
-      enemy = create_enemy( 400, 400)
+      enemy = create_enemy(400, 400)
       state = put_in(state.entities[enemy.id], enemy)
       {:noreply, state}
     else
@@ -253,6 +263,8 @@ defmodule Notmg.Room do
 
   def circle_collision?(obj1, obj2) do
     distance = :math.sqrt(:math.pow(obj1.x - obj2.x, 2) + :math.pow(obj1.y - obj2.y, 2))
-    Bitwise.band(obj1.collision_mask, obj2.collision_mask) > 0 && distance < obj1.radius + obj2.radius
+
+    Bitwise.band(obj1.collision_mask, obj2.collision_mask) > 0 &&
+      distance < obj1.radius + obj2.radius
   end
 end
