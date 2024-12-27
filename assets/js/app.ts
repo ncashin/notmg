@@ -140,7 +140,6 @@ document.addEventListener("DOMContentLoaded", () => {
       {},
     );
 
-
     window.state = newState;
 
     state = newState;
@@ -165,7 +164,7 @@ document.addEventListener("DOMContentLoaded", () => {
           state.entities[userId].wip_message = undefined;
           state.entities[userId].chat_messages = [
             { content: chatMessage, sent_at: Math.floor(Date.now() / 1000) },
-            ...(state.entities[userId].chat_messages || []).slice(0, 2)
+            ...(state.entities[userId].chat_messages || []).slice(0, 2),
           ];
         }
         isChatting = false;
@@ -272,27 +271,19 @@ document.addEventListener("DOMContentLoaded", () => {
         content = chatMessage ?? "";
       }
 
-      context.fillText(
-        content,
-        entity.x - cameraX,
-        entity.y - 60 - cameraY
-      );
+      context.fillText(content, entity.x - cameraX, entity.y - 60 - cameraY);
     }
 
     entity.chat_messages?.forEach((message, index) => {
       let baseY = entity.y - cameraY;
-      
+
       if (entity.wip_message) {
         baseY -= 80;
       } else {
         baseY -= 60;
       }
 
-      context.fillText(
-        message.content,
-        entity.x - cameraX,
-        baseY - (index * 20)
-      );
+      context.fillText(message.content, entity.x - cameraX, baseY - index * 20);
     });
   };
   const drawDebugCircle = (radius, x, y) => {
@@ -326,7 +317,10 @@ document.addEventListener("DOMContentLoaded", () => {
           drawDebugCircle(entity.radius, x, y);
           drawChatMessages({ ...entity, x, y });
 
-          if (!inputMap.leftmouse || Date.now() - shootTime < timeBetweenShoot) {
+          if (
+            !inputMap.leftmouse ||
+            Date.now() - shootTime < timeBetweenShoot
+          ) {
             return;
           }
 

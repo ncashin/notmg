@@ -12,7 +12,6 @@ defmodule Notmg.Enemy do
     velocity_x = :math.cos(angle) * entity.speed
     velocity_y = :math.sin(angle) * entity.speed
 
-
     new_x = entity.x + velocity_x * delta_time
     new_y = entity.y + velocity_y * delta_time
 
