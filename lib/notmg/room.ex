@@ -93,19 +93,22 @@ defmodule Notmg.Room do
     {:ok,
      %{
        room_id: room_id,
-       entities: %{button_id => button}
+       entities: %{button_id => button},
+       map: Maps.get_map("level_0")
      }}
   end
 
   @impl true
   def handle_call({:join, player_id}, _from, state) do
+    spawn_point = Enum.find(state.map.entities, &(&1.name == :spawn_point))
+
     player = %Player{
       id: player_id,
       type: :player,
       max_health: 100,
       health: 100,
-      x: 0,
-      y: 0,
+      x: spawn_point.world_x,
+      y: spawn_point.world_y,
       radius: 24,
       inventory: Inventory.new() |> Inventory.populate_with_test_data(),
       collision_mask: @collision_mask_player + @collision_mask_player_interactable
@@ -114,7 +117,8 @@ defmodule Notmg.Room do
     join_payload = %{
       player: player,
       tick_rate: @tick_rate,
-      map: Maps.get_map("level_0")
+      map_scale: @map_scale,
+      map: state.map
     }
 
     state = put_in(state.entities[player_id], player)
@@ -223,7 +227,9 @@ defmodule Notmg.Room do
         end
       end)
 
-    Endpoint.broadcast!(room_key(state.room_id), "state", new_state)
+    update_state = Map.delete(new_state, :map)
+
+    Endpoint.broadcast!(room_key(state.room_id), "state", update_state)
     {:noreply, new_state}
   end
 
