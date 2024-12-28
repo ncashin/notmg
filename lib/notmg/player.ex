@@ -1,5 +1,5 @@
 defmodule Notmg.Player do
-  alias Notmg.{Entity, Inventory}
+  alias Notmg.Entity
 
   @derive Jason.Encoder
   defstruct ([

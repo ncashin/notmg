@@ -4,10 +4,10 @@ defmodule Notmg.Maps do
   @map_scale 2.5
   defmodule MapEntity do
     @derive Jason.Encoder
-    defstruct name: nil, world_x: nil, world_y: nil
+    defstruct name: nil, world_x: nil, world_y: nil, fields: %{}
   end
 
-  defmodule Map do
+  defmodule MapInstance do
     @derive Jason.Encoder
     defstruct name: nil,
               width: nil,
@@ -41,12 +41,13 @@ defmodule Notmg.Maps do
               %MapEntity{
                 name: entity.identifier |> String.to_atom(),
                 world_x: entity.world_x * @map_scale,
-                world_y: entity.world_y * @map_scale
+                world_y: entity.world_y * @map_scale,
+                fields: Map.new(entity.field_instances, fn field -> {String.to_atom(field.identifier), field.value} end)
               }
             end
         end
 
-      %Map{
+      %MapInstance{
         name: level.identifier,
         width: level.px_wid * @map_scale,
         height: level.px_hei * @map_scale,

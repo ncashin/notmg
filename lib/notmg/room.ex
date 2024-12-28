@@ -5,11 +5,10 @@ defmodule Notmg.Room do
   require Logger
 
   @tick_rate 32
-  @enemy_spawn_rate 1000 * 3
 
-  @collision_mask_player 1
-  @collision_mask_enemy 2
-  @collision_mask_player_interactable 4
+  @collision_mask_player 0b0001
+  @collision_mask_enemy 0b0010
+  @collision_mask_player_interactable 0b0100
 
   def tick_rate, do: @tick_rate
 
@@ -50,12 +49,14 @@ defmodule Notmg.Room do
     GenServer.call(via_tuple(room_id), {:inventory, player_id, payload})
   end
 
-  def create_enemy(x, y) do
+  def create_enemy(x, y, enemy_type) do
     enemy_id = Entity.generate_id()
+
+    IO.inspect([x, y, enemy_type])
 
     %Enemy{
       id: enemy_id,
-      type: :leviathan,
+      type: enemy_type,
       update_fn: &Enemy.update/3,
       interact_fn: nil,
       inventory: nil,
@@ -64,7 +65,7 @@ defmodule Notmg.Room do
       x: x,
       y: y,
       radius: 48,
-      collision_mask: 2,
+      collision_mask: @collision_mask_enemy,
       speed: 500
     }
   end
@@ -76,32 +77,41 @@ defmodule Notmg.Room do
     Endpoint.subscribe(room_key(room_id))
 
     :timer.send_interval(@tick_rate, :tick)
-    :timer.send_interval(@enemy_spawn_rate, :spawn_enemy)
 
-    button_id = Entity.generate_id()
+    # button_id = Entity.generate_id()
 
-    button = %{
-      id: button_id,
-      type: :button,
-      update_fn: nil,
-      interact_fn: fn state, _interacting_entity, interactable ->
-        enemy = create_enemy(interactable.x, interactable.y)
-        put_in(state.entities[enemy.id], enemy)
-      end,
-      inventory: nil,
-      x: 0,
-      y: 0,
-      radius: 400,
-      health: 0,
-      max_health: 1,
-      collision_mask: @collision_mask_player_interactable
-    }
+    # button = %{
+    #   id: button_id,
+    #   type: :button,
+    #   update_fn: nil,
+    #   interact_fn: fn state, _interacting_entity, interactable ->
+    #     enemy = create_enemy(interactable.x, interactable.y)
+    #     put_in(state.entities[enemy.id], enemy)
+    #   end,
+    #   inventory: nil,
+    #   x: 0,
+    #   y: 0,
+    #   radius: 400,
+    #   health: 0,
+    #   max_health: 1,
+    #   collision_mask: @collision_mask_player_interactable
+    # }
+
+    map = Maps.get_map("level_0")
+    enemies = map.entities
+    |> Enum.filter(&(&1.name == :enemy))
+    |> Enum.map(fn enemy ->
+      create_enemy(enemy.world_x, enemy.world_y, enemy.fields.enemy_type |> String.to_atom())
+    end)
+    |> Enum.reduce(%{}, fn enemy, acc ->
+      Map.put(acc, enemy.id, enemy)
+    end)
 
     {:ok,
      %{
        room_id: room_id,
-       entities: %{button_id => button},
-       map: Maps.get_map("level_0")
+       entities: enemies,
+       map: map
      }}
   end
 
@@ -124,7 +134,6 @@ defmodule Notmg.Room do
     join_payload = %{
       player: player,
       tick_rate: @tick_rate,
-      map_scale: @map_scale,
       map: state.map
     }
 
@@ -247,18 +256,6 @@ defmodule Notmg.Room do
 
     Endpoint.broadcast!(room_key(state.room_id), "state", update_state)
     {:noreply, new_state}
-  end
-
-  @impl true
-  def handle_info(:spawn_enemy, state) do
-    if map_size(state.entities) < 5 do
-      enemy = create_enemy(400, 400)
-      state = put_in(state.entities[enemy.id], enemy)
-      {:noreply, state}
-    else
-      Logger.info("Not spawning enemy, too many enemies")
-      {:noreply, state}
-    end
   end
 
   @impl true
