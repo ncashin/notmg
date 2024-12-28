@@ -120,9 +120,8 @@ export const handleInventoryMouseDown = (event) => {
 
     selectedItem.x = x + pickupX;
     selectedItem.y = y + pickupY;
-    
+
     channel.push("inventory", selectedItem).receive("ok", (resp) => {
-      console.log(resp);
       setInventory(resp);
     });
 
