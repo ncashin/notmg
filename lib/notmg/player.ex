@@ -5,7 +5,6 @@ defmodule Notmg.Player do
   defstruct ([
                max_health: 100,
                health: 100,
-               inventory: %Inventory{},
                chat_messages: [],
                wip_message: ""
              ] ++

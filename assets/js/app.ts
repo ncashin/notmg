@@ -3,6 +3,7 @@ import {
   drawUI,
   handleInventoryMouseDown,
   handleInventoryMouseMove,
+  setInventory,
   toggleInventory,
 } from "./inventory";
 
@@ -56,17 +57,16 @@ export let context: CanvasRenderingContext2D;
 
 export let inputMap: any = {};
 
+let urlParams = new URLSearchParams(window.location.search);
+let room = urlParams.has("room") ? urlParams.get("room") : "lobby";
+export let channel = socket.channel(`room:${room}`, {});
+window.channel = channel;
+
 document.addEventListener("DOMContentLoaded", () => {
   socket.connect();
 
   canvas = document.getElementById("canvas") as HTMLCanvasElement;
   context = canvas.getContext("2d") as CanvasRenderingContext2D;
-
-  let urlParams = new URLSearchParams(window.location.search);
-  let room = urlParams.has("room") ? urlParams.get("room") : "lobby";
-
-  let channel = socket.channel(`room:${room}`, {});
-  window.channel = channel;
 
   let presence = new Presence(channel);
 
@@ -104,6 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
   channel
     .join()
     .receive("ok", (resp) => {
+<<<<<<< HEAD
       map = resp.map;
 
       map.layers = map.layer_names.reduce((acc, layerName) => {
@@ -115,9 +116,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
       window.map = map;
 
+=======
+      console.log(resp);
+>>>>>>> 6c44569 (basic server side inventory)
       userId = resp.player.id;
       x = resp.player.x;
       y = resp.player.y;
+
+      setInventory(resp.player.inventory);
 
       tickRate = resp.tick_rate;
 

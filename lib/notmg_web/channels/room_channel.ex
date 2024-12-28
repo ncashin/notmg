@@ -68,6 +68,12 @@ defmodule NotmgWeb.RoomChannel do
   end
 
   @impl true
+  def handle_in("inventory", payload, socket) do
+    {:ok, updated_inventory} = Room.update_inventory(socket.assigns.room_id, socket.assigns.user_id, payload)
+    {:reply, {:ok, updated_inventory}, socket}
+  end
+
+  @impl true
   def handle_info(:after_join, socket) do
     {:ok, _} =
       Presence.track(socket, socket.assigns.user_id, %{

@@ -21,6 +21,7 @@ defmodule Notmg.Room do
     GenServer.call(via_tuple(room_id), {:join, player_id})
   end
 
+  @spec update_player(any(), any(), any()) :: any()
   def update_player(room_id, player_id, payload) do
     GenServer.call(via_tuple(room_id), {:update_entity_player, player_id, payload})
   end
@@ -45,6 +46,10 @@ defmodule Notmg.Room do
     GenServer.call(via_tuple(room_id), :get_state)
   end
 
+  def update_inventory(room_id, player_id, payload) do
+    GenServer.call(via_tuple(room_id), {:inventory, player_id, payload})
+  end
+
   def create_enemy(x, y) do
     enemy_id = Entity.generate_id()
 
@@ -53,6 +58,7 @@ defmodule Notmg.Room do
       type: :leviathan,
       update_fn: &Enemy.update/3,
       interact_fn: nil,
+      inventory: nil,
       max_health: 50,
       health: 50,
       x: x,
@@ -82,6 +88,7 @@ defmodule Notmg.Room do
         enemy = create_enemy(interactable.x, interactable.y)
         put_in(state.entities[enemy.id], enemy)
       end,
+      inventory: nil,
       x: 0,
       y: 0,
       radius: 400,
@@ -110,8 +117,8 @@ defmodule Notmg.Room do
       x: spawn_point.world_x,
       y: spawn_point.world_y,
       radius: 24,
-      inventory: Inventory.new() |> Inventory.populate_with_test_data(),
-      collision_mask: @collision_mask_player + @collision_mask_player_interactable
+      collision_mask: @collision_mask_player + @collision_mask_player_interactable,
+      inventory: Inventory.new() |> Inventory.populate_with_test_data()
     }
 
     join_payload = %{
@@ -204,6 +211,15 @@ defmodule Notmg.Room do
 
     state = put_in(state.entities[player_id], player)
     {:reply, {:ok, nil}, state}
+  end
+
+  @impl true
+  def handle_call({:inventory, player_id, payload}, _from, state) do
+    player = state.entities[player_id]
+    inventory = player.inventory |> IO.inspect()
+    updated_inventory = put_in(inventory.items[payload["id"]], payload) |> IO.inspect()
+    state = put_in(state.entities[player_id], player |> Map.put(:inventory, updated_inventory)) |> IO.inspect()
+    {:reply, {:ok, updated_inventory}, state}
   end
 
   @impl true
