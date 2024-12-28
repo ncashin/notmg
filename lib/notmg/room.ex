@@ -25,10 +25,6 @@ defmodule Notmg.Room do
     GenServer.call(via_tuple(room_id), {:update_entity_player, player_id, payload})
   end
 
-  def update_enemy(room_id, enemy) do
-    GenServer.call(via_tuple(room_id), {:update_entity_server, enemy})
-  end
-
   def shoot(room_id, player_id, payload) do
     GenServer.call(via_tuple(room_id), {:shoot, player_id, payload})
   end
@@ -82,7 +78,10 @@ defmodule Notmg.Room do
       id: button_id,
       type: :button,
       update_fn: nil,
-      interact_fn: nil,
+      interact_fn: fn state, _interacting_entity, interactable ->
+        enemy = create_enemy(interactable.x, interactable.y)
+        put_in(state.entities[enemy.id], enemy)
+      end,
       x: 0,
       y: 0,
       radius: 400,
@@ -155,15 +154,14 @@ defmodule Notmg.Room do
   end
 
   @impl true
-  def handle_call({:interact, player_id, payload}, _from, state) do
+  def handle_call({:interact, entity_id, payload}, _from, state) do
     interact_id = payload["interact_id"]
-    player = get_in(state.entities, [player_id])
+    interacting_entity = get_in(state.entities, [entity_id])
     interactable = get_in(state.entities, [interact_id])
 
-    if circle_collision?(player, interactable) do
-      enemy = create_enemy(interactable.x, interactable.y)
-      state = put_in(state.entities[enemy.id], enemy)
-      {:reply, {:ok, interact_id}, state}
+    if circle_collision?(interacting_entity, interactable) && interactable.interact_fn != nil do
+      {:reply, {:ok, interact_id},
+       state |> interactable.interact_fn.(interacting_entity, interactable)}
     else
       {:reply, {:ok, interact_id}, state}
     end

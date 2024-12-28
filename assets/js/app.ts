@@ -189,7 +189,7 @@ document.addEventListener("DOMContentLoaded", () => {
       isChatting = !isChatting;
     }
 
-    if (event.key === "p") {
+    if (event.key === "e") {
       const interact_id = Object.values(state.entities).find((entity) => {
         const distance = Math.sqrt(
           Math.pow(entity.x - x, 2) + Math.pow(entity.y - y, 2),
