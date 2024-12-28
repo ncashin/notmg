@@ -19,15 +19,10 @@ defmodule NotmgWeb.RoomChannel do
       DynamicSupervisor.start_child(Notmg.RoomSupervisor, {Room, room_id})
 
       case Room.join(room_id, socket.assigns.user_id) do
-        {:ok, player} ->
+        {:ok, join_payload} ->
           socket = assign(socket, :room_id, room_id)
 
-          init_message = %{
-            player: player,
-            tick_rate: Room.tick_rate()
-          }
-
-          {:ok, init_message, socket}
+          {:ok, join_payload, socket}
 
         {:error, reason} ->
           {:error, %{reason: reason}}

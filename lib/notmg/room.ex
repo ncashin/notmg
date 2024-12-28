@@ -1,6 +1,6 @@
 defmodule Notmg.Room do
   use GenServer
-  alias Notmg.{Player, Enemy, Projectile, Entity, Inventory}
+  alias Notmg.{Maps, Player, Enemy, Projectile, Entity, Inventory}
   alias NotmgWeb.Endpoint
   require Logger
 
@@ -111,8 +111,14 @@ defmodule Notmg.Room do
       collision_mask: @collision_mask_player + @collision_mask_player_interactable
     }
 
+    join_payload = %{
+      player: player,
+      tick_rate: @tick_rate,
+      map: Maps.get_map("level_0")
+    }
+
     state = put_in(state.entities[player_id], player)
-    {:reply, {:ok, player}, state}
+    {:reply, {:ok, join_payload}, state}
   end
 
   @impl true
