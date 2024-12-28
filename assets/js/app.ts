@@ -82,7 +82,11 @@ document.addEventListener("DOMContentLoaded", () => {
     player: loadImage("/assets/notmglittleguy.png"),
     leviathan: loadImage("/assets/leviathan.png"),
     button: loadImage("/assets/notmglittleguy.png"),
-    projectile: loadImage("/assets/notmglittleguy.png"),
+    projectile: (entity) => {
+      drawDebugCircle(entity.radius, entity.x, entity.y);
+      context.fillStyle = "white";
+      context.fill();
+    },
   };
   channel
     .join()
@@ -158,7 +162,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (event.key === "Enter" || event.key === "Escape") {
         if (chatMessage === undefined) return;
 
-        console.log("Sending chat message", chatMessage);
         channel.push("finalize_chat", { message: chatMessage });
         if (state.entities[userId]) {
           state.entities[userId].wip_message = undefined;
@@ -331,6 +334,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const dy = entity.y - oldEntity.y;
         oldEntity.x += dx * interpolationTime;
         oldEntity.y += dy * interpolationTime;
+
+        if (typeof sprites[oldEntity.type] === "function") {
+          sprites[oldEntity.type](oldEntity);
+          return;
+        }
+
         drawChatMessages(oldEntity);
         drawImageCentered(sprites[entity.type], oldEntity.x, oldEntity.y);
         drawHealthBar(sprites[entity.type], oldEntity);
