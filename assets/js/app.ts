@@ -107,7 +107,9 @@ document.addEventListener("DOMContentLoaded", () => {
       map = resp.map;
 
       map.layers = map.layer_names.reduce((acc, layerName) => {
-        acc[layerName] = loadImage(`/assets/map/png/${map.name}__${layerName}.png`);
+        if (layerName !== 'entities') {
+          acc[layerName] = loadImage(`/assets/map/png/${map.name}__${layerName}.png`);
+        }
         return acc;
       }, {});
 
@@ -118,6 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
       y = resp.player.y;
 
       tickRate = resp.tick_rate;
+
       setInterval(() => {
         const update = {
           x: x,
@@ -320,8 +323,6 @@ document.addEventListener("DOMContentLoaded", () => {
     context.stroke();
   };
 
-  const mapScale = 3;
-
   const draw = (interpolationTime) => {
     context.imageSmoothingEnabled = false;
 
@@ -333,8 +334,8 @@ document.addEventListener("DOMContentLoaded", () => {
           layer as CanvasImageSource,
           map.world_x - cameraX,
           map.world_y - cameraY,
-          map.width * mapScale,
-          map.height * mapScale
+          map.width,
+          map.height
         );
       });
     }
