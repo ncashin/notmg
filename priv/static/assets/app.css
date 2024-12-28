@@ -6,10 +6,6 @@ body {
 }
 
 canvas {
-    background: url("/assets/grass.jpg");
-    background-repeat: repeat;
-    background-position: 100 100;
-    background-size: auto auto;
     display: block;
     image-rendering: pixelated;
     image-rendering: crisp-edges;

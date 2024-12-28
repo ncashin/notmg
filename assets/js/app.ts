@@ -30,10 +30,21 @@ type State = {
   entities: Record<string, Entity>;
 };
 
+type Map = {
+  name: string;
+  width: number;
+  height: number;
+  world_x: number;
+  world_y: number;
+  layer_names: string[];
+  layers: Record<string, CanvasImageSource>;
+};
+
 declare global {
   interface Window {
     state: State;
     channel: Channel;
+    map: Map;
     userToken: string;
   }
 }
@@ -68,6 +79,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let velocityX = 0;
   let velocityY = 0;
 
+  let map: Map;
+
   let shootTime = Date.now();
   let timeBetweenShoot = 250;
 
@@ -91,6 +104,15 @@ document.addEventListener("DOMContentLoaded", () => {
   channel
     .join()
     .receive("ok", (resp) => {
+      map = resp.map;
+
+      map.layers = map.layer_names.reduce((acc, layerName) => {
+        acc[layerName] = loadImage(`/assets/map/png/${map.name}__${layerName}.png`);
+        return acc;
+      }, {});
+
+      window.map = map;
+
       userId = resp.player.id;
       x = resp.player.x;
       y = resp.player.y;
@@ -297,8 +319,26 @@ document.addEventListener("DOMContentLoaded", () => {
     context.strokeStyle = "red";
     context.stroke();
   };
+
+  const mapScale = 3;
+
   const draw = (interpolationTime) => {
+    context.imageSmoothingEnabled = false;
+
     clearCanvas();
+
+    if (map) {
+      Object.entries(map.layers).reverse().forEach(([layerName, layer]) => {
+        context.drawImage(
+          layer as CanvasImageSource,
+          map.world_x - cameraX,
+          map.world_y - cameraY,
+          map.width * mapScale,
+          map.height * mapScale
+        );
+      });
+    }
+
     if (state !== undefined && state.entities !== undefined) {
       Object.entries(state.entities).forEach(([id, entity]) => {
         let oldEntity = oldEntities[id];
@@ -393,8 +433,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     cameraX = x - canvas.width / 2;
     cameraY = y - canvas.height / 2;
-
-    canvas.style.backgroundPosition = -cameraX + "px " + -cameraY + "px";
 
     const rawInterp = (Date.now() - timeStateReceived) / tickRate / 1000;
     const interpolationTime = Math.cbrt(rawInterp);
