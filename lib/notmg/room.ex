@@ -46,7 +46,7 @@ defmodule Notmg.Room do
   end
 
   def update_inventory(room_id, player_id, payload) do
-    GenServer.call(via_tuple(room_id), {:inventory, player_id, payload})
+    GenServer.call(via_tuple(room_id), {:update_inventory, player_id, payload})
   end
 
   def create_enemy(x, y, enemy_type) do
@@ -223,12 +223,54 @@ defmodule Notmg.Room do
   end
 
   @impl true
-  def handle_call({:inventory, player_id, payload}, _from, state) do
+  def handle_call({:update_inventory, player_id, payload}, _from, state) do
+
+
     player = state.entities[player_id]
-    inventory = player.inventory |> IO.inspect()
-    updated_inventory = put_in(inventory.items[payload["id"]], payload) |> IO.inspect()
-    state = put_in(state.entities[player_id], player |> Map.put(:inventory, updated_inventory)) |> IO.inspect()
-    {:reply, {:ok, updated_inventory}, state}
+    inventory = player.inventory
+    item = %Notmg.Inventory.Item{
+      inventory.items[payload["id"]] |
+      x: payload["x"],
+      y: payload["y"]
+    } |> IO.inspect()
+
+    slot_check =
+      Notmg.Inventory.inventory_item_check(
+        inventory,
+        item,
+        item.x,
+        item.y
+      )
+
+    if slot_check == nil do
+      {:reply, {:ok, inventory}, state}
+    else
+      if slot_check != :none do
+        inventory = put_in(inventory.items[item.id], item)
+        inventory = put_in(inventory.equipped_items[item.id], item)
+
+        state =
+          put_in(state.entities[player_id], player |> Map.put(:inventory, inventory))
+
+        {:reply, {:ok, inventory}, state}
+      else
+        if inventory.equipped_items[item.id] != nil do
+          inventory = put_in(inventory.equipped_items, inventory.equipped_items |> Map.delete(item.id))
+
+          state =
+            put_in(state.entities[player_id], player |> Map.put(:inventory, inventory))
+
+          {:reply, {:ok, inventory}, state}
+        else
+          inventory = put_in(inventory.items[item.id], item)
+
+          state =
+            put_in(state.entities[player_id], player |> Map.put(:inventory, inventory))
+
+          {:reply, {:ok, inventory}, state}
+        end
+      end
+    end
   end
 
   @impl true

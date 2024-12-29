@@ -154,7 +154,14 @@ const drawItemColliders = (item, x, y) => {
 };
 const drawInventorySlots = (inventory) => {
   inventory.slots.forEach((slot) => {
-    context.fillStyle = "white";
+    switch (slot.type) {
+      case "none":
+        context.fillStyle = "white";
+        break;
+      case "weapon":
+        context.fillStyle = "gray";
+        break;
+    }
 
     context.fillRect(
       slot.x * cellSize,
