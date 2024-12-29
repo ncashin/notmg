@@ -66,7 +66,7 @@ defmodule Notmg.Room do
       y: y,
       radius: 48,
       collision_mask: @collision_mask_enemy,
-      speed: 500
+      speed: 150
     }
   end
 
