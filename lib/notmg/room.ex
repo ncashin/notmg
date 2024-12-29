@@ -232,7 +232,7 @@ defmodule Notmg.Room do
       inventory.items[payload["id"]] |
       x: payload["x"],
       y: payload["y"]
-    } |> IO.inspect()
+    }
 
     slot_check =
       Notmg.Inventory.inventory_item_check(
@@ -256,6 +256,7 @@ defmodule Notmg.Room do
       else
         if inventory.equipped_items[item.id] != nil do
           inventory = put_in(inventory.equipped_items, inventory.equipped_items |> Map.delete(item.id))
+          inventory = put_in(inventory.items[item.id], item)
 
           state =
             put_in(state.entities[player_id], player |> Map.put(:inventory, inventory))
