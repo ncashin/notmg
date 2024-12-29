@@ -1,4 +1,5 @@
 import type { Channel } from "phoenix";
+import { Howl } from "howler";
 
 export type ChatMessage = {
   content: string;
@@ -71,5 +72,6 @@ declare global {
     map: Map;
     userToken: string;
     debug: boolean;
+    sounds: Record<string, Howl>;
   }
 }

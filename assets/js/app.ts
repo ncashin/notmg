@@ -1,4 +1,5 @@
 import { Socket, Presence } from "phoenix";
+import { Howl } from "howler";
 import {
   drawUI,
   handleInventoryMouseDown,
@@ -61,6 +62,12 @@ document.addEventListener("DOMContentLoaded", () => {
     },
     projectile: loadImage("/assets/projectile.png"),
   };
+
+  const sounds = {
+    enemyHit: new Howl({ src: ["/assets/enemy_hit.wav"] }),
+  };
+  window.sounds = sounds;
+
   channel
     .join()
     .receive("ok", (resp) => {
