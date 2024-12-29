@@ -94,7 +94,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const sprites = {
     player: loadImage("/assets/notmglittleguy.png"),
     leviathan: loadImage("/assets/leviathan.png"),
-    button: loadImage("/assets/notmglittleguy.png"),
+    button: (entity) => {
+      drawDebugCircle(entity.radius, entity.x, entity.y);
+      context.fillStyle = "yellow";
+      context.fill();
+    },
     projectile: (entity) => {
       drawDebugCircle(entity.radius, entity.x, entity.y);
       context.fillStyle = "white";
