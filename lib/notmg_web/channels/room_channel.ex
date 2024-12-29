@@ -16,7 +16,10 @@ defmodule NotmgWeb.RoomChannel do
     socket = setup_user_id(socket)
 
     if authorized?(payload) do
-      DynamicSupervisor.start_child(Notmg.RoomSupervisor, {Room, room_id})
+      case DynamicSupervisor.start_child(Notmg.RoomSupervisor, {Room, room_id}) do
+        {:ok, _pid} -> :ok
+        {:error, {:already_started, _pid}} -> :ok
+      end
 
       case Room.join(room_id, socket.assigns.user_id) do
         {:ok, join_payload} ->
