@@ -72,7 +72,9 @@ defmodule NotmgWeb.RoomChannel do
 
   @impl true
   def handle_in("inventory", payload, socket) do
-    {:ok, updated_inventory} = Room.update_inventory(socket.assigns.room_id, socket.assigns.user_id, payload)
+    {:ok, updated_inventory} =
+      Room.update_inventory(socket.assigns.room_id, socket.assigns.user_id, payload)
+
     {:reply, {:ok, updated_inventory}, socket}
   end
 

@@ -111,8 +111,10 @@ document.addEventListener("DOMContentLoaded", () => {
       map = resp.map;
 
       map.layers = map.layer_names.reduce((acc, layerName) => {
-        if (layerName !== 'entities') {
-          acc[layerName] = loadImage(`/assets/map/png/${map.name}__${layerName}.png`);
+        if (layerName !== "entities") {
+          acc[layerName] = loadImage(
+            `/assets/map/png/${map.name}__${layerName}.png`,
+          );
         }
         return acc;
       }, {});
@@ -335,15 +337,17 @@ document.addEventListener("DOMContentLoaded", () => {
     clearCanvas();
 
     if (map) {
-      Object.entries(map.layers).reverse().forEach(([layerName, layer]) => {
-        context.drawImage(
-          layer as CanvasImageSource,
-          map.world_x - cameraX,
-          map.world_y - cameraY,
-          map.width,
-          map.height
-        );
-      });
+      Object.entries(map.layers)
+        .reverse()
+        .forEach(([layerName, layer]) => {
+          context.drawImage(
+            layer as CanvasImageSource,
+            map.world_x - cameraX,
+            map.world_y - cameraY,
+            map.width,
+            map.height,
+          );
+        });
     }
 
     if (state !== undefined && state.entities !== undefined) {

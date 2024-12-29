@@ -59,76 +59,78 @@ defmodule Notmg.Inventory do
   end
 
   def inventory_item_check(inventory, item, x, y) do
-    slot_type = Enum.reduce_while(item.colliders, item.type, fn collider, acc ->
-      slot = check_slots(inventory, x, y, collider, item.type)
-      slot_type = if slot == acc, do: acc, else: :none
-      if slot != nil do
-        {:cont, slot_type}
-      else
-        {:halt, nil}
-      end
-    end)
-    if Enum.reduce_while(item.colliders, true, fn collider, _ ->
-        cx = x + collider.offset_x
-        cy = y + collider.offset_y
+    slot_type =
+      Enum.reduce_while(item.colliders, item.type, fn collider, acc ->
+        slot = check_slots(inventory, x, y, collider, item.type)
+        slot_type = if slot == acc, do: acc, else: :none
 
-        if !Enum.reduce_while(inventory.items, true, fn {_id, iter_item}, _ ->
-             if item.id != iter_item.id ||
-                  Enum.reduce_while(iter_item.colliders, true, fn other_collider, _ ->
-                    ocx = item.x + other_collider.offset_x
-                    ocy = item.y + other_collider.offset_y
-
-                    noXOverlap =
-                      ocx + other_collider.width - 1 < cx || ocx > cx + collider.width - 1
-
-                    noYOverlap =
-                      ocy + other_collider.height - 1 < cy || ocy > cy + collider.height - 1
-
-                    if noXOverlap || noYOverlap do
-                      {:cont, true}
-                    else
-                      {:halt, false}
-                    end
-                  end) do
-               {:cont, true}
-             else
-               {:cont, true}
-             end
-           end) do
-          {:cont, true}
+        if slot != nil do
+          {:cont, slot_type}
         else
-          {:halt, false}
+          {:halt, nil}
         end
-      end) do
-        nil
-      else
-        slot_type
-      end
+      end)
+
+    if Enum.reduce_while(item.colliders, true, fn collider, _ ->
+         cx = x + collider.offset_x
+         cy = y + collider.offset_y
+
+         if !Enum.reduce_while(inventory.items, true, fn {_id, iter_item}, _ ->
+              if item.id != iter_item.id ||
+                   Enum.reduce_while(iter_item.colliders, true, fn other_collider, _ ->
+                     ocx = item.x + other_collider.offset_x
+                     ocy = item.y + other_collider.offset_y
+
+                     noXOverlap =
+                       ocx + other_collider.width - 1 < cx || ocx > cx + collider.width - 1
+
+                     noYOverlap =
+                       ocy + other_collider.height - 1 < cy || ocy > cy + collider.height - 1
+
+                     if noXOverlap || noYOverlap do
+                       {:cont, true}
+                     else
+                       {:halt, false}
+                     end
+                   end) do
+                {:cont, true}
+              else
+                {:cont, true}
+              end
+            end) do
+           {:cont, true}
+         else
+           {:halt, false}
+         end
+       end) do
+      nil
+    else
+      slot_type
+    end
   end
 
   defp check_slots(inventory, x, y, collider, type) do
-    IO.inspect(type)
-      0..(collider.width - 1)
-      |> Enum.to_list()
-      |> Enum.reduce_while(type, fn dx, type ->
-        slot =
-          0..(collider.height - 1)
-          |> Enum.to_list()
-          |> Enum.reduce_while(type, fn dy, type ->
-            slot =
-              inventory_slot_check(
-                inventory,
-                x + collider.offset_x + dx,
-                y + collider.offset_y + dy
-              ) |> IO.inspect()
+    0..(collider.width - 1)
+    |> Enum.to_list()
+    |> Enum.reduce_while(type, fn dx, type ->
+      slot =
+        0..(collider.height - 1)
+        |> Enum.to_list()
+        |> Enum.reduce_while(type, fn dy, type ->
+          slot =
+            inventory_slot_check(
+              inventory,
+              x + collider.offset_x + dx,
+              y + collider.offset_y + dy
+            )
 
-            slot_type = if slot == type, do: type, else: :none
-            if slot != nil, do: {:cont, slot_type}, else: {:halt, nil}
-          end)
+          slot_type = if slot == type, do: type, else: :none
+          if slot != nil, do: {:cont, slot_type}, else: {:halt, nil}
+        end)
 
-        slot_type = if slot == type, do: type, else: :none
-        if slot != nil, do: {:cont, slot_type}, else: {:halt, nil}
-      end)
+      slot_type = if slot == type, do: type, else: :none
+      if slot != nil, do: {:cont, slot_type}, else: {:halt, nil}
+    end)
   end
 
   def new do

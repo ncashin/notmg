@@ -56,7 +56,7 @@ const inventoryItemCheck = (inventory, item, x, y) => {
         const slotExists = inventorySlotCheck(
           inventory,
           x + collider.offset_x + dx,
-          y + collider.offset_y + dy
+          y + collider.offset_y + dy,
         );
         if (!slotExists) return false;
       }
@@ -97,7 +97,7 @@ export const handleInventoryMouseDown = (event) => {
   const clickedCell = getInventoryCellFromMousePosition(
     inventory,
     event.clientX,
-    event.clientY
+    event.clientY,
   );
   if (!clickedCell) return false;
   const [x, y] = clickedCell;
@@ -108,13 +108,13 @@ export const handleInventoryMouseDown = (event) => {
       inventory,
       selectedItem,
       x + pickupX,
-      y + pickupY
+      y + pickupY,
     );
     const collisionCheck = getCollidingItem(
       inventory,
       selectedItem,
       x + pickupX,
-      y + pickupY
+      y + pickupY,
     );
     if (slotCheck || collisionCheck) return true;
 
@@ -137,7 +137,7 @@ export const handleInventoryMouseMove = (event) => {
   const hoveredCell = getInventoryCellFromMousePosition(
     inventory,
     event.clientX,
-    event.clientY
+    event.clientY,
   );
   if (!hoveredCell) return false;
   const [x, y] = hoveredCell;
@@ -148,7 +148,7 @@ const drawItemColliders = (item, x, y) => {
       x + collider.offset_x * cellSize,
       y + collider.offset_y * cellSize,
       collider.width * cellSize,
-      collider.height * cellSize
+      collider.height * cellSize,
     );
   });
 };
@@ -167,7 +167,7 @@ const drawInventorySlots = (inventory) => {
       slot.x * cellSize,
       slot.y * cellSize,
       slot.width * cellSize,
-      slot.height * cellSize
+      slot.height * cellSize,
     );
     context.fillStyle = "black";
     for (let i = 0; i < slot.width + 1; i++) {
@@ -175,7 +175,7 @@ const drawInventorySlots = (inventory) => {
         slot.x * cellSize + i * cellSize,
         slot.y * cellSize,
         1,
-        slot.height * cellSize
+        slot.height * cellSize,
       );
     }
     for (let i = 0; i < slot.height + 1; i++) {
@@ -183,7 +183,7 @@ const drawInventorySlots = (inventory) => {
         slot.x * cellSize,
         slot.y * cellSize + i * cellSize,
         slot.width * cellSize,
-        1
+        1,
       );
     }
   });
@@ -211,20 +211,20 @@ export const drawUI = () => {
         inventory,
         selectedItem,
         cellX + pickupX,
-        cellY + pickupY
+        cellY + pickupY,
       );
       const collisionCheck = getCollidingItem(
         inventory,
         selectedItem,
         cellX + pickupX,
-        cellY + pickupY
+        cellY + pickupY,
       );
       if (!slotCheck && !collisionCheck) {
         context.fillStyle = "yellow";
         drawItemColliders(
           selectedItem,
           cellSize * (cellX + pickupX),
-          cellSize * (cellY + pickupY)
+          cellSize * (cellY + pickupY),
         );
       }
     }
@@ -232,7 +232,7 @@ export const drawUI = () => {
     drawItemColliders(
       ghostItem,
       x - cellSize / 2 + pickupX * cellSize,
-      y - cellSize / 2 + pickupY * cellSize
+      y - cellSize / 2 + pickupY * cellSize,
     );
   }
 

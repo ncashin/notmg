@@ -42,7 +42,10 @@ defmodule Notmg.Maps do
                 name: entity.identifier |> String.to_atom(),
                 world_x: entity.world_x * @map_scale,
                 world_y: entity.world_y * @map_scale,
-                fields: Map.new(entity.field_instances, fn field -> {String.to_atom(field.identifier), field.value} end)
+                fields:
+                  Map.new(entity.field_instances, fn field ->
+                    {String.to_atom(field.identifier), field.value}
+                  end)
               }
             end
         end

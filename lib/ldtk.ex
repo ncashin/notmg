@@ -13,33 +13,33 @@ defmodule Ldtk.WhenEnum do
     :AfterLoad,
     :AfterSave,
     :BeforeSave,
-    :Manual,
+    :Manual
   ]
 
   def valid_atom?(value), do: value in @valid_enum_members
 
   def valid_atom_string?(value) do
     try do
-        atom = String.to_existing_atom(value)
-        atom in @valid_enum_members
+      atom = String.to_existing_atom(value)
+      atom in @valid_enum_members
     rescue
-        ArgumentError -> false
+      ArgumentError -> false
     end
   end
 
   def encode(value) do
     if valid_atom?(value) do
-        Atom.to_string(value)
+      Atom.to_string(value)
     else
-        {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
     end
   end
 
   def decode(value) do
     if valid_atom_string?(value) do
-        String.to_existing_atom(value)
+      String.to_existing_atom(value)
     else
-        {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
     end
   end
 
@@ -72,27 +72,27 @@ defmodule Ldtk.LdtkCustomCommand do
   def from_map(m) do
     %Ldtk.LdtkCustomCommand{
       command: m["command"],
-      ldtk_custom_command_when: Ldtk.WhenEnum.decode(m["when"]),
+      ldtk_custom_command_when: Ldtk.WhenEnum.decode(m["when"])
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
     %{
       "command" => struct.command,
-      "when" => Ldtk.WhenEnum.encode(struct.ldtk_custom_command_when),
+      "when" => Ldtk.WhenEnum.encode(struct.ldtk_custom_command_when)
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end
 
@@ -104,33 +104,33 @@ defmodule Ldtk.AllowedRefs do
     :Any,
     :OnlySame,
     :OnlySpecificEntity,
-    :OnlyTags,
+    :OnlyTags
   ]
 
   def valid_atom?(value), do: value in @valid_enum_members
 
   def valid_atom_string?(value) do
     try do
-        atom = String.to_existing_atom(value)
-        atom in @valid_enum_members
+      atom = String.to_existing_atom(value)
+      atom in @valid_enum_members
     rescue
-        ArgumentError -> false
+      ArgumentError -> false
     end
   end
 
   def encode(value) do
     if valid_atom?(value) do
-        Atom.to_string(value)
+      Atom.to_string(value)
     else
-        {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
     end
   end
 
   def decode(value) do
     if valid_atom_string?(value) do
-        String.to_existing_atom(value)
+      String.to_existing_atom(value)
     else
-        {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
     end
   end
 
@@ -169,33 +169,33 @@ defmodule Ldtk.EditorDisplayMode do
     :RadiusPx,
     :RefLinkBetweenCenters,
     :RefLinkBetweenPivots,
-    :ValueOnly,
+    :ValueOnly
   ]
 
   def valid_atom?(value), do: value in @valid_enum_members
 
   def valid_atom_string?(value) do
     try do
-        atom = String.to_existing_atom(value)
-        atom in @valid_enum_members
+      atom = String.to_existing_atom(value)
+      atom in @valid_enum_members
     rescue
-        ArgumentError -> false
+      ArgumentError -> false
     end
   end
 
   def encode(value) do
     if valid_atom?(value) do
-        Atom.to_string(value)
+      Atom.to_string(value)
     else
-        {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
     end
   end
 
   def decode(value) do
     if valid_atom_string?(value) do
-        String.to_existing_atom(value)
+      String.to_existing_atom(value)
     else
-        {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
     end
   end
 
@@ -219,33 +219,33 @@ defmodule Ldtk.EditorDisplayPos do
   @valid_enum_members [
     :Above,
     :Beneath,
-    :Center,
+    :Center
   ]
 
   def valid_atom?(value), do: value in @valid_enum_members
 
   def valid_atom_string?(value) do
     try do
-        atom = String.to_existing_atom(value)
-        atom in @valid_enum_members
+      atom = String.to_existing_atom(value)
+      atom in @valid_enum_members
     rescue
-        ArgumentError -> false
+      ArgumentError -> false
     end
   end
 
   def encode(value) do
     if valid_atom?(value) do
-        Atom.to_string(value)
+      Atom.to_string(value)
     else
-        {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
     end
   end
 
   def decode(value) do
     if valid_atom_string?(value) do
-        String.to_existing_atom(value)
+      String.to_existing_atom(value)
     else
-        {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
     end
   end
 
@@ -271,33 +271,33 @@ defmodule Ldtk.EditorLinkStyle do
     :CurvedArrow,
     :DashedLine,
     :StraightArrow,
-    :ZigZag,
+    :ZigZag
   ]
 
   def valid_atom?(value), do: value in @valid_enum_members
 
   def valid_atom_string?(value) do
     try do
-        atom = String.to_existing_atom(value)
-        atom in @valid_enum_members
+      atom = String.to_existing_atom(value)
+      atom in @valid_enum_members
     rescue
-        ArgumentError -> false
+      ArgumentError -> false
     end
   end
 
   def encode(value) do
     if valid_atom?(value) do
-        Atom.to_string(value)
+      Atom.to_string(value)
     else
-        {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
     end
   end
 
   def decode(value) do
     if valid_atom_string?(value) do
-        String.to_existing_atom(value)
+      String.to_existing_atom(value)
     else
-        {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
     end
   end
 
@@ -325,33 +325,33 @@ defmodule Ldtk.TextLanguageMode do
     :LangMarkdown,
     :LangPython,
     :LangRuby,
-    :LangXml,
+    :LangXml
   ]
 
   def valid_atom?(value), do: value in @valid_enum_members
 
   def valid_atom_string?(value) do
     try do
-        atom = String.to_existing_atom(value)
-        atom in @valid_enum_members
+      atom = String.to_existing_atom(value)
+      atom in @valid_enum_members
     rescue
-        ArgumentError -> false
+      ArgumentError -> false
     end
   end
 
   def encode(value) do
     if valid_atom?(value) do
-        Atom.to_string(value)
+      Atom.to_string(value)
     else
-        {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
     end
   end
 
   def decode(value) do
     if valid_atom_string?(value) do
-        String.to_existing_atom(value)
+      String.to_existing_atom(value)
     else
-        {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
     end
   end
 
@@ -397,8 +397,66 @@ defmodule Ldtk.FieldDefinition do
   - `:use_for_smart_color` - If TRUE, the color associated with this field will override the Entity or Level defaultcolor in the editor UI. For Enum fields, this would be the color associated to theirvalues.
   """
 
-  @enforce_keys [:type, :allowed_refs, :allowed_ref_tags, :allow_out_of_level_ref, :auto_chain_ref, :can_be_null, :editor_always_show, :editor_cut_long_values, :editor_display_mode, :editor_display_pos, :editor_display_scale, :editor_link_style, :editor_show_in_world, :export_to_toc, :identifier, :is_array, :searchable, :symmetrical_ref, :field_definition_type, :uid, :use_for_smart_color]
-  defstruct [:type, :accept_file_types, :allowed_refs, :allowed_refs_entity_uid, :allowed_ref_tags, :allow_out_of_level_ref, :array_max_length, :array_min_length, :auto_chain_ref, :can_be_null, :default_override, :doc, :editor_always_show, :editor_cut_long_values, :editor_display_color, :editor_display_mode, :editor_display_pos, :editor_display_scale, :editor_link_style, :editor_show_in_world, :editor_text_prefix, :editor_text_suffix, :export_to_toc, :identifier, :is_array, :max, :min, :regex, :searchable, :symmetrical_ref, :text_language_mode, :tileset_uid, :field_definition_type, :uid, :use_for_smart_color]
+  @enforce_keys [
+    :type,
+    :allowed_refs,
+    :allowed_ref_tags,
+    :allow_out_of_level_ref,
+    :auto_chain_ref,
+    :can_be_null,
+    :editor_always_show,
+    :editor_cut_long_values,
+    :editor_display_mode,
+    :editor_display_pos,
+    :editor_display_scale,
+    :editor_link_style,
+    :editor_show_in_world,
+    :export_to_toc,
+    :identifier,
+    :is_array,
+    :searchable,
+    :symmetrical_ref,
+    :field_definition_type,
+    :uid,
+    :use_for_smart_color
+  ]
+  defstruct [
+    :type,
+    :accept_file_types,
+    :allowed_refs,
+    :allowed_refs_entity_uid,
+    :allowed_ref_tags,
+    :allow_out_of_level_ref,
+    :array_max_length,
+    :array_min_length,
+    :auto_chain_ref,
+    :can_be_null,
+    :default_override,
+    :doc,
+    :editor_always_show,
+    :editor_cut_long_values,
+    :editor_display_color,
+    :editor_display_mode,
+    :editor_display_pos,
+    :editor_display_scale,
+    :editor_link_style,
+    :editor_show_in_world,
+    :editor_text_prefix,
+    :editor_text_suffix,
+    :export_to_toc,
+    :identifier,
+    :is_array,
+    :max,
+    :min,
+    :regex,
+    :searchable,
+    :symmetrical_ref,
+    :text_language_mode,
+    :tileset_uid,
+    :field_definition_type,
+    :uid,
+    :use_for_smart_color
+  ]
 
   @type t :: %__MODULE__{
           type: String.t(),
@@ -470,18 +528,19 @@ defmodule Ldtk.FieldDefinition do
       regex: m["regex"],
       searchable: m["searchable"],
       symmetrical_ref: m["symmetricalRef"],
-      text_language_mode: m["textLanguageMode"] && Ldtk.TextLanguageMode.decode(m["textLanguageMode"]),
+      text_language_mode:
+        m["textLanguageMode"] && Ldtk.TextLanguageMode.decode(m["textLanguageMode"]),
       tileset_uid: m["tilesetUid"],
       field_definition_type: m["type"],
       uid: m["uid"],
-      use_for_smart_color: m["useForSmartColor"],
+      use_for_smart_color: m["useForSmartColor"]
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
@@ -516,18 +575,19 @@ defmodule Ldtk.FieldDefinition do
       "regex" => struct.regex,
       "searchable" => struct.searchable,
       "symmetricalRef" => struct.symmetrical_ref,
-      "textLanguageMode" => struct.text_language_mode && Ldtk.TextLanguageMode.encode(struct.text_language_mode),
+      "textLanguageMode" =>
+        struct.text_language_mode && Ldtk.TextLanguageMode.encode(struct.text_language_mode),
       "tilesetUid" => struct.tileset_uid,
       "type" => struct.field_definition_type,
       "uid" => struct.uid,
-      "useForSmartColor" => struct.use_for_smart_color,
+      "useForSmartColor" => struct.use_for_smart_color
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end
 
@@ -538,33 +598,33 @@ defmodule Ldtk.LimitBehavior do
   @valid_enum_members [
     :DiscardOldOnes,
     :MoveLastOne,
-    :PreventAdding,
+    :PreventAdding
   ]
 
   def valid_atom?(value), do: value in @valid_enum_members
 
   def valid_atom_string?(value) do
     try do
-        atom = String.to_existing_atom(value)
-        atom in @valid_enum_members
+      atom = String.to_existing_atom(value)
+      atom in @valid_enum_members
     rescue
-        ArgumentError -> false
+      ArgumentError -> false
     end
   end
 
   def encode(value) do
     if valid_atom?(value) do
-        Atom.to_string(value)
+      Atom.to_string(value)
     else
-        {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
     end
   end
 
   def decode(value) do
     if valid_atom_string?(value) do
-        String.to_existing_atom(value)
+      String.to_existing_atom(value)
     else
-        {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
     end
   end
 
@@ -589,33 +649,33 @@ defmodule Ldtk.LimitScope do
   @valid_enum_members [
     :PerLayer,
     :PerLevel,
-    :PerWorld,
+    :PerWorld
   ]
 
   def valid_atom?(value), do: value in @valid_enum_members
 
   def valid_atom_string?(value) do
     try do
-        atom = String.to_existing_atom(value)
-        atom in @valid_enum_members
+      atom = String.to_existing_atom(value)
+      atom in @valid_enum_members
     rescue
-        ArgumentError -> false
+      ArgumentError -> false
     end
   end
 
   def encode(value) do
     if valid_atom?(value) do
-        Atom.to_string(value)
+      Atom.to_string(value)
     else
-        {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
     end
   end
 
   def decode(value) do
     if valid_atom_string?(value) do
-        String.to_existing_atom(value)
+      String.to_existing_atom(value)
     else
-        {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
     end
   end
 
@@ -640,33 +700,33 @@ defmodule Ldtk.RenderMode do
     :Cross,
     :Ellipse,
     :Rectangle,
-    :Tile,
+    :Tile
   ]
 
   def valid_atom?(value), do: value in @valid_enum_members
 
   def valid_atom_string?(value) do
     try do
-        atom = String.to_existing_atom(value)
-        atom in @valid_enum_members
+      atom = String.to_existing_atom(value)
+      atom in @valid_enum_members
     rescue
-        ArgumentError -> false
+      ArgumentError -> false
     end
   end
 
   def encode(value) do
     if valid_atom?(value) do
-        Atom.to_string(value)
+      Atom.to_string(value)
     else
-        {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
     end
   end
 
   def decode(value) do
     if valid_atom_string?(value) do
-        String.to_existing_atom(value)
+      String.to_existing_atom(value)
     else
-        {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
     end
   end
 
@@ -710,14 +770,14 @@ defmodule Ldtk.TilesetRectangle do
       tileset_uid: m["tilesetUid"],
       w: m["w"],
       x: m["x"],
-      y: m["y"],
+      y: m["y"]
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
@@ -726,14 +786,14 @@ defmodule Ldtk.TilesetRectangle do
       "tilesetUid" => struct.tileset_uid,
       "w" => struct.w,
       "x" => struct.x,
-      "y" => struct.y,
+      "y" => struct.y
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end
 
@@ -750,33 +810,33 @@ defmodule Ldtk.TileRenderMode do
     :FullSizeUncropped,
     :NineSlice,
     :Repeat,
-    :Stretch,
+    :Stretch
   ]
 
   def valid_atom?(value), do: value in @valid_enum_members
 
   def valid_atom_string?(value) do
     try do
-        atom = String.to_existing_atom(value)
-        atom in @valid_enum_members
+      atom = String.to_existing_atom(value)
+      atom in @valid_enum_members
     rescue
-        ArgumentError -> false
+      ArgumentError -> false
     end
   end
 
   def encode(value) do
     if valid_atom?(value) do
-        Atom.to_string(value)
+      Atom.to_string(value)
     else
-        {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
     end
   end
 
   def decode(value) do
     if valid_atom_string?(value) do
-        String.to_existing_atom(value)
+      String.to_existing_atom(value)
     else
-        {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
     end
   end
 
@@ -827,8 +887,69 @@ defmodule Ldtk.EntityDefinition do
   - `:width` - Pixel width
   """
 
-  @enforce_keys [:allow_out_of_bounds, :color, :export_to_toc, :field_defs, :fill_opacity, :height, :hollow, :identifier, :keep_aspect_ratio, :limit_behavior, :limit_scope, :line_opacity, :max_count, :nine_slice_borders, :pivot_x, :pivot_y, :render_mode, :resizable_x, :resizable_y, :show_name, :tags, :tile_opacity, :tile_render_mode, :uid, :width]
-  defstruct [:allow_out_of_bounds, :color, :doc, :export_to_toc, :field_defs, :fill_opacity, :height, :hollow, :identifier, :keep_aspect_ratio, :limit_behavior, :limit_scope, :line_opacity, :max_count, :max_height, :max_width, :min_height, :min_width, :nine_slice_borders, :pivot_x, :pivot_y, :render_mode, :resizable_x, :resizable_y, :show_name, :tags, :tile_id, :tile_opacity, :tile_rect, :tile_render_mode, :tileset_id, :uid, :ui_tile_rect, :width]
+  @enforce_keys [
+    :allow_out_of_bounds,
+    :color,
+    :export_to_toc,
+    :field_defs,
+    :fill_opacity,
+    :height,
+    :hollow,
+    :identifier,
+    :keep_aspect_ratio,
+    :limit_behavior,
+    :limit_scope,
+    :line_opacity,
+    :max_count,
+    :nine_slice_borders,
+    :pivot_x,
+    :pivot_y,
+    :render_mode,
+    :resizable_x,
+    :resizable_y,
+    :show_name,
+    :tags,
+    :tile_opacity,
+    :tile_render_mode,
+    :uid,
+    :width
+  ]
+  defstruct [
+    :allow_out_of_bounds,
+    :color,
+    :doc,
+    :export_to_toc,
+    :field_defs,
+    :fill_opacity,
+    :height,
+    :hollow,
+    :identifier,
+    :keep_aspect_ratio,
+    :limit_behavior,
+    :limit_scope,
+    :line_opacity,
+    :max_count,
+    :max_height,
+    :max_width,
+    :min_height,
+    :min_width,
+    :nine_slice_borders,
+    :pivot_x,
+    :pivot_y,
+    :render_mode,
+    :resizable_x,
+    :resizable_y,
+    :show_name,
+    :tags,
+    :tile_id,
+    :tile_opacity,
+    :tile_rect,
+    :tile_render_mode,
+    :tileset_id,
+    :uid,
+    :ui_tile_rect,
+    :width
+  ]
 
   @type t :: %__MODULE__{
           allow_out_of_bounds: boolean(),
@@ -902,14 +1023,14 @@ defmodule Ldtk.EntityDefinition do
       tileset_id: m["tilesetId"],
       uid: m["uid"],
       ui_tile_rect: m["uiTileRect"] && Ldtk.TilesetRectangle.from_map(m["uiTileRect"]),
-      width: m["width"],
+      width: m["width"]
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
@@ -918,7 +1039,8 @@ defmodule Ldtk.EntityDefinition do
       "color" => struct.color,
       "doc" => struct.doc,
       "exportToToc" => struct.export_to_toc,
-      "fieldDefs" => struct.field_defs && Enum.map(struct.field_defs, &Ldtk.FieldDefinition.to_map/1),
+      "fieldDefs" =>
+        struct.field_defs && Enum.map(struct.field_defs, &Ldtk.FieldDefinition.to_map/1),
       "fillOpacity" => struct.fill_opacity,
       "height" => struct.height,
       "hollow" => struct.hollow,
@@ -947,14 +1069,14 @@ defmodule Ldtk.EntityDefinition do
       "tilesetId" => struct.tileset_id,
       "uid" => struct.uid,
       "uiTileRect" => struct.ui_tile_rect && Ldtk.TilesetRectangle.to_map(struct.ui_tile_rect),
-      "width" => struct.width,
+      "width" => struct.width
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end
 
@@ -984,14 +1106,14 @@ defmodule Ldtk.EnumValueDefinition do
       color: m["color"],
       id: m["id"],
       tile_id: m["tileId"],
-      tile_rect: m["tileRect"] && Ldtk.TilesetRectangle.from_map(m["tileRect"]),
+      tile_rect: m["tileRect"] && Ldtk.TilesetRectangle.from_map(m["tileRect"])
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
@@ -1000,14 +1122,14 @@ defmodule Ldtk.EnumValueDefinition do
       "color" => struct.color,
       "id" => struct.id,
       "tileId" => struct.tile_id,
-      "tileRect" => struct.tile_rect && Ldtk.TilesetRectangle.to_map(struct.tile_rect),
+      "tileRect" => struct.tile_rect && Ldtk.TilesetRectangle.to_map(struct.tile_rect)
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end
 
@@ -1022,7 +1144,15 @@ defmodule Ldtk.EnumDefinition do
   """
 
   @enforce_keys [:identifier, :tags, :uid, :values]
-  defstruct [:external_file_checksum, :external_rel_path, :icon_tileset_uid, :identifier, :tags, :uid, :values]
+  defstruct [
+    :external_file_checksum,
+    :external_rel_path,
+    :icon_tileset_uid,
+    :identifier,
+    :tags,
+    :uid,
+    :values
+  ]
 
   @type t :: %__MODULE__{
           external_file_checksum: nil | String.t() | nil,
@@ -1042,14 +1172,14 @@ defmodule Ldtk.EnumDefinition do
       identifier: m["identifier"],
       tags: m["tags"],
       uid: m["uid"],
-      values: Enum.map(m["values"], &Ldtk.EnumValueDefinition.from_map/1),
+      values: Enum.map(m["values"], &Ldtk.EnumValueDefinition.from_map/1)
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
@@ -1060,14 +1190,14 @@ defmodule Ldtk.EnumDefinition do
       "identifier" => struct.identifier,
       "tags" => struct.tags,
       "uid" => struct.uid,
-      "values" => struct.values && Enum.map(struct.values, &Ldtk.EnumValueDefinition.to_map/1),
+      "values" => struct.values && Enum.map(struct.values, &Ldtk.EnumValueDefinition.to_map/1)
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end
 
@@ -1078,33 +1208,33 @@ defmodule Ldtk.Checker do
   @valid_enum_members [
     :Horizontal,
     :None,
-    :Vertical,
+    :Vertical
   ]
 
   def valid_atom?(value), do: value in @valid_enum_members
 
   def valid_atom_string?(value) do
     try do
-        atom = String.to_existing_atom(value)
-        atom in @valid_enum_members
+      atom = String.to_existing_atom(value)
+      atom in @valid_enum_members
     rescue
-        ArgumentError -> false
+      ArgumentError -> false
     end
   end
 
   def encode(value) do
     if valid_atom?(value) do
-        Atom.to_string(value)
+      Atom.to_string(value)
     else
-        {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
     end
   end
 
   def decode(value) do
     if valid_atom_string?(value) do
-        String.to_existing_atom(value)
+      String.to_existing_atom(value)
     else
-        {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
     end
   end
 
@@ -1127,33 +1257,33 @@ defmodule Ldtk.TileMode do
   """
   @valid_enum_members [
     :Single,
-    :Stamp,
+    :Stamp
   ]
 
   def valid_atom?(value), do: value in @valid_enum_members
 
   def valid_atom_string?(value) do
     try do
-        atom = String.to_existing_atom(value)
-        atom in @valid_enum_members
+      atom = String.to_existing_atom(value)
+      atom in @valid_enum_members
     rescue
-        ArgumentError -> false
+      ArgumentError -> false
     end
   end
 
   def encode(value) do
     if valid_atom?(value) do
-        Atom.to_string(value)
+      Atom.to_string(value)
     else
-        {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
     end
   end
 
   def decode(value) do
     if valid_atom_string?(value) do
-        String.to_existing_atom(value)
+      String.to_existing_atom(value)
     else
-        {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
     end
   end
 
@@ -1204,8 +1334,70 @@ defmodule Ldtk.AutoLayerRuleDefinition do
   - `:y_offset` - Y cell start offset
   """
 
-  @enforce_keys [:active, :alpha, :break_on_match, :chance, :checker, :flip_x, :flip_y, :invalidated, :pattern, :perlin_active, :perlin_octaves, :perlin_scale, :perlin_seed, :pivot_x, :pivot_y, :size, :tile_mode, :tile_random_x_max, :tile_random_x_min, :tile_random_y_max, :tile_random_y_min, :tile_rects_ids, :tile_x_offset, :tile_y_offset, :uid, :x_modulo, :x_offset, :y_modulo, :y_offset]
-  defstruct [:active, :alpha, :break_on_match, :chance, :checker, :flip_x, :flip_y, :invalidated, :out_of_bounds_value, :pattern, :perlin_active, :perlin_octaves, :perlin_scale, :perlin_seed, :pivot_x, :pivot_y, :size, :tile_ids, :tile_mode, :tile_random_x_max, :tile_random_x_min, :tile_random_y_max, :tile_random_y_min, :tile_rects_ids, :tile_x_offset, :tile_y_offset, :uid, :x_modulo, :x_offset, :y_modulo, :y_offset]
+  @enforce_keys [
+    :active,
+    :alpha,
+    :break_on_match,
+    :chance,
+    :checker,
+    :flip_x,
+    :flip_y,
+    :invalidated,
+    :pattern,
+    :perlin_active,
+    :perlin_octaves,
+    :perlin_scale,
+    :perlin_seed,
+    :pivot_x,
+    :pivot_y,
+    :size,
+    :tile_mode,
+    :tile_random_x_max,
+    :tile_random_x_min,
+    :tile_random_y_max,
+    :tile_random_y_min,
+    :tile_rects_ids,
+    :tile_x_offset,
+    :tile_y_offset,
+    :uid,
+    :x_modulo,
+    :x_offset,
+    :y_modulo,
+    :y_offset
+  ]
+  defstruct [
+    :active,
+    :alpha,
+    :break_on_match,
+    :chance,
+    :checker,
+    :flip_x,
+    :flip_y,
+    :invalidated,
+    :out_of_bounds_value,
+    :pattern,
+    :perlin_active,
+    :perlin_octaves,
+    :perlin_scale,
+    :perlin_seed,
+    :pivot_x,
+    :pivot_y,
+    :size,
+    :tile_ids,
+    :tile_mode,
+    :tile_random_x_max,
+    :tile_random_x_min,
+    :tile_random_y_max,
+    :tile_random_y_min,
+    :tile_rects_ids,
+    :tile_x_offset,
+    :tile_y_offset,
+    :uid,
+    :x_modulo,
+    :x_offset,
+    :y_modulo,
+    :y_offset
+  ]
 
   @type t :: %__MODULE__{
           active: boolean(),
@@ -1273,14 +1465,14 @@ defmodule Ldtk.AutoLayerRuleDefinition do
       x_modulo: m["xModulo"],
       x_offset: m["xOffset"],
       y_modulo: m["yModulo"],
-      y_offset: m["yOffset"],
+      y_offset: m["yOffset"]
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
@@ -1315,14 +1507,14 @@ defmodule Ldtk.AutoLayerRuleDefinition do
       "xModulo" => struct.x_modulo,
       "xOffset" => struct.x_offset,
       "yModulo" => struct.y_modulo,
-      "yOffset" => struct.y_offset,
+      "yOffset" => struct.y_offset
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end
 
@@ -1331,8 +1523,29 @@ defmodule Ldtk.AutoLayerRuleGroup do
   - `:collapsed` - *This field was removed in 1.0.0 and should no longer be used.*
   """
 
-  @enforce_keys [:active, :biome_requirement_mode, :is_optional, :name, :required_biome_values, :rules, :uid, :uses_wizard]
-  defstruct [:active, :biome_requirement_mode, :collapsed, :color, :icon, :is_optional, :name, :required_biome_values, :rules, :uid, :uses_wizard]
+  @enforce_keys [
+    :active,
+    :biome_requirement_mode,
+    :is_optional,
+    :name,
+    :required_biome_values,
+    :rules,
+    :uid,
+    :uses_wizard
+  ]
+  defstruct [
+    :active,
+    :biome_requirement_mode,
+    :collapsed,
+    :color,
+    :icon,
+    :is_optional,
+    :name,
+    :required_biome_values,
+    :rules,
+    :uid,
+    :uses_wizard
+  ]
 
   @type t :: %__MODULE__{
           active: boolean(),
@@ -1360,14 +1573,14 @@ defmodule Ldtk.AutoLayerRuleGroup do
       required_biome_values: m["requiredBiomeValues"],
       rules: Enum.map(m["rules"], &Ldtk.AutoLayerRuleDefinition.from_map/1),
       uid: m["uid"],
-      uses_wizard: m["usesWizard"],
+      uses_wizard: m["usesWizard"]
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
@@ -1382,14 +1595,14 @@ defmodule Ldtk.AutoLayerRuleGroup do
       "requiredBiomeValues" => struct.required_biome_values,
       "rules" => struct.rules && Enum.map(struct.rules, &Ldtk.AutoLayerRuleDefinition.to_map/1),
       "uid" => struct.uid,
-      "usesWizard" => struct.uses_wizard,
+      "usesWizard" => struct.uses_wizard
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end
 
@@ -1418,14 +1631,14 @@ defmodule Ldtk.IntGridValueDefinition do
       group_uid: m["groupUid"],
       identifier: m["identifier"],
       tile: m["tile"] && Ldtk.TilesetRectangle.from_map(m["tile"]),
-      value: m["value"],
+      value: m["value"]
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
@@ -1434,14 +1647,14 @@ defmodule Ldtk.IntGridValueDefinition do
       "groupUid" => struct.group_uid,
       "identifier" => struct.identifier,
       "tile" => struct.tile && Ldtk.TilesetRectangle.to_map(struct.tile),
-      "value" => struct.value,
+      "value" => struct.value
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end
 
@@ -1466,28 +1679,28 @@ defmodule Ldtk.IntGridValueGroupDefinition do
     %Ldtk.IntGridValueGroupDefinition{
       color: m["color"],
       identifier: m["identifier"],
-      uid: m["uid"],
+      uid: m["uid"]
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
     %{
       "color" => struct.color,
       "identifier" => struct.identifier,
-      "uid" => struct.uid,
+      "uid" => struct.uid
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end
 
@@ -1500,33 +1713,33 @@ defmodule Ldtk.Type do
     :AutoLayer,
     :Entities,
     :IntGrid,
-    :Tiles,
+    :Tiles
   ]
 
   def valid_atom?(value), do: value in @valid_enum_members
 
   def valid_atom_string?(value) do
     try do
-        atom = String.to_existing_atom(value)
-        atom in @valid_enum_members
+      atom = String.to_existing_atom(value)
+      atom in @valid_enum_members
     rescue
-        ArgumentError -> false
+      ArgumentError -> false
     end
   end
 
   def encode(value) do
     if valid_atom?(value) do
-        Atom.to_string(value)
+      Atom.to_string(value)
     else
-        {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
     end
   end
 
   def decode(value) do
     if valid_atom_string?(value) do
-        String.to_existing_atom(value)
+      String.to_existing_atom(value)
     else
-        {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
     end
   end
 
@@ -1577,8 +1790,71 @@ defmodule Ldtk.LayerDefinition do
   - `:use_async_render` - Asynchronous rendering option for large/complex layers
   """
 
-  @enforce_keys [:type, :auto_rule_groups, :can_select_when_inactive, :display_opacity, :excluded_tags, :grid_size, :guide_grid_hei, :guide_grid_wid, :hide_fields_when_inactive, :hide_in_list, :identifier, :inactive_opacity, :int_grid_values, :int_grid_values_groups, :parallax_factor_x, :parallax_factor_y, :parallax_scaling, :px_offset_x, :px_offset_y, :render_in_world_view, :required_tags, :tile_pivot_x, :tile_pivot_y, :layer_definition_type, :uid, :ui_filter_tags, :use_async_render]
-  defstruct [:type, :auto_rule_groups, :auto_source_layer_def_uid, :auto_tileset_def_uid, :auto_tiles_killed_by_other_layer_uid, :biome_field_uid, :can_select_when_inactive, :display_opacity, :doc, :excluded_tags, :grid_size, :guide_grid_hei, :guide_grid_wid, :hide_fields_when_inactive, :hide_in_list, :identifier, :inactive_opacity, :int_grid_values, :int_grid_values_groups, :parallax_factor_x, :parallax_factor_y, :parallax_scaling, :px_offset_x, :px_offset_y, :render_in_world_view, :required_tags, :tile_pivot_x, :tile_pivot_y, :tileset_def_uid, :layer_definition_type, :ui_color, :uid, :ui_filter_tags, :use_async_render]
+  @enforce_keys [
+    :type,
+    :auto_rule_groups,
+    :can_select_when_inactive,
+    :display_opacity,
+    :excluded_tags,
+    :grid_size,
+    :guide_grid_hei,
+    :guide_grid_wid,
+    :hide_fields_when_inactive,
+    :hide_in_list,
+    :identifier,
+    :inactive_opacity,
+    :int_grid_values,
+    :int_grid_values_groups,
+    :parallax_factor_x,
+    :parallax_factor_y,
+    :parallax_scaling,
+    :px_offset_x,
+    :px_offset_y,
+    :render_in_world_view,
+    :required_tags,
+    :tile_pivot_x,
+    :tile_pivot_y,
+    :layer_definition_type,
+    :uid,
+    :ui_filter_tags,
+    :use_async_render
+  ]
+  defstruct [
+    :type,
+    :auto_rule_groups,
+    :auto_source_layer_def_uid,
+    :auto_tileset_def_uid,
+    :auto_tiles_killed_by_other_layer_uid,
+    :biome_field_uid,
+    :can_select_when_inactive,
+    :display_opacity,
+    :doc,
+    :excluded_tags,
+    :grid_size,
+    :guide_grid_hei,
+    :guide_grid_wid,
+    :hide_fields_when_inactive,
+    :hide_in_list,
+    :identifier,
+    :inactive_opacity,
+    :int_grid_values,
+    :int_grid_values_groups,
+    :parallax_factor_x,
+    :parallax_factor_y,
+    :parallax_scaling,
+    :px_offset_x,
+    :px_offset_y,
+    :render_in_world_view,
+    :required_tags,
+    :tile_pivot_x,
+    :tile_pivot_y,
+    :tileset_def_uid,
+    :layer_definition_type,
+    :ui_color,
+    :uid,
+    :ui_filter_tags,
+    :use_async_render
+  ]
 
   @type t :: %__MODULE__{
           type: String.t(),
@@ -1637,7 +1913,8 @@ defmodule Ldtk.LayerDefinition do
       identifier: m["identifier"],
       inactive_opacity: m["inactiveOpacity"],
       int_grid_values: Enum.map(m["intGridValues"], &Ldtk.IntGridValueDefinition.from_map/1),
-      int_grid_values_groups: Enum.map(m["intGridValuesGroups"], &Ldtk.IntGridValueGroupDefinition.from_map/1),
+      int_grid_values_groups:
+        Enum.map(m["intGridValuesGroups"], &Ldtk.IntGridValueGroupDefinition.from_map/1),
       parallax_factor_x: m["parallaxFactorX"],
       parallax_factor_y: m["parallaxFactorY"],
       parallax_scaling: m["parallaxScaling"],
@@ -1652,20 +1929,22 @@ defmodule Ldtk.LayerDefinition do
       ui_color: m["uiColor"],
       uid: m["uid"],
       ui_filter_tags: m["uiFilterTags"],
-      use_async_render: m["useAsyncRender"],
+      use_async_render: m["useAsyncRender"]
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
     %{
       "__type" => struct.type,
-      "autoRuleGroups" => struct.auto_rule_groups && Enum.map(struct.auto_rule_groups, &Ldtk.AutoLayerRuleGroup.to_map/1),
+      "autoRuleGroups" =>
+        struct.auto_rule_groups &&
+          Enum.map(struct.auto_rule_groups, &Ldtk.AutoLayerRuleGroup.to_map/1),
       "autoSourceLayerDefUid" => struct.auto_source_layer_def_uid,
       "autoTilesetDefUid" => struct.auto_tileset_def_uid,
       "autoTilesKilledByOtherLayerUid" => struct.auto_tiles_killed_by_other_layer_uid,
@@ -1681,8 +1960,12 @@ defmodule Ldtk.LayerDefinition do
       "hideInList" => struct.hide_in_list,
       "identifier" => struct.identifier,
       "inactiveOpacity" => struct.inactive_opacity,
-      "intGridValues" => struct.int_grid_values && Enum.map(struct.int_grid_values, &Ldtk.IntGridValueDefinition.to_map/1),
-      "intGridValuesGroups" => struct.int_grid_values_groups && Enum.map(struct.int_grid_values_groups, &Ldtk.IntGridValueGroupDefinition.to_map/1),
+      "intGridValues" =>
+        struct.int_grid_values &&
+          Enum.map(struct.int_grid_values, &Ldtk.IntGridValueDefinition.to_map/1),
+      "intGridValuesGroups" =>
+        struct.int_grid_values_groups &&
+          Enum.map(struct.int_grid_values_groups, &Ldtk.IntGridValueGroupDefinition.to_map/1),
       "parallaxFactorX" => struct.parallax_factor_x,
       "parallaxFactorY" => struct.parallax_factor_y,
       "parallaxScaling" => struct.parallax_scaling,
@@ -1697,14 +1980,14 @@ defmodule Ldtk.LayerDefinition do
       "uiColor" => struct.ui_color,
       "uid" => struct.uid,
       "uiFilterTags" => struct.ui_filter_tags,
-      "useAsyncRender" => struct.use_async_render,
+      "useAsyncRender" => struct.use_async_render
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end
 
@@ -1724,59 +2007,59 @@ defmodule Ldtk.TileCustomMetadata do
   def from_map(m) do
     %Ldtk.TileCustomMetadata{
       data: m["data"],
-      tile_id: m["tileId"],
+      tile_id: m["tileId"]
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
     %{
       "data" => struct.data,
-      "tileId" => struct.tile_id,
+      "tileId" => struct.tile_id
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end
 
 defmodule Ldtk.EmbedAtlas do
   @valid_enum_members [
-    :LdtkIcons,
+    :LdtkIcons
   ]
 
   def valid_atom?(value), do: value in @valid_enum_members
 
   def valid_atom_string?(value) do
     try do
-        atom = String.to_existing_atom(value)
-        atom in @valid_enum_members
+      atom = String.to_existing_atom(value)
+      atom in @valid_enum_members
     rescue
-        ArgumentError -> false
+      ArgumentError -> false
     end
   end
 
   def encode(value) do
     if valid_atom?(value) do
-        Atom.to_string(value)
+      Atom.to_string(value)
     else
-        {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
     end
   end
 
   def decode(value) do
     if valid_atom_string?(value) do
-        String.to_existing_atom(value)
+      String.to_existing_atom(value)
     else
-        {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
     end
   end
 
@@ -1809,27 +2092,27 @@ defmodule Ldtk.EnumTagValue do
   def from_map(m) do
     %Ldtk.EnumTagValue{
       enum_value_id: m["enumValueId"],
-      tile_ids: m["tileIds"],
+      tile_ids: m["tileIds"]
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
     %{
       "enumValueId" => struct.enum_value_id,
-      "tileIds" => struct.tile_ids,
+      "tileIds" => struct.tile_ids
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end
 
@@ -1856,8 +2139,40 @@ defmodule Ldtk.TilesetDefinition do
   - `:uid` - Unique Intidentifier
   """
 
-  @enforce_keys [:c_hei, :c_wid, :custom_data, :enum_tags, :identifier, :padding, :px_hei, :px_wid, :saved_selections, :spacing, :tags, :tile_grid_size, :uid]
-  defstruct [:c_hei, :c_wid, :cached_pixel_data, :custom_data, :embed_atlas, :enum_tags, :identifier, :padding, :px_hei, :px_wid, :rel_path, :saved_selections, :spacing, :tags, :tags_source_enum_uid, :tile_grid_size, :uid]
+  @enforce_keys [
+    :c_hei,
+    :c_wid,
+    :custom_data,
+    :enum_tags,
+    :identifier,
+    :padding,
+    :px_hei,
+    :px_wid,
+    :saved_selections,
+    :spacing,
+    :tags,
+    :tile_grid_size,
+    :uid
+  ]
+  defstruct [
+    :c_hei,
+    :c_wid,
+    :cached_pixel_data,
+    :custom_data,
+    :embed_atlas,
+    :enum_tags,
+    :identifier,
+    :padding,
+    :px_hei,
+    :px_wid,
+    :rel_path,
+    :saved_selections,
+    :spacing,
+    :tags,
+    :tags_source_enum_uid,
+    :tile_grid_size,
+    :uid
+  ]
 
   @type t :: %__MODULE__{
           c_hei: integer(),
@@ -1897,14 +2212,14 @@ defmodule Ldtk.TilesetDefinition do
       tags: m["tags"],
       tags_source_enum_uid: m["tagsSourceEnumUid"],
       tile_grid_size: m["tileGridSize"],
-      uid: m["uid"],
+      uid: m["uid"]
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
@@ -1912,7 +2227,8 @@ defmodule Ldtk.TilesetDefinition do
       "__cHei" => struct.c_hei,
       "__cWid" => struct.c_wid,
       "cachedPixelData" => struct.cached_pixel_data,
-      "customData" => struct.custom_data && Enum.map(struct.custom_data, &Ldtk.TileCustomMetadata.to_map/1),
+      "customData" =>
+        struct.custom_data && Enum.map(struct.custom_data, &Ldtk.TileCustomMetadata.to_map/1),
       "embedAtlas" => struct.embed_atlas && Ldtk.EmbedAtlas.encode(struct.embed_atlas),
       "enumTags" => struct.enum_tags && Enum.map(struct.enum_tags, &Ldtk.EnumTagValue.to_map/1),
       "identifier" => struct.identifier,
@@ -1925,14 +2241,14 @@ defmodule Ldtk.TilesetDefinition do
       "tags" => struct.tags,
       "tagsSourceEnumUid" => struct.tags_source_enum_uid,
       "tileGridSize" => struct.tile_grid_size,
-      "uid" => struct.uid,
+      "uid" => struct.uid
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end
 
@@ -1973,31 +2289,33 @@ defmodule Ldtk.Definitions do
       external_enums: Enum.map(m["externalEnums"], &Ldtk.EnumDefinition.from_map/1),
       layers: Enum.map(m["layers"], &Ldtk.LayerDefinition.from_map/1),
       level_fields: Enum.map(m["levelFields"], &Ldtk.FieldDefinition.from_map/1),
-      tilesets: Enum.map(m["tilesets"], &Ldtk.TilesetDefinition.from_map/1),
+      tilesets: Enum.map(m["tilesets"], &Ldtk.TilesetDefinition.from_map/1)
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
     %{
       "entities" => struct.entities && Enum.map(struct.entities, &Ldtk.EntityDefinition.to_map/1),
       "enums" => struct.enums && Enum.map(struct.enums, &Ldtk.EnumDefinition.to_map/1),
-      "externalEnums" => struct.external_enums && Enum.map(struct.external_enums, &Ldtk.EnumDefinition.to_map/1),
+      "externalEnums" =>
+        struct.external_enums && Enum.map(struct.external_enums, &Ldtk.EnumDefinition.to_map/1),
       "layers" => struct.layers && Enum.map(struct.layers, &Ldtk.LayerDefinition.to_map/1),
-      "levelFields" => struct.level_fields && Enum.map(struct.level_fields, &Ldtk.FieldDefinition.to_map/1),
-      "tilesets" => struct.tilesets && Enum.map(struct.tilesets, &Ldtk.TilesetDefinition.to_map/1),
+      "levelFields" =>
+        struct.level_fields && Enum.map(struct.level_fields, &Ldtk.FieldDefinition.to_map/1),
+      "tilesets" => struct.tilesets && Enum.map(struct.tilesets, &Ldtk.TilesetDefinition.to_map/1)
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end
 
@@ -2009,33 +2327,33 @@ defmodule Ldtk.Flag do
     :IgnoreBackupSuggest,
     :MultiWorlds,
     :PrependIndexToLevelFileNames,
-    :UseMultilinesType,
+    :UseMultilinesType
   ]
 
   def valid_atom?(value), do: value in @valid_enum_members
 
   def valid_atom_string?(value) do
     try do
-        atom = String.to_existing_atom(value)
-        atom in @valid_enum_members
+      atom = String.to_existing_atom(value)
+      atom in @valid_enum_members
     rescue
-        ArgumentError -> false
+      ArgumentError -> false
     end
   end
 
   def encode(value) do
     if valid_atom?(value) do
-        Atom.to_string(value)
+      Atom.to_string(value)
     else
-        {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
     end
   end
 
   def decode(value) do
     if valid_atom_string?(value) do
-        String.to_existing_atom(value)
+      String.to_existing_atom(value)
     else
-        {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
     end
   end
 
@@ -2081,14 +2399,14 @@ defmodule Ldtk.FieldInstance do
       type: m["__type"],
       value: m["__value"],
       def_uid: m["defUid"],
-      real_editor_values: m["realEditorValues"],
+      real_editor_values: m["realEditorValues"]
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
@@ -2098,14 +2416,14 @@ defmodule Ldtk.FieldInstance do
       "__type" => struct.type,
       "__value" => struct.value,
       "defUid" => struct.def_uid,
-      "realEditorValues" => struct.real_editor_values,
+      "realEditorValues" => struct.real_editor_values
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end
 
@@ -2127,8 +2445,35 @@ defmodule Ldtk.EntityInstance do
   - `:width` - Entity width in pixels. For non-resizable entities, it will be the same as Entitydefinition.
   """
 
-  @enforce_keys [:grid, :identifier, :pivot, :smart_color, :tags, :def_uid, :field_instances, :height, :iid, :px, :width]
-  defstruct [:grid, :identifier, :pivot, :smart_color, :tags, :tile, :world_x, :world_y, :def_uid, :field_instances, :height, :iid, :px, :width]
+  @enforce_keys [
+    :grid,
+    :identifier,
+    :pivot,
+    :smart_color,
+    :tags,
+    :def_uid,
+    :field_instances,
+    :height,
+    :iid,
+    :px,
+    :width
+  ]
+  defstruct [
+    :grid,
+    :identifier,
+    :pivot,
+    :smart_color,
+    :tags,
+    :tile,
+    :world_x,
+    :world_y,
+    :def_uid,
+    :field_instances,
+    :height,
+    :iid,
+    :px,
+    :width
+  ]
 
   @type t :: %__MODULE__{
           grid: [integer()],
@@ -2162,14 +2507,14 @@ defmodule Ldtk.EntityInstance do
       height: m["height"],
       iid: m["iid"],
       px: m["px"],
-      width: m["width"],
+      width: m["width"]
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
@@ -2183,18 +2528,19 @@ defmodule Ldtk.EntityInstance do
       "__worldX" => struct.world_x,
       "__worldY" => struct.world_y,
       "defUid" => struct.def_uid,
-      "fieldInstances" => struct.field_instances && Enum.map(struct.field_instances, &Ldtk.FieldInstance.to_map/1),
+      "fieldInstances" =>
+        struct.field_instances && Enum.map(struct.field_instances, &Ldtk.FieldInstance.to_map/1),
       "height" => struct.height,
       "iid" => struct.iid,
       "px" => struct.px,
-      "width" => struct.width,
+      "width" => struct.width
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end
 
@@ -2224,14 +2570,14 @@ defmodule Ldtk.ReferenceToAnEntityInstance do
       entity_iid: m["entityIid"],
       layer_iid: m["layerIid"],
       level_iid: m["levelIid"],
-      world_iid: m["worldIid"],
+      world_iid: m["worldIid"]
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
@@ -2239,14 +2585,14 @@ defmodule Ldtk.ReferenceToAnEntityInstance do
       "entityIid" => struct.entity_iid,
       "layerIid" => struct.layer_iid,
       "levelIid" => struct.level_iid,
-      "worldIid" => struct.world_iid,
+      "worldIid" => struct.world_iid
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end
 
@@ -2268,27 +2614,27 @@ defmodule Ldtk.GridPoint do
   def from_map(m) do
     %Ldtk.GridPoint{
       cx: m["cx"],
-      cy: m["cy"],
+      cy: m["cy"]
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
     %{
       "cx" => struct.cx,
-      "cy" => struct.cy,
+      "cy" => struct.cy
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end
 
@@ -2310,27 +2656,27 @@ defmodule Ldtk.IntGridValueInstance do
   def from_map(m) do
     %Ldtk.IntGridValueInstance{
       coord_id: m["coordId"],
-      v: m["v"],
+      v: m["v"]
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
     %{
       "coordId" => struct.coord_id,
-      "v" => struct.v,
+      "v" => struct.v
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end
 
@@ -2364,14 +2710,14 @@ defmodule Ldtk.TileInstance do
       f: m["f"],
       px: m["px"],
       src: m["src"],
-      t: m["t"],
+      t: m["t"]
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
@@ -2381,14 +2727,14 @@ defmodule Ldtk.TileInstance do
       "f" => struct.f,
       "px" => struct.px,
       "src" => struct.src,
-      "t" => struct.t,
+      "t" => struct.t
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end
 
@@ -2418,8 +2764,54 @@ defmodule Ldtk.LayerInstance do
   - `:visible` - Layer instance visibility
   """
 
-  @enforce_keys [:c_hei, :c_wid, :grid_size, :identifier, :opacity, :px_total_offset_x, :px_total_offset_y, :type, :auto_layer_tiles, :entity_instances, :grid_tiles, :iid, :int_grid_csv, :layer_def_uid, :level_id, :optional_rules, :px_offset_x, :px_offset_y, :seed, :visible]
-  defstruct [:c_hei, :c_wid, :grid_size, :identifier, :opacity, :px_total_offset_x, :px_total_offset_y, :tileset_def_uid, :tileset_rel_path, :type, :auto_layer_tiles, :entity_instances, :grid_tiles, :iid, :int_grid, :int_grid_csv, :layer_def_uid, :level_id, :optional_rules, :override_tileset_uid, :px_offset_x, :px_offset_y, :seed, :visible]
+  @enforce_keys [
+    :c_hei,
+    :c_wid,
+    :grid_size,
+    :identifier,
+    :opacity,
+    :px_total_offset_x,
+    :px_total_offset_y,
+    :type,
+    :auto_layer_tiles,
+    :entity_instances,
+    :grid_tiles,
+    :iid,
+    :int_grid_csv,
+    :layer_def_uid,
+    :level_id,
+    :optional_rules,
+    :px_offset_x,
+    :px_offset_y,
+    :seed,
+    :visible
+  ]
+  defstruct [
+    :c_hei,
+    :c_wid,
+    :grid_size,
+    :identifier,
+    :opacity,
+    :px_total_offset_x,
+    :px_total_offset_y,
+    :tileset_def_uid,
+    :tileset_rel_path,
+    :type,
+    :auto_layer_tiles,
+    :entity_instances,
+    :grid_tiles,
+    :iid,
+    :int_grid,
+    :int_grid_csv,
+    :layer_def_uid,
+    :level_id,
+    :optional_rules,
+    :override_tileset_uid,
+    :px_offset_x,
+    :px_offset_y,
+    :seed,
+    :visible
+  ]
 
   @type t :: %__MODULE__{
           c_hei: integer(),
@@ -2473,14 +2865,14 @@ defmodule Ldtk.LayerInstance do
       px_offset_x: m["pxOffsetX"],
       px_offset_y: m["pxOffsetY"],
       seed: m["seed"],
-      visible: m["visible"],
+      visible: m["visible"]
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
@@ -2495,11 +2887,16 @@ defmodule Ldtk.LayerInstance do
       "__tilesetDefUid" => struct.tileset_def_uid,
       "__tilesetRelPath" => struct.tileset_rel_path,
       "__type" => struct.type,
-      "autoLayerTiles" => struct.auto_layer_tiles && Enum.map(struct.auto_layer_tiles, &Ldtk.TileInstance.to_map/1),
-      "entityInstances" => struct.entity_instances && Enum.map(struct.entity_instances, &Ldtk.EntityInstance.to_map/1),
-      "gridTiles" => struct.grid_tiles && Enum.map(struct.grid_tiles, &Ldtk.TileInstance.to_map/1),
+      "autoLayerTiles" =>
+        struct.auto_layer_tiles && Enum.map(struct.auto_layer_tiles, &Ldtk.TileInstance.to_map/1),
+      "entityInstances" =>
+        struct.entity_instances &&
+          Enum.map(struct.entity_instances, &Ldtk.EntityInstance.to_map/1),
+      "gridTiles" =>
+        struct.grid_tiles && Enum.map(struct.grid_tiles, &Ldtk.TileInstance.to_map/1),
       "iid" => struct.iid,
-      "intGrid" => struct.int_grid && Enum.map(struct.int_grid, &Ldtk.IntGridValueInstance.to_map/1),
+      "intGrid" =>
+        struct.int_grid && Enum.map(struct.int_grid, &Ldtk.IntGridValueInstance.to_map/1),
       "intGridCsv" => struct.int_grid_csv,
       "layerDefUid" => struct.layer_def_uid,
       "levelId" => struct.level_id,
@@ -2508,14 +2905,14 @@ defmodule Ldtk.LayerInstance do
       "pxOffsetX" => struct.px_offset_x,
       "pxOffsetY" => struct.px_offset_y,
       "seed" => struct.seed,
-      "visible" => struct.visible,
+      "visible" => struct.visible
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end
 
@@ -2540,28 +2937,28 @@ defmodule Ldtk.LevelBackgroundPosition do
     %Ldtk.LevelBackgroundPosition{
       crop_rect: m["cropRect"],
       scale: m["scale"],
-      top_left_px: m["topLeftPx"],
+      top_left_px: m["topLeftPx"]
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
     %{
       "cropRect" => struct.crop_rect,
       "scale" => struct.scale,
-      "topLeftPx" => struct.top_left_px,
+      "topLeftPx" => struct.top_left_px
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end
 
@@ -2571,33 +2968,33 @@ defmodule Ldtk.BgPos do
     :Cover,
     :CoverDirty,
     :Repeat,
-    :Unscaled,
+    :Unscaled
   ]
 
   def valid_atom?(value), do: value in @valid_enum_members
 
   def valid_atom_string?(value) do
     try do
-        atom = String.to_existing_atom(value)
-        atom in @valid_enum_members
+      atom = String.to_existing_atom(value)
+      atom in @valid_enum_members
     rescue
-        ArgumentError -> false
+      ArgumentError -> false
     end
   end
 
   def encode(value) do
     if valid_atom?(value) do
-        Atom.to_string(value)
+      Atom.to_string(value)
     else
-        {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
     end
   end
 
   def decode(value) do
     if valid_atom_string?(value) do
-        String.to_existing_atom(value)
+      String.to_existing_atom(value)
     else
-        {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
     end
   end
 
@@ -2635,28 +3032,28 @@ defmodule Ldtk.NeighbourLevel do
     %Ldtk.NeighbourLevel{
       dir: m["dir"],
       level_iid: m["levelIid"],
-      level_uid: m["levelUid"],
+      level_uid: m["levelUid"]
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
     %{
       "dir" => struct.dir,
       "levelIid" => struct.level_iid,
-      "levelUid" => struct.level_uid,
+      "levelUid" => struct.level_uid
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end
 
@@ -2693,8 +3090,46 @@ defmodule Ldtk.Level do
   - `:world_y` - World Y coordinate in pixels.<br/>  Only relevant for world layouts where level spatialpositioning is manual (ie. GridVania, Free). For Horizontal and Vertical layouts, thevalue is always -1 here.
   """
 
-  @enforce_keys [:bg_color, :neighbours, :smart_color, :bg_pivot_x, :bg_pivot_y, :field_instances, :identifier, :iid, :px_hei, :px_wid, :uid, :use_auto_identifier, :world_depth, :world_x, :world_y]
-  defstruct [:bg_color, :bg_pos, :neighbours, :smart_color, :level_bg_color, :bg_pivot_x, :bg_pivot_y, :level_bg_pos, :bg_rel_path, :external_rel_path, :field_instances, :identifier, :iid, :layer_instances, :px_hei, :px_wid, :uid, :use_auto_identifier, :world_depth, :world_x, :world_y]
+  @enforce_keys [
+    :bg_color,
+    :neighbours,
+    :smart_color,
+    :bg_pivot_x,
+    :bg_pivot_y,
+    :field_instances,
+    :identifier,
+    :iid,
+    :px_hei,
+    :px_wid,
+    :uid,
+    :use_auto_identifier,
+    :world_depth,
+    :world_x,
+    :world_y
+  ]
+  defstruct [
+    :bg_color,
+    :bg_pos,
+    :neighbours,
+    :smart_color,
+    :level_bg_color,
+    :bg_pivot_x,
+    :bg_pivot_y,
+    :level_bg_pos,
+    :bg_rel_path,
+    :external_rel_path,
+    :field_instances,
+    :identifier,
+    :iid,
+    :layer_instances,
+    :px_hei,
+    :px_wid,
+    :uid,
+    :use_auto_identifier,
+    :world_depth,
+    :world_x,
+    :world_y
+  ]
 
   @type t :: %__MODULE__{
           bg_color: String.t(),
@@ -2735,28 +3170,30 @@ defmodule Ldtk.Level do
       field_instances: Enum.map(m["fieldInstances"], &Ldtk.FieldInstance.from_map/1),
       identifier: m["identifier"],
       iid: m["iid"],
-      layer_instances: m["layerInstances"] && Enum.map(m["layerInstances"], &Ldtk.LayerInstance.from_map/1),
+      layer_instances:
+        m["layerInstances"] && Enum.map(m["layerInstances"], &Ldtk.LayerInstance.from_map/1),
       px_hei: m["pxHei"],
       px_wid: m["pxWid"],
       uid: m["uid"],
       use_auto_identifier: m["useAutoIdentifier"],
       world_depth: m["worldDepth"],
       world_x: m["worldX"],
-      world_y: m["worldY"],
+      world_y: m["worldY"]
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
     %{
       "__bgColor" => struct.bg_color,
       "__bgPos" => struct.bg_pos && Ldtk.LevelBackgroundPosition.to_map(struct.bg_pos),
-      "__neighbours" => struct.neighbours && Enum.map(struct.neighbours, &Ldtk.NeighbourLevel.to_map/1),
+      "__neighbours" =>
+        struct.neighbours && Enum.map(struct.neighbours, &Ldtk.NeighbourLevel.to_map/1),
       "__smartColor" => struct.smart_color,
       "bgColor" => struct.level_bg_color,
       "bgPivotX" => struct.bg_pivot_x,
@@ -2764,24 +3201,26 @@ defmodule Ldtk.Level do
       "bgPos" => struct.level_bg_pos && Ldtk.BgPos.encode(struct.level_bg_pos),
       "bgRelPath" => struct.bg_rel_path,
       "externalRelPath" => struct.external_rel_path,
-      "fieldInstances" => struct.field_instances && Enum.map(struct.field_instances, &Ldtk.FieldInstance.to_map/1),
+      "fieldInstances" =>
+        struct.field_instances && Enum.map(struct.field_instances, &Ldtk.FieldInstance.to_map/1),
       "identifier" => struct.identifier,
       "iid" => struct.iid,
-      "layerInstances" => struct.layer_instances && Enum.map(struct.layer_instances, &Ldtk.LayerInstance.to_map/1),
+      "layerInstances" =>
+        struct.layer_instances && Enum.map(struct.layer_instances, &Ldtk.LayerInstance.to_map/1),
       "pxHei" => struct.px_hei,
       "pxWid" => struct.px_wid,
       "uid" => struct.uid,
       "useAutoIdentifier" => struct.use_auto_identifier,
       "worldDepth" => struct.world_depth,
       "worldX" => struct.world_x,
-      "worldY" => struct.world_y,
+      "worldY" => struct.world_y
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end
 
@@ -2810,14 +3249,14 @@ defmodule Ldtk.LdtkTocInstanceData do
       iids: Ldtk.ReferenceToAnEntityInstance.from_map(m["iids"]),
       wid_px: m["widPx"],
       world_x: m["worldX"],
-      world_y: m["worldY"],
+      world_y: m["worldY"]
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
@@ -2827,14 +3266,14 @@ defmodule Ldtk.LdtkTocInstanceData do
       "iids" => Ldtk.ReferenceToAnEntityInstance.to_map(struct.iids),
       "widPx" => struct.wid_px,
       "worldX" => struct.world_x,
-      "worldY" => struct.world_y,
+      "worldY" => struct.world_y
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end
 
@@ -2855,29 +3294,33 @@ defmodule Ldtk.LdtkTableOfContentEntry do
   def from_map(m) do
     %Ldtk.LdtkTableOfContentEntry{
       identifier: m["identifier"],
-      instances: m["instances"] && Enum.map(m["instances"], &Ldtk.ReferenceToAnEntityInstance.from_map/1),
-      instances_data: Enum.map(m["instancesData"], &Ldtk.LdtkTocInstanceData.from_map/1),
+      instances:
+        m["instances"] && Enum.map(m["instances"], &Ldtk.ReferenceToAnEntityInstance.from_map/1),
+      instances_data: Enum.map(m["instancesData"], &Ldtk.LdtkTocInstanceData.from_map/1)
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
     %{
       "identifier" => struct.identifier,
-      "instances" => struct.instances && Enum.map(struct.instances, &Ldtk.ReferenceToAnEntityInstance.to_map/1),
-      "instancesData" => struct.instances_data && Enum.map(struct.instances_data, &Ldtk.LdtkTocInstanceData.to_map/1),
+      "instances" =>
+        struct.instances && Enum.map(struct.instances, &Ldtk.ReferenceToAnEntityInstance.to_map/1),
+      "instancesData" =>
+        struct.instances_data &&
+          Enum.map(struct.instances_data, &Ldtk.LdtkTocInstanceData.to_map/1)
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end
 
@@ -2886,33 +3329,33 @@ defmodule Ldtk.WorldLayout do
     :Free,
     :GridVania,
     :LinearHorizontal,
-    :LinearVertical,
+    :LinearVertical
   ]
 
   def valid_atom?(value), do: value in @valid_enum_members
 
   def valid_atom_string?(value) do
     try do
-        atom = String.to_existing_atom(value)
-        atom in @valid_enum_members
+      atom = String.to_existing_atom(value)
+      atom in @valid_enum_members
     rescue
-        ArgumentError -> false
+      ArgumentError -> false
     end
   end
 
   def encode(value) do
     if valid_atom?(value) do
-        Atom.to_string(value)
+      Atom.to_string(value)
     else
-        {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
     end
   end
 
   def decode(value) do
     if valid_atom_string?(value) do
-        String.to_existing_atom(value)
+      String.to_existing_atom(value)
     else
-        {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
     end
   end
 
@@ -2944,8 +3387,26 @@ defmodule Ldtk.World do
   - `:world_layout` - An enum that describes how levels are organized in this project (ie. linearly or in a 2Dspace). Possible values: `Free`, `GridVania`, `LinearHorizontal`, `LinearVertical`, `null`
   """
 
-  @enforce_keys [:default_level_height, :default_level_width, :identifier, :iid, :levels, :world_grid_height, :world_grid_width, :world_layout]
-  defstruct [:default_level_height, :default_level_width, :identifier, :iid, :levels, :world_grid_height, :world_grid_width, :world_layout]
+  @enforce_keys [
+    :default_level_height,
+    :default_level_width,
+    :identifier,
+    :iid,
+    :levels,
+    :world_grid_height,
+    :world_grid_width,
+    :world_layout
+  ]
+  defstruct [
+    :default_level_height,
+    :default_level_width,
+    :identifier,
+    :iid,
+    :levels,
+    :world_grid_height,
+    :world_grid_width,
+    :world_layout
+  ]
 
   @type t :: %__MODULE__{
           default_level_height: integer(),
@@ -2967,14 +3428,14 @@ defmodule Ldtk.World do
       levels: Enum.map(m["levels"], &Ldtk.Level.from_map/1),
       world_grid_height: m["worldGridHeight"],
       world_grid_width: m["worldGridWidth"],
-      world_layout: m["worldLayout"] && Ldtk.WorldLayout.decode(m["worldLayout"]),
+      world_layout: m["worldLayout"] && Ldtk.WorldLayout.decode(m["worldLayout"])
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
@@ -2986,14 +3447,14 @@ defmodule Ldtk.World do
       "levels" => struct.levels && Enum.map(struct.levels, &Ldtk.Level.to_map/1),
       "worldGridHeight" => struct.world_grid_height,
       "worldGridWidth" => struct.world_grid_width,
-      "worldLayout" => struct.world_layout && Ldtk.WorldLayout.encode(struct.world_layout),
+      "worldLayout" => struct.world_layout && Ldtk.WorldLayout.encode(struct.world_layout)
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end
 
@@ -3004,7 +3465,36 @@ defmodule Ldtk.ForcedRefs do
   Quicktype will drop types that are not explicitely used.
   """
 
-  defstruct [:auto_layer_rule_group, :auto_rule_def, :custom_command, :definitions, :entity_def, :entity_instance, :entity_reference_infos, :enum_def, :enum_def_values, :enum_tag_value, :field_def, :field_instance, :grid_point, :int_grid_value_def, :int_grid_value_group_def, :int_grid_value_instance, :layer_def, :layer_instance, :level, :level_bg_pos_infos, :neighbour_level, :table_of_content_entry, :tile, :tile_custom_metadata, :tileset_def, :tileset_rect, :toc_instance_data, :world]
+  defstruct [
+    :auto_layer_rule_group,
+    :auto_rule_def,
+    :custom_command,
+    :definitions,
+    :entity_def,
+    :entity_instance,
+    :entity_reference_infos,
+    :enum_def,
+    :enum_def_values,
+    :enum_tag_value,
+    :field_def,
+    :field_instance,
+    :grid_point,
+    :int_grid_value_def,
+    :int_grid_value_group_def,
+    :int_grid_value_instance,
+    :layer_def,
+    :layer_instance,
+    :level,
+    :level_bg_pos_infos,
+    :neighbour_level,
+    :table_of_content_entry,
+    :tile,
+    :tile_custom_metadata,
+    :tileset_def,
+    :tileset_rect,
+    :toc_instance_data,
+    :world
+  ]
 
   @type t :: %__MODULE__{
           auto_layer_rule_group: Ldtk.AutoLayerRuleGroup.t() | nil,
@@ -3039,80 +3529,115 @@ defmodule Ldtk.ForcedRefs do
 
   def from_map(m) do
     %Ldtk.ForcedRefs{
-      auto_layer_rule_group: m["AutoLayerRuleGroup"] && Ldtk.AutoLayerRuleGroup.from_map(m["AutoLayerRuleGroup"]),
+      auto_layer_rule_group:
+        m["AutoLayerRuleGroup"] && Ldtk.AutoLayerRuleGroup.from_map(m["AutoLayerRuleGroup"]),
       auto_rule_def: m["AutoRuleDef"] && Ldtk.AutoLayerRuleDefinition.from_map(m["AutoRuleDef"]),
       custom_command: m["CustomCommand"] && Ldtk.LdtkCustomCommand.from_map(m["CustomCommand"]),
       definitions: m["Definitions"] && Ldtk.Definitions.from_map(m["Definitions"]),
       entity_def: m["EntityDef"] && Ldtk.EntityDefinition.from_map(m["EntityDef"]),
       entity_instance: m["EntityInstance"] && Ldtk.EntityInstance.from_map(m["EntityInstance"]),
-      entity_reference_infos: m["EntityReferenceInfos"] && Ldtk.ReferenceToAnEntityInstance.from_map(m["EntityReferenceInfos"]),
+      entity_reference_infos:
+        m["EntityReferenceInfos"] &&
+          Ldtk.ReferenceToAnEntityInstance.from_map(m["EntityReferenceInfos"]),
       enum_def: m["EnumDef"] && Ldtk.EnumDefinition.from_map(m["EnumDef"]),
-      enum_def_values: m["EnumDefValues"] && Ldtk.EnumValueDefinition.from_map(m["EnumDefValues"]),
+      enum_def_values:
+        m["EnumDefValues"] && Ldtk.EnumValueDefinition.from_map(m["EnumDefValues"]),
       enum_tag_value: m["EnumTagValue"] && Ldtk.EnumTagValue.from_map(m["EnumTagValue"]),
       field_def: m["FieldDef"] && Ldtk.FieldDefinition.from_map(m["FieldDef"]),
       field_instance: m["FieldInstance"] && Ldtk.FieldInstance.from_map(m["FieldInstance"]),
       grid_point: m["GridPoint"] && Ldtk.GridPoint.from_map(m["GridPoint"]),
-      int_grid_value_def: m["IntGridValueDef"] && Ldtk.IntGridValueDefinition.from_map(m["IntGridValueDef"]),
-      int_grid_value_group_def: m["IntGridValueGroupDef"] && Ldtk.IntGridValueGroupDefinition.from_map(m["IntGridValueGroupDef"]),
-      int_grid_value_instance: m["IntGridValueInstance"] && Ldtk.IntGridValueInstance.from_map(m["IntGridValueInstance"]),
+      int_grid_value_def:
+        m["IntGridValueDef"] && Ldtk.IntGridValueDefinition.from_map(m["IntGridValueDef"]),
+      int_grid_value_group_def:
+        m["IntGridValueGroupDef"] &&
+          Ldtk.IntGridValueGroupDefinition.from_map(m["IntGridValueGroupDef"]),
+      int_grid_value_instance:
+        m["IntGridValueInstance"] && Ldtk.IntGridValueInstance.from_map(m["IntGridValueInstance"]),
       layer_def: m["LayerDef"] && Ldtk.LayerDefinition.from_map(m["LayerDef"]),
       layer_instance: m["LayerInstance"] && Ldtk.LayerInstance.from_map(m["LayerInstance"]),
       level: m["Level"] && Ldtk.Level.from_map(m["Level"]),
-      level_bg_pos_infos: m["LevelBgPosInfos"] && Ldtk.LevelBackgroundPosition.from_map(m["LevelBgPosInfos"]),
+      level_bg_pos_infos:
+        m["LevelBgPosInfos"] && Ldtk.LevelBackgroundPosition.from_map(m["LevelBgPosInfos"]),
       neighbour_level: m["NeighbourLevel"] && Ldtk.NeighbourLevel.from_map(m["NeighbourLevel"]),
-      table_of_content_entry: m["TableOfContentEntry"] && Ldtk.LdtkTableOfContentEntry.from_map(m["TableOfContentEntry"]),
+      table_of_content_entry:
+        m["TableOfContentEntry"] &&
+          Ldtk.LdtkTableOfContentEntry.from_map(m["TableOfContentEntry"]),
       tile: m["Tile"] && Ldtk.TileInstance.from_map(m["Tile"]),
-      tile_custom_metadata: m["TileCustomMetadata"] && Ldtk.TileCustomMetadata.from_map(m["TileCustomMetadata"]),
+      tile_custom_metadata:
+        m["TileCustomMetadata"] && Ldtk.TileCustomMetadata.from_map(m["TileCustomMetadata"]),
       tileset_def: m["TilesetDef"] && Ldtk.TilesetDefinition.from_map(m["TilesetDef"]),
       tileset_rect: m["TilesetRect"] && Ldtk.TilesetRectangle.from_map(m["TilesetRect"]),
-      toc_instance_data: m["TocInstanceData"] && Ldtk.LdtkTocInstanceData.from_map(m["TocInstanceData"]),
-      world: m["World"] && Ldtk.World.from_map(m["World"]),
+      toc_instance_data:
+        m["TocInstanceData"] && Ldtk.LdtkTocInstanceData.from_map(m["TocInstanceData"]),
+      world: m["World"] && Ldtk.World.from_map(m["World"])
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
     %{
-      "AutoLayerRuleGroup" => struct.auto_layer_rule_group && Ldtk.AutoLayerRuleGroup.to_map(struct.auto_layer_rule_group),
-      "AutoRuleDef" => struct.auto_rule_def && Ldtk.AutoLayerRuleDefinition.to_map(struct.auto_rule_def),
-      "CustomCommand" => struct.custom_command && Ldtk.LdtkCustomCommand.to_map(struct.custom_command),
+      "AutoLayerRuleGroup" =>
+        struct.auto_layer_rule_group &&
+          Ldtk.AutoLayerRuleGroup.to_map(struct.auto_layer_rule_group),
+      "AutoRuleDef" =>
+        struct.auto_rule_def && Ldtk.AutoLayerRuleDefinition.to_map(struct.auto_rule_def),
+      "CustomCommand" =>
+        struct.custom_command && Ldtk.LdtkCustomCommand.to_map(struct.custom_command),
       "Definitions" => struct.definitions && Ldtk.Definitions.to_map(struct.definitions),
       "EntityDef" => struct.entity_def && Ldtk.EntityDefinition.to_map(struct.entity_def),
-      "EntityInstance" => struct.entity_instance && Ldtk.EntityInstance.to_map(struct.entity_instance),
-      "EntityReferenceInfos" => struct.entity_reference_infos && Ldtk.ReferenceToAnEntityInstance.to_map(struct.entity_reference_infos),
+      "EntityInstance" =>
+        struct.entity_instance && Ldtk.EntityInstance.to_map(struct.entity_instance),
+      "EntityReferenceInfos" =>
+        struct.entity_reference_infos &&
+          Ldtk.ReferenceToAnEntityInstance.to_map(struct.entity_reference_infos),
       "EnumDef" => struct.enum_def && Ldtk.EnumDefinition.to_map(struct.enum_def),
-      "EnumDefValues" => struct.enum_def_values && Ldtk.EnumValueDefinition.to_map(struct.enum_def_values),
+      "EnumDefValues" =>
+        struct.enum_def_values && Ldtk.EnumValueDefinition.to_map(struct.enum_def_values),
       "EnumTagValue" => struct.enum_tag_value && Ldtk.EnumTagValue.to_map(struct.enum_tag_value),
       "FieldDef" => struct.field_def && Ldtk.FieldDefinition.to_map(struct.field_def),
-      "FieldInstance" => struct.field_instance && Ldtk.FieldInstance.to_map(struct.field_instance),
+      "FieldInstance" =>
+        struct.field_instance && Ldtk.FieldInstance.to_map(struct.field_instance),
       "GridPoint" => struct.grid_point && Ldtk.GridPoint.to_map(struct.grid_point),
-      "IntGridValueDef" => struct.int_grid_value_def && Ldtk.IntGridValueDefinition.to_map(struct.int_grid_value_def),
-      "IntGridValueGroupDef" => struct.int_grid_value_group_def && Ldtk.IntGridValueGroupDefinition.to_map(struct.int_grid_value_group_def),
-      "IntGridValueInstance" => struct.int_grid_value_instance && Ldtk.IntGridValueInstance.to_map(struct.int_grid_value_instance),
+      "IntGridValueDef" =>
+        struct.int_grid_value_def && Ldtk.IntGridValueDefinition.to_map(struct.int_grid_value_def),
+      "IntGridValueGroupDef" =>
+        struct.int_grid_value_group_def &&
+          Ldtk.IntGridValueGroupDefinition.to_map(struct.int_grid_value_group_def),
+      "IntGridValueInstance" =>
+        struct.int_grid_value_instance &&
+          Ldtk.IntGridValueInstance.to_map(struct.int_grid_value_instance),
       "LayerDef" => struct.layer_def && Ldtk.LayerDefinition.to_map(struct.layer_def),
-      "LayerInstance" => struct.layer_instance && Ldtk.LayerInstance.to_map(struct.layer_instance),
+      "LayerInstance" =>
+        struct.layer_instance && Ldtk.LayerInstance.to_map(struct.layer_instance),
       "Level" => struct.level && Ldtk.Level.to_map(struct.level),
-      "LevelBgPosInfos" => struct.level_bg_pos_infos && Ldtk.LevelBackgroundPosition.to_map(struct.level_bg_pos_infos),
-      "NeighbourLevel" => struct.neighbour_level && Ldtk.NeighbourLevel.to_map(struct.neighbour_level),
-      "TableOfContentEntry" => struct.table_of_content_entry && Ldtk.LdtkTableOfContentEntry.to_map(struct.table_of_content_entry),
+      "LevelBgPosInfos" =>
+        struct.level_bg_pos_infos &&
+          Ldtk.LevelBackgroundPosition.to_map(struct.level_bg_pos_infos),
+      "NeighbourLevel" =>
+        struct.neighbour_level && Ldtk.NeighbourLevel.to_map(struct.neighbour_level),
+      "TableOfContentEntry" =>
+        struct.table_of_content_entry &&
+          Ldtk.LdtkTableOfContentEntry.to_map(struct.table_of_content_entry),
       "Tile" => struct.tile && Ldtk.TileInstance.to_map(struct.tile),
-      "TileCustomMetadata" => struct.tile_custom_metadata && Ldtk.TileCustomMetadata.to_map(struct.tile_custom_metadata),
+      "TileCustomMetadata" =>
+        struct.tile_custom_metadata && Ldtk.TileCustomMetadata.to_map(struct.tile_custom_metadata),
       "TilesetDef" => struct.tileset_def && Ldtk.TilesetDefinition.to_map(struct.tileset_def),
       "TilesetRect" => struct.tileset_rect && Ldtk.TilesetRectangle.to_map(struct.tileset_rect),
-      "TocInstanceData" => struct.toc_instance_data && Ldtk.LdtkTocInstanceData.to_map(struct.toc_instance_data),
-      "World" => struct.world && Ldtk.World.to_map(struct.world),
+      "TocInstanceData" =>
+        struct.toc_instance_data && Ldtk.LdtkTocInstanceData.to_map(struct.toc_instance_data),
+      "World" => struct.world && Ldtk.World.to_map(struct.world)
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end
 
@@ -3125,33 +3650,33 @@ defmodule Ldtk.IdentifierStyle do
     :Capitalize,
     :Free,
     :Lowercase,
-    :Uppercase,
+    :Uppercase
   ]
 
   def valid_atom?(value), do: value in @valid_enum_members
 
   def valid_atom_string?(value) do
     try do
-        atom = String.to_existing_atom(value)
-        atom in @valid_enum_members
+      atom = String.to_existing_atom(value)
+      atom in @valid_enum_members
     rescue
-        ArgumentError -> false
+      ArgumentError -> false
     end
   end
 
   def encode(value) do
     if valid_atom?(value) do
-        Atom.to_string(value)
+      Atom.to_string(value)
     else
-        {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
     end
   end
 
   def decode(value) do
     if valid_atom_string?(value) do
-        String.to_existing_atom(value)
+      String.to_existing_atom(value)
     else
-        {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
     end
   end
 
@@ -3177,33 +3702,33 @@ defmodule Ldtk.ImageExportMode do
     :LayersAndLevels,
     :None,
     :OneImagePerLayer,
-    :OneImagePerLevel,
+    :OneImagePerLevel
   ]
 
   def valid_atom?(value), do: value in @valid_enum_members
 
   def valid_atom_string?(value) do
     try do
-        atom = String.to_existing_atom(value)
-        atom in @valid_enum_members
+      atom = String.to_existing_atom(value)
+      atom in @valid_enum_members
     rescue
-        ArgumentError -> false
+      ArgumentError -> false
     end
   end
 
   def encode(value) do
     if valid_atom?(value) do
-        Atom.to_string(value)
+      Atom.to_string(value)
     else
-        {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when encoding atom: #{inspect(value)}"}
     end
   end
 
   def decode(value) do
     if valid_atom_string?(value) do
-        String.to_existing_atom(value)
+      String.to_existing_atom(value)
     else
-        {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
+      {:error, "Unexpected value when decoding atom: #{inspect(value)}"}
     end
   end
 
@@ -3267,8 +3792,76 @@ defmodule Ldtk.Root do
   - `:worlds` - This array will be empty, unless you enable the Multi-Worlds in the project advancedsettings.<br/><br/> - in current version, a LDtk project file can only contain a singleworld with multiple levels in it. In this case, levels and world layout related settingsare stored in the root of the JSON.<br/> - with "Multi-worlds" enabled, there will be a`worlds` array in root, each world containing levels and layout settings. Basically, it'spretty much only about moving the `levels` array to the `worlds` array, along with worldlayout related values (eg. `worldGridWidth` etc).<br/><br/>If you want to startsupporting this future update easily, please refer to this documentation:https://github.com/deepnight/ldtk/issues/231
   """
 
-  @enforce_keys [:app_build_id, :backup_limit, :backup_on_save, :bg_color, :custom_commands, :default_entity_height, :default_entity_width, :default_grid_size, :default_level_bg_color, :default_pivot_x, :default_pivot_y, :defs, :dummy_world_iid, :export_level_bg, :export_tiled, :external_levels, :flags, :identifier_style, :iid, :image_export_mode, :json_version, :level_name_pattern, :levels, :minify_json, :next_uid, :simplified_export, :toc, :worlds]
-  defstruct [:forced_refs, :app_build_id, :backup_limit, :backup_on_save, :backup_rel_path, :bg_color, :custom_commands, :default_entity_height, :default_entity_width, :default_grid_size, :default_level_bg_color, :default_level_height, :default_level_width, :default_pivot_x, :default_pivot_y, :defs, :dummy_world_iid, :export_level_bg, :export_png, :export_tiled, :external_levels, :flags, :identifier_style, :iid, :image_export_mode, :json_version, :level_name_pattern, :levels, :minify_json, :next_uid, :png_file_pattern, :simplified_export, :toc, :tutorial_desc, :world_grid_height, :world_grid_width, :world_layout, :worlds]
+  @enforce_keys [
+    :app_build_id,
+    :backup_limit,
+    :backup_on_save,
+    :bg_color,
+    :custom_commands,
+    :default_entity_height,
+    :default_entity_width,
+    :default_grid_size,
+    :default_level_bg_color,
+    :default_pivot_x,
+    :default_pivot_y,
+    :defs,
+    :dummy_world_iid,
+    :export_level_bg,
+    :export_tiled,
+    :external_levels,
+    :flags,
+    :identifier_style,
+    :iid,
+    :image_export_mode,
+    :json_version,
+    :level_name_pattern,
+    :levels,
+    :minify_json,
+    :next_uid,
+    :simplified_export,
+    :toc,
+    :worlds
+  ]
+  defstruct [
+    :forced_refs,
+    :app_build_id,
+    :backup_limit,
+    :backup_on_save,
+    :backup_rel_path,
+    :bg_color,
+    :custom_commands,
+    :default_entity_height,
+    :default_entity_width,
+    :default_grid_size,
+    :default_level_bg_color,
+    :default_level_height,
+    :default_level_width,
+    :default_pivot_x,
+    :default_pivot_y,
+    :defs,
+    :dummy_world_iid,
+    :export_level_bg,
+    :export_png,
+    :export_tiled,
+    :external_levels,
+    :flags,
+    :identifier_style,
+    :iid,
+    :image_export_mode,
+    :json_version,
+    :level_name_pattern,
+    :levels,
+    :minify_json,
+    :next_uid,
+    :png_file_pattern,
+    :simplified_export,
+    :toc,
+    :tutorial_desc,
+    :world_grid_height,
+    :world_grid_width,
+    :world_layout,
+    :worlds
+  ]
 
   @type t :: %__MODULE__{
           forced_refs: Ldtk.ForcedRefs.t() | nil,
@@ -3350,14 +3943,14 @@ defmodule Ldtk.Root do
       world_grid_height: m["worldGridHeight"],
       world_grid_width: m["worldGridWidth"],
       world_layout: m["worldLayout"] && Ldtk.WorldLayout.decode(m["worldLayout"]),
-      worlds: Enum.map(m["worlds"], &Ldtk.World.from_map/1),
+      worlds: Enum.map(m["worlds"], &Ldtk.World.from_map/1)
     }
   end
 
   def from_json(json) do
     json
-          |> Jason.decode!()
-          |> from_map()
+    |> Jason.decode!()
+    |> from_map()
   end
 
   def to_map(struct) do
@@ -3368,7 +3961,9 @@ defmodule Ldtk.Root do
       "backupOnSave" => struct.backup_on_save,
       "backupRelPath" => struct.backup_rel_path,
       "bgColor" => struct.bg_color,
-      "customCommands" => struct.custom_commands && Enum.map(struct.custom_commands, &Ldtk.LdtkCustomCommand.to_map/1),
+      "customCommands" =>
+        struct.custom_commands &&
+          Enum.map(struct.custom_commands, &Ldtk.LdtkCustomCommand.to_map/1),
       "defaultEntityHeight" => struct.default_entity_height,
       "defaultEntityWidth" => struct.default_entity_width,
       "defaultGridSize" => struct.default_grid_size,
@@ -3399,13 +3994,13 @@ defmodule Ldtk.Root do
       "worldGridHeight" => struct.world_grid_height,
       "worldGridWidth" => struct.world_grid_width,
       "worldLayout" => struct.world_layout && Ldtk.WorldLayout.encode(struct.world_layout),
-      "worlds" => struct.worlds && Enum.map(struct.worlds, &Ldtk.World.to_map/1),
+      "worlds" => struct.worlds && Enum.map(struct.worlds, &Ldtk.World.to_map/1)
     }
   end
 
   def to_json(struct) do
     struct
-          |> to_map()
-          |> Jason.encode!()
+    |> to_map()
+    |> Jason.encode!()
   end
 end

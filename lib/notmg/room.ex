@@ -1,14 +1,10 @@
 defmodule Notmg.Room do
   use GenServer
-  alias Notmg.{Maps, Player, Enemy, Projectile, Entity, Inventory}
+  alias Notmg.{Maps, Player, Entity, Inventory}
   alias NotmgWeb.Endpoint
   require Logger
 
   @tick_rate 32
-
-  @collision_mask_player 0b0001
-  @collision_mask_enemy 0b0010
-  @collision_mask_player_interactable 0b0100
 
   def tick_rate, do: @tick_rate
 
@@ -49,27 +45,6 @@ defmodule Notmg.Room do
     GenServer.call(via_tuple(room_id), {:update_inventory, player_id, payload})
   end
 
-  def create_enemy(x, y, enemy_type) do
-    enemy_id = Entity.generate_id()
-
-    IO.inspect([x, y, enemy_type])
-
-    %Enemy{
-      id: enemy_id,
-      type: enemy_type,
-      update_fn: &Enemy.update/3,
-      interact_fn: nil,
-      inventory: nil,
-      max_health: 50,
-      health: 50,
-      x: x,
-      y: y,
-      radius: 48,
-      collision_mask: @collision_mask_enemy,
-      speed: 150
-    }
-  end
-
   @impl true
   def init(room_id) do
     Logger.info("Starting room #{room_id}")
@@ -98,15 +73,21 @@ defmodule Notmg.Room do
     # }
 
     map = Maps.get_map("level_0")
-    enemies = map.entities
-    |> Enum.filter(fn enemy -> enemy.name != :spawn_point end)
-    |> Enum.map(fn enemy ->
-      enemy  |> IO.inspect()
-      Notmg.Entity.create_entity(enemy.fields.type |> String.to_atom(), enemy.world_x, enemy.world_y)
-    end)
-    |> Enum.reduce(%{}, fn enemy, acc ->
-      Map.put(acc, enemy.id, enemy)
-    end)
+
+    enemies =
+      map.entities
+      |> Enum.filter(fn entity -> entity.name != :spawn_point end)
+      |> Enum.map(fn entity ->
+        # TODO take in fields from entity, map them to opts on the create_entity function
+        Entity.create_entity(
+          entity.fields.type |> String.to_atom(),
+          entity.world_x,
+          entity.world_y
+        )
+      end)
+      |> Enum.reduce(%{}, fn entity, acc ->
+        Map.put(acc, entity.id, entity)
+      end)
 
     {:ok,
      %{
@@ -128,7 +109,8 @@ defmodule Notmg.Room do
       x: spawn_point.world_x,
       y: spawn_point.world_y,
       radius: 24,
-      collision_mask: @collision_mask_player + @collision_mask_player_interactable,
+      collision_mask:
+        Entity.collision_mask_player() + Entity.collision_mask_player_interactable(),
       inventory: Inventory.new() |> Inventory.populate_with_test_data()
     }
 
@@ -146,14 +128,18 @@ defmodule Notmg.Room do
   def handle_call({:update_entity_player, player_id, payload}, _from, state) do
     player = get_in(state.entities, [player_id])
 
-    player = %Player{
-      player
-      | x: payload["x"],
-        y: payload["y"]
-    }
+    if player == nil do
+      {:reply, {:error, :player_not_found}, state}
+    else
+      player = %Player{
+        player
+        | x: payload["x"],
+          y: payload["y"]
+      }
 
-    state = put_in(state.entities[player_id], player)
-    {:reply, {:ok, payload}, state}
+      state = put_in(state.entities[player_id], player)
+      {:reply, {:ok, payload}, state}
+    end
   end
 
   @impl true
@@ -161,23 +147,17 @@ defmodule Notmg.Room do
     player = get_in(state.entities, [player_id])
     radians = payload["radians"]
 
-    projectile_id = Entity.generate_id()
+    projectile =
+      Entity.create_entity(:projectile, player.x, player.y,
+        collision_mask: Entity.collision_mask_enemy(),
+        radians: radians,
+        radius: 16,
+        speed: 500
+      )
 
-    projectile = %Projectile{
-      id: projectile_id,
-      type: :projectile,
-      update_fn: &Projectile.update/3,
-      collision_mask: @collision_mask_enemy,
-      x: player.x,
-      y: player.y,
-      radius: 16,
-      radians: radians,
-      speed: 500
-    }
+    state = put_in(state.entities[projectile.id], projectile)
 
-    state = put_in(state.entities[projectile_id], projectile)
-
-    {:reply, {:ok, projectile_id}, state}
+    {:reply, {:ok, projectile.id}, state}
   end
 
   @impl true
@@ -225,14 +205,13 @@ defmodule Notmg.Room do
 
   @impl true
   def handle_call({:update_inventory, player_id, payload}, _from, state) do
-
-
     player = state.entities[player_id]
     inventory = player.inventory
+
     item = %Notmg.Inventory.Item{
-      inventory.items[payload["id"]] |
-      x: payload["x"],
-      y: payload["y"]
+      inventory.items[payload["id"]]
+      | x: payload["x"],
+        y: payload["y"]
     }
 
     slot_check =
@@ -256,7 +235,9 @@ defmodule Notmg.Room do
         {:reply, {:ok, inventory}, state}
       else
         if inventory.equipped_items[item.id] != nil do
-          inventory = put_in(inventory.equipped_items, inventory.equipped_items |> Map.delete(item.id))
+          inventory =
+            put_in(inventory.equipped_items, inventory.equipped_items |> Map.delete(item.id))
+
           inventory = put_in(inventory.items[item.id], item)
 
           state =
