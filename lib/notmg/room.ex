@@ -185,7 +185,7 @@ defmodule Notmg.Room do
     interacting_entity = get_in(state.entities, [entity_id])
     interactable = get_in(state.entities, [interact_id])
 
-    if circle_collision?(interacting_entity, interactable) && interactable.interact_fn != nil do
+    if Entity.circle_collision?(interacting_entity, interactable) && interactable.interact_fn != nil do
       {:reply, {:ok, interact_id},
        state |> interactable.interact_fn.(interacting_entity, interactable)}
     else
@@ -322,12 +322,5 @@ defmodule Notmg.Room do
 
   defp via_tuple(room_id) do
     {:via, Registry, {Notmg.RoomRegistry, room_id}}
-  end
-
-  def circle_collision?(obj1, obj2) do
-    distance = :math.sqrt(:math.pow(obj1.x - obj2.x, 2) + :math.pow(obj1.y - obj2.y, 2))
-
-    Bitwise.band(obj1.collision_mask, obj2.collision_mask) > 0 &&
-      distance < obj1.radius + obj2.radius
   end
 end

@@ -1,6 +1,5 @@
 defmodule Notmg.Projectile do
   alias Notmg.Entity
-  alias Notmg.Room
 
   @derive Jason.Encoder
   defstruct ([:radians, :speed, creation_time: nil] ++
@@ -20,7 +19,7 @@ defmodule Notmg.Projectile do
     {_id, colliding_entity} =
       state.entities
       |> Enum.find({nil, nil}, fn {_id, entity} ->
-        entity.type != :projectile && Room.circle_collision?(entity, projectile)
+        entity.type != :projectile && Entity.circle_collision?(entity, projectile)
       end)
 
     if colliding_entity != nil do
