@@ -34,7 +34,10 @@ defmodule Notmg.Projectile do
       if entity.lifetime < 0 do
         put_in(state.entities, state.entities |> Map.delete(projectile.id))
       else
-        put_in(state.entities[entity.id], projectile |> Map.put(:lifetime, projectile.lifetime - delta_time))
+        put_in(
+          state.entities[entity.id],
+          projectile |> Map.put(:lifetime, projectile.lifetime - delta_time)
+        )
       end
     end
   end

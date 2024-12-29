@@ -1,4 +1,4 @@
-import { Socket, Presence, Channel } from "phoenix";
+import { Socket, Presence } from "phoenix";
 import {
   drawUI,
   handleInventoryMouseDown,
@@ -6,50 +6,7 @@ import {
   setInventory,
   toggleInventory,
 } from "./inventory";
-
-type ChatMessage = {
-  content: string;
-  sent_at: number;
-};
-
-type Entity = {
-  id: string;
-  type: string;
-  x: number;
-  y: number;
-  radius: number;
-  velocity_x: number;
-  velocity_y: number;
-  health: number;
-  max_health: number;
-  health_accumulator: number;
-  wip_message?: string;
-  chat_messages?: ChatMessage[];
-  radians?: number;
-};
-
-type State = {
-  entities: Record<string, Entity>;
-};
-
-type Map = {
-  name: string;
-  width: number;
-  height: number;
-  world_x: number;
-  world_y: number;
-  layer_names: string[];
-  layers: Record<string, CanvasImageSource>;
-};
-
-declare global {
-  interface Window {
-    state: State;
-    channel: Channel;
-    map: Map;
-    userToken: string;
-  }
-}
+import { Entity, Map, State } from "./types";
 
 let socket = new Socket("/socket", { params: { token: window.userToken } });
 
@@ -391,7 +348,12 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         drawChatMessages(oldEntity);
-        drawImageCentered(sprites[entity.type], oldEntity.x, oldEntity.y, oldEntity.radians);
+        drawImageCentered(
+          sprites[entity.type],
+          oldEntity.x,
+          oldEntity.y,
+          oldEntity.radians,
+        );
         drawHealthBar(sprites[entity.type], oldEntity);
         drawDebugCircle(entity.radius, oldEntity.x, oldEntity.y);
       });

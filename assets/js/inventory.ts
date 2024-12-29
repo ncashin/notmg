@@ -1,32 +1,28 @@
 import { channel, context, inputMap } from "./app";
-
-export let inventoryOpen = false;
-
-export const toggleInventory = () => {
-  inventoryOpen = !inventoryOpen;
-};
+import { Inventory, InventoryItem } from "./types";
+import { invariant } from "./tiny-invariant";
 
 const cellSize = 32;
 
-export type Inventory = {
-  slots: any[];
-  items: Record<string, any>;
+let selectedItem: InventoryItem | undefined;
+let ghostItem: InventoryItem | undefined;
+let pickupOffset: [number, number] | undefined;
+
+export let inventoryOpen = false;
+export const toggleInventory = () => {
+  inventoryOpen = !inventoryOpen;
 };
 
 let inventory: Inventory = {
   slots: [],
   items: {},
 };
-export const setInventory = (i) => {
+export const setInventory = (i: Inventory) => {
   inventory = i;
   window.inventory = inventory;
 };
 
-let itemSelected = false;
-let selectedItem;
-let ghostItem;
-let pickupOffset;
-const selectItem = (inventory, x, y) => {
+const selectItem = (inventory: Inventory, x: number, y: number) => {
   selectedItem = Object.values(inventory.items).find((item) => {
     return item.colliders.reduce((isColliding, collider) => {
       const cx = item.x + collider.offset_x;
@@ -38,10 +34,13 @@ const selectItem = (inventory, x, y) => {
       return isColliding || (xOverlap && yOverlap);
     }, false);
   });
+  invariant(selectedItem, "No item selected");
+
   pickupOffset = [selectedItem.x - x, selectedItem.y - y];
   ghostItem = structuredClone(selectedItem);
 };
-const inventorySlotCheck = (inventory, x, y) => {
+
+const inventorySlotCheck = (inventory: Inventory, x: number, y: number) => {
   return inventory.slots.reduce((slotExists, slot) => {
     const overlapX = slot.x <= x && x < slot.x + slot.width;
     const overlapY = slot.y <= y && y < slot.y + slot.height;
@@ -49,7 +48,13 @@ const inventorySlotCheck = (inventory, x, y) => {
     return slotExists || (overlapX && overlapY);
   }, false);
 };
-const inventoryItemCheck = (inventory, item, x, y) => {
+
+const inventoryItemCheck = (
+  inventory: Inventory,
+  item: InventoryItem,
+  x: number,
+  y: number,
+) => {
   return item.colliders.reduce((slotsExist, collider) => {
     for (let dx = 0; dx < collider.width; dx++) {
       for (let dy = 0; dy < collider.height; dy++) {
@@ -64,13 +69,24 @@ const inventoryItemCheck = (inventory, item, x, y) => {
     return slotsExist;
   }, true);
 };
-const getInventoryCellFromMousePosition = (inventory, mouseX, mouseY) => {
+
+const getInventoryCellFromMousePosition = (
+  inventory: Inventory,
+  mouseX: number,
+  mouseY: number,
+) => {
   const gridX = Math.floor(mouseX / cellSize);
   const gridY = Math.floor(mouseY / cellSize);
   if (!inventorySlotCheck(inventory, gridX, gridY)) return;
   return [gridX, gridY];
 };
-const getCollidingItem = (inventory, itemToCollide, x, y) =>
+
+const getCollidingItem = (
+  inventory: Inventory,
+  itemToCollide: InventoryItem,
+  x: number,
+  y: number,
+) =>
   itemToCollide.colliders.find((collider) => {
     const cx = x + collider.offset_x;
     const cy = y + collider.offset_y;
@@ -93,7 +109,8 @@ const getCollidingItem = (inventory, itemToCollide, x, y) =>
       }) !== undefined
     );
   }) !== undefined;
-export const handleInventoryMouseDown = (event) => {
+
+export const handleInventoryMouseDown = (event: MouseEvent) => {
   const clickedCell = getInventoryCellFromMousePosition(
     inventory,
     event.clientX,
@@ -103,6 +120,7 @@ export const handleInventoryMouseDown = (event) => {
   const [x, y] = clickedCell;
 
   if (selectedItem) {
+    invariant(pickupOffset, "No pickup offset");
     const [pickupX, pickupY] = pickupOffset;
     const slotCheck = !inventoryItemCheck(
       inventory,
@@ -133,7 +151,8 @@ export const handleInventoryMouseDown = (event) => {
   selectItem(inventory, x, y);
   return true;
 };
-export const handleInventoryMouseMove = (event) => {
+
+export const handleInventoryMouseMove = (event: MouseEvent) => {
   const hoveredCell = getInventoryCellFromMousePosition(
     inventory,
     event.clientX,
@@ -142,7 +161,8 @@ export const handleInventoryMouseMove = (event) => {
   if (!hoveredCell) return false;
   const [x, y] = hoveredCell;
 };
-const drawItemColliders = (item, x, y) => {
+
+const drawItemColliders = (item: InventoryItem, x: number, y: number) => {
   item.colliders.forEach((collider) => {
     context.fillRect(
       x + collider.offset_x * cellSize,
@@ -152,7 +172,8 @@ const drawItemColliders = (item, x, y) => {
     );
   });
 };
-const drawInventorySlots = (inventory) => {
+
+const drawInventorySlots = (inventory: Inventory) => {
   inventory.slots.forEach((slot) => {
     switch (slot.type) {
       case "none":
@@ -188,6 +209,7 @@ const drawInventorySlots = (inventory) => {
     }
   });
 };
+
 export const drawUI = () => {
   if (!inventoryOpen) return;
 
@@ -202,6 +224,7 @@ export const drawUI = () => {
   });
   if (selectedItem) {
     const [x, y] = inputMap.mousePosition;
+    invariant(pickupOffset, "No pickup offset");
     const [pickupX, pickupY] = pickupOffset;
 
     const cellPos = getInventoryCellFromMousePosition(inventory, x, y);
@@ -229,6 +252,7 @@ export const drawUI = () => {
       }
     }
     context.fillStyle = "purple";
+    invariant(ghostItem, "No ghost item");
     drawItemColliders(
       ghostItem,
       x - cellSize / 2 + pickupX * cellSize,
