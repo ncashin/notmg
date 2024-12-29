@@ -268,6 +268,8 @@ defmodule Notmg.Room do
   def handle_info(:tick, state) do
     delta_time = 1 / @tick_rate
 
+    state = Map.put(state, :events, [])
+
     new_state =
       state.entities
       |> Enum.reduce(state, fn {id, _entity}, state ->
@@ -280,9 +282,12 @@ defmodule Notmg.Room do
         end
       end)
 
-    update_state = Map.delete(new_state, :map)
+    update_state = new_state |> Map.delete(:map)
 
     Endpoint.broadcast!(room_key(state.room_id), "state", update_state)
+
+    new_state = Map.delete(new_state, :events)
+
     {:noreply, new_state}
   end
 

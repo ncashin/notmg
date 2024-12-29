@@ -22,8 +22,15 @@ export type Entity = {
   radians?: number;
 };
 
+export type Event = {
+  type: string;
+  data: Record<string, any>;
+};
+
 export type State = {
+  room_id?: string;
   entities: Record<string, Entity>;
+  events: Event[];
 };
 
 export type Map = {
@@ -62,6 +69,21 @@ export type InventoryItem = {
 export type Inventory = {
   slots: InventorySlot[];
   items: Record<string, InventoryItem | undefined>;
+};
+
+export type Particle = {
+  x: number;
+  y: number;
+  radius: number;
+  velocity_x: number;
+  velocity_y: number;
+  lifetime: number;
+  color: {
+    r: number;
+    g: number;
+    b: number;
+    a: number;
+  };
 };
 
 declare global {

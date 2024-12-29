@@ -1,5 +1,4 @@
 import { Socket, Presence } from "phoenix";
-import { Howl } from "howler";
 import {
   drawUI,
   handleInventoryMouseDown,
@@ -8,7 +7,7 @@ import {
   setInventory,
   toggleInventory,
 } from "./inventory";
-import { Entity, Map, State } from "./types";
+import { Entity, Map, Particle, State } from "./types";
 
 let socket = new Socket("/socket", { params: { token: window.userToken } });
 
@@ -21,6 +20,32 @@ let urlParams = new URLSearchParams(window.location.search);
 let room = urlParams.has("room") ? urlParams.get("room") : "lobby";
 export let channel = socket.channel(`room:${room}`, {});
 window.channel = channel;
+
+let audioContext: AudioContext;
+type SoundBank = {
+  [key: string]: AudioBuffer;
+}
+const sounds: SoundBank = {};
+
+const initAudio = async () => {
+  audioContext = new AudioContext();
+
+  const setupSound = async (name: string, path: string) => {
+    const response = await fetch(path);
+    const buffer = await response.arrayBuffer();
+    sounds[name] = await audioContext.decodeAudioData(buffer);
+  };
+
+  await setupSound("enemyHit", "/assets/enemy_hit.wav");
+  await setupSound("blowUp", "/assets/blow_up.wav");
+};
+
+const playSound = (buffer: AudioBuffer) => {
+  const source = audioContext.createBufferSource();
+  source.buffer = buffer;
+  source.connect(audioContext.destination);
+  source.start(0);
+};
 
 document.addEventListener("DOMContentLoaded", () => {
   socket.connect();
@@ -63,10 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
     projectile: loadImage("/assets/projectile.png"),
   };
 
-  const sounds = {
-    enemyHit: new Howl({ src: ["/assets/enemy_hit.wav"] }),
-  };
-  window.sounds = sounds;
+  initAudio();
 
   channel
     .join()
@@ -106,14 +128,75 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("Unable to join", resp);
     });
 
-  let state: State = {
+  let particles: Particle[] = [];
+
+  const createExplosion = (x: number, y: number) => {
+    for (let i = 0; i < 10; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 100 + Math.random() * 100;
+      const radius = 4 + Math.random() * 4;
+
+      particles.push({
+        x: x,
+        y: y,
+        radius: radius,
+        velocity_x: Math.cos(angle) * speed,
+        velocity_y: Math.sin(angle) * speed,
+        lifetime: 0.4,
+        color: {
+          r: 255,
+          g: 0,
+          b: 0,
+          a: 1,
+        },
+      });
+    }
+  };
+
+  const updateAndDrawParticles = (deltaTime: number) => {
+    particles.forEach((particle) => {
+      particle.x += particle.velocity_x * deltaTime;
+      particle.y += particle.velocity_y * deltaTime;
+      particle.lifetime -= deltaTime;
+
+      const alpha = particle.lifetime / 0.4;
+      context.fillStyle = `rgba(${particle.color.r}, ${particle.color.g}, ${particle.color.b}, ${alpha})`;
+      context.beginPath();
+      context.arc(
+        particle.x - cameraX,
+        particle.y - cameraY,
+        particle.radius,
+        0,
+        Math.PI * 2
+      );
+      context.fill();
+    });
+  };
+
+ let state: State = {
     entities: {},
+    events: [],
   };
   let timeStateReceived;
 
   let oldEntities: Record<string, Entity> = {};
 
   channel.on("state", (newState: State) => {
+    newState.events.forEach((event) => {
+      if (event.type === "projectile_hit") {
+        const entity = state.entities[event.data.colliding_entity_id];
+        if (entity?.type === "leviathan") {
+          playSound(sounds.enemyHit);
+        }
+      }
+
+      if (event.type === "enemy_died") {
+        console.log("Enemy died", event.data);
+        playSound(sounds.blowUp);
+        createExplosion(event.data.x, event.data.y);
+      }
+    });
+
     oldEntities = Object.entries(newState.entities).reduce(
       (acc, [id, entity]) => {
         const oldEntity = oldEntities[id];
@@ -438,6 +521,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     draw(interpolationTime);
     drawUI();
+    updateAndDrawParticles(deltaTime);
 
     handlePlayerInput();
 

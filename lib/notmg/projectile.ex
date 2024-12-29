@@ -29,10 +29,27 @@ defmodule Notmg.Projectile do
           | health: colliding_entity.health - 5
         })
 
-      put_in(state.entities, state.entities |> Map.delete(projectile.id))
+      state = put_in(state.entities, state.entities |> Map.delete(projectile.id))
+
+      angle = :math.atan2(colliding_entity.y - projectile.y, colliding_entity.x - projectile.x)
+      collision_x = projectile.x + :math.cos(angle) * projectile.radius
+      collision_y = projectile.y + :math.sin(angle) * projectile.radius
+
+      put_in(state.events, [
+        %Notmg.Event{type: :projectile_hit, data: %{
+          projectile_id: projectile.id,
+          colliding_entity_id: colliding_entity.id,
+          x: collision_x,
+          y: collision_y
+        }}
+      ])
     else
       if entity.lifetime < 0 do
-        put_in(state.entities, state.entities |> Map.delete(projectile.id))
+        state = put_in(state.entities, state.entities |> Map.delete(projectile.id))
+
+        put_in(state.events, [
+          %Notmg.Event{type: :projectile_expired, data: %{projectile_id: projectile.id}}
+        ])
       else
         put_in(
           state.entities[entity.id],

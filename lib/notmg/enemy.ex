@@ -40,7 +40,11 @@ defmodule Notmg.Enemy do
       end
 
     if new_entity.health <= 0 do
-      put_in(new_state.entities, new_state.entities |> Map.delete(entity.id))
+      state = put_in(new_state.entities, new_state.entities |> Map.delete(entity.id))
+
+      put_in(state.events, [
+        %Notmg.Event{type: :enemy_died, data: %{enemy_id: entity.id, x: entity.x, y: entity.y}}
+      ])
     else
       put_in(new_state.entities[entity.id], new_entity)
     end
