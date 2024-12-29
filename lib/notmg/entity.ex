@@ -47,7 +47,8 @@ defmodule Notmg.Entity do
       y: y,
       radius: Keyword.fetch!(opts, :radius),
       radians: Keyword.fetch!(opts, :radians),
-      speed: Keyword.fetch!(opts, :speed)
+      speed: Keyword.fetch!(opts, :speed),
+      lifetime: Keyword.get(opts, :lifetime, 3)
     }
   end
 

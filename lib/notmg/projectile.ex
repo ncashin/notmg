@@ -2,7 +2,7 @@ defmodule Notmg.Projectile do
   alias Notmg.Entity
 
   @derive Jason.Encoder
-  defstruct ([:radians, :speed, creation_time: nil] ++
+  defstruct ([:radians, :speed, :lifetime, creation_time: nil] ++
                Map.keys(%Entity{}))
             |> Enum.reject(&(&1 == :__struct__))
 
@@ -31,7 +31,11 @@ defmodule Notmg.Projectile do
 
       put_in(state.entities, state.entities |> Map.delete(projectile.id))
     else
-      put_in(state.entities[entity.id], projectile)
+      if entity.lifetime < 0 do
+        put_in(state.entities, state.entities |> Map.delete(projectile.id))
+      else
+        put_in(state.entities[entity.id], projectile |> Map.put(:lifetime, projectile.lifetime - delta_time))
+      end
     end
   end
 end
