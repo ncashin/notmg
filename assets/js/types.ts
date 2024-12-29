@@ -60,7 +60,7 @@ export type InventoryItem = {
 
 export type Inventory = {
   slots: InventorySlot[];
-  items: Record<string, InventoryItem>;
+  items: Record<string, InventoryItem | undefined>;
 };
 
 declare global {

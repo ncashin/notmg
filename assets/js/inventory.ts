@@ -24,6 +24,7 @@ export const setInventory = (i: Inventory) => {
 
 const selectItem = (inventory: Inventory, x: number, y: number) => {
   selectedItem = Object.values(inventory.items).find((item) => {
+    invariant(item, "Item is undefined");
     return item.colliders.reduce((isColliding, collider) => {
       const cx = item.x + collider.offset_x;
       const cy = item.y + collider.offset_y;
@@ -92,6 +93,7 @@ const getCollidingItem = (
     const cy = y + collider.offset_y;
     return (
       Object.values(inventory.items).find((item) => {
+        invariant(item, "Item is undefined");
         if (item === selectedItem) return false;
 
         return (
@@ -216,6 +218,7 @@ export const drawUI = () => {
   drawInventorySlots(inventory);
 
   Object.values(inventory.items).forEach((item) => {
+    invariant(item, "Item is undefined");
     context.fillStyle = "red";
     if (item === selectedItem) {
       context.fillStyle = "blue";
