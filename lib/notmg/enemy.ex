@@ -79,8 +79,14 @@ defmodule Notmg.Enemy do
 
     state_with_projectile =
       if current_time >= entity.attack_cooldown do
+        projectile_x = entity.x + :math.cos(angle) * entity.radius
+        projectile_y = entity.y + :math.sin(angle) * entity.radius
+
         projectile =
-          Entity.create_entity(:projectile, entity.x, entity.y,
+          Entity.create_entity(
+            :projectile,
+            projectile_x,
+            projectile_y,
             collision_mask: Entity.collision_mask_player(),
             radians: angle,
             radius: 16,

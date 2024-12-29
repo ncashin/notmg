@@ -147,8 +147,11 @@ defmodule Notmg.Room do
     player = get_in(state.entities, [player_id])
     radians = payload["radians"]
 
+    projectile_x = player.x + :math.cos(radians) * player.radius
+    projectile_y = player.y + :math.sin(radians) * player.radius
+
     projectile =
-      Entity.create_entity(:projectile, player.x, player.y,
+      Entity.create_entity(:projectile, projectile_x, projectile_y,
         collision_mask: Entity.collision_mask_enemy(),
         radians: radians,
         radius: 16,
