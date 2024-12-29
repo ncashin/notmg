@@ -3,6 +3,7 @@ import {
   drawUI,
   handleInventoryMouseDown,
   handleInventoryMouseMove,
+  inventoryOpen,
   setInventory,
   toggleInventory,
 } from "./inventory";
@@ -196,22 +197,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
     inputMap[event.key] = true;
   });
+
   document.addEventListener("keyup", (event) => {
     inputMap[event.key] = false;
   });
 
   document.addEventListener("mousedown", function (event) {
-    const isHandled = handleInventoryMouseDown(event);
-    if (isHandled) return;
+    if (inventoryOpen) {
+      const isHandled = handleInventoryMouseDown(event);
+      if (isHandled) return;
+    }
 
     inputMap["leftmouse"] = true;
   });
+
   document.addEventListener("mouseup", function (event) {
     inputMap["leftmouse"] = false;
   });
+
   document.addEventListener("mousemove", function (event) {
     inputMap.mousePosition = [event.clientX, event.clientY];
-    const isHandled = handleInventoryMouseMove(event);
+
+    if (inventoryOpen) {
+      handleInventoryMouseMove(event);
+    }
   });
 
   const clearCanvas = () => {
@@ -375,8 +384,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const playerSpeed = 200;
   const handlePlayerInput = () => {
     const currentTime = Date.now();
-    if (!inputMap.leftmouse || currentTime - shootTime < timeBetweenShoot)
+
+    if (!inputMap.leftmouse || currentTime - shootTime < timeBetweenShoot) {
       return;
+    }
+
     shootTime = currentTime;
     const [mouseX, mouseY] = inputMap.mousePosition;
     const radians = Math.atan2(mouseY - y + cameraY, mouseX - x + cameraX);
