@@ -70,5 +70,6 @@ declare global {
     inventory: Inventory;
     map: Map;
     userToken: string;
+    debug: boolean;
   }
 }

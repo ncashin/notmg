@@ -27,6 +27,8 @@ document.addEventListener("DOMContentLoaded", () => {
   canvas = document.getElementById("canvas") as HTMLCanvasElement;
   context = canvas.getContext("2d") as CanvasRenderingContext2D;
 
+  window.debug = false;
+
   let presence = new Presence(channel);
 
   let userId;
@@ -38,11 +40,10 @@ document.addEventListener("DOMContentLoaded", () => {
   let velocityX = 0;
   let velocityY = 0;
 
-  let map: Map;
-
   let shootTime = Date.now();
   let timeBetweenShoot = 250;
 
+  let map: Map;
   let tickRate = 0;
 
   const loadImage = (source) => {
@@ -54,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
     player: loadImage("/assets/notmglittleguy.png"),
     leviathan: loadImage("/assets/leviathan.png"),
     button: (entity) => {
-      drawDebugCircle(entity.radius, entity.x, entity.y);
+      drawCircle(entity.radius, entity.x, entity.y);
       context.fillStyle = "#00ff0020";
       context.fill();
     },
@@ -287,7 +288,7 @@ document.addEventListener("DOMContentLoaded", () => {
       context.fillText(message.content, entity.x - cameraX, baseY - index * 20);
     });
   };
-  const drawDebugCircle = (radius, x, y) => {
+  const drawCircle = (radius, x, y) => {
     context.lineWidth = 1;
 
     context.beginPath();
@@ -333,7 +334,11 @@ document.addEventListener("DOMContentLoaded", () => {
             y,
             health_accumulator: 0,
           });
-          drawDebugCircle(entity.radius, x, y);
+
+          if (window.debug) {
+            drawCircle(entity.radius, x, y);
+          }
+
           drawChatMessages({ ...entity, x, y });
 
           if (
@@ -364,7 +369,10 @@ document.addEventListener("DOMContentLoaded", () => {
           oldEntity.radians,
         );
         drawHealthBar(sprites[entity.type], oldEntity);
-        drawDebugCircle(entity.radius, oldEntity.x, oldEntity.y);
+
+        if (window.debug) {
+          drawCircle(entity.radius, oldEntity.x, oldEntity.y);
+        }
       });
     }
   };
