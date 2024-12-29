@@ -96,7 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
     leviathan: loadImage("/assets/leviathan.png"),
     button: (entity) => {
       drawDebugCircle(entity.radius, entity.x, entity.y);
-      context.fillStyle = "yellow";
+      context.fillStyle = "#00ff0020";
       context.fill();
     },
     projectile: (entity) => {
