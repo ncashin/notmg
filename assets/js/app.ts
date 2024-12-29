@@ -25,6 +25,7 @@ type Entity = {
   health_accumulator: number;
   wip_message?: string;
   chat_messages?: ChatMessage[];
+  radians?: number;
 };
 
 type State = {
@@ -99,11 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
       context.fillStyle = "#00ff0020";
       context.fill();
     },
-    projectile: (entity) => {
-      drawDebugCircle(entity.radius, entity.x, entity.y);
-      context.fillStyle = "white";
-      context.fill();
-    },
+    projectile: loadImage("/assets/projectile.png"),
   };
   channel
     .join()
@@ -270,6 +267,8 @@ document.addEventListener("DOMContentLoaded", () => {
     context.setTransform(1, 0, 0, 1, 0, 0);
   };
   const drawHealthBar = (image, entity) => {
+    if (entity.health === undefined) return;
+
     context.fillStyle = "red";
     context.fillRect(
       entity.x - image.width / 2 - cameraX,
@@ -392,7 +391,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         drawChatMessages(oldEntity);
-        drawImageCentered(sprites[entity.type], oldEntity.x, oldEntity.y);
+        drawImageCentered(sprites[entity.type], oldEntity.x, oldEntity.y, oldEntity.radians);
         drawHealthBar(sprites[entity.type], oldEntity);
         drawDebugCircle(entity.radius, oldEntity.x, oldEntity.y);
       });
