@@ -1,5 +1,7 @@
 defmodule Notmg.Maps do
-  @assets_path Path.join([Path.dirname(__ENV__.file), "..", "..", "assets", "map.ldtk"])
+  defp ldtk_path do
+    Path.join(:code.priv_dir(:notmg), "static/assets/map.ldtk")
+  end
 
   @map_scale 2.5
   defmodule MapEntity do
@@ -26,7 +28,7 @@ defmodule Notmg.Maps do
   end
 
   def load_map() do
-    load_map(@assets_path)
+    load_map(ldtk_path())
   end
 
   def ldtk_root_to_maps(ldtk_root) do

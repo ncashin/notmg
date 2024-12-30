@@ -3,7 +3,3 @@ app:
 
 livebook:
   livebook server --port 8010
-
-ldtk:
-  rm -rf ./priv/static/assets/map
-  mv ./assets/map ./priv/static/assets/
