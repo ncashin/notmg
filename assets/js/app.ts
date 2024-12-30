@@ -188,6 +188,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (entity?.type === "leviathan") {
           playSound(sounds.enemyHit);
         }
+        createExplosion(event.data.x, event.data.y);
       }
 
       if (event.type === "enemy_died") {
