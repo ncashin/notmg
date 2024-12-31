@@ -71,6 +71,13 @@ export type Inventory = {
   items: Record<string, InventoryItem | undefined>;
 };
 
+export type ParticleColor = {
+  r: number;
+  g: number;
+  b: number;
+  a: number;
+};
+
 export type Particle = {
   x: number;
   y: number;
@@ -78,12 +85,7 @@ export type Particle = {
   velocity_x: number;
   velocity_y: number;
   lifetime: number;
-  color: {
-    r: number;
-    g: number;
-    b: number;
-    a: number;
-  };
+  color: ParticleColor;
 };
 
 declare global {
