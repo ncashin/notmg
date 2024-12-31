@@ -6,7 +6,7 @@ defmodule Notmg.Projectile do
                Map.keys(%Entity{}))
             |> Enum.reject(&(&1 == :__struct__))
 
-  def update(state, delta_time, entity) do
+  def update_basic_projectile(state, delta_time, entity) do
     velocity_x = :math.cos(entity.radians) * entity.speed
     velocity_y = :math.sin(entity.radians) * entity.speed
 
@@ -35,21 +35,28 @@ defmodule Notmg.Projectile do
       collision_x = projectile.x + :math.cos(angle) * projectile.radius
       collision_y = projectile.y + :math.sin(angle) * projectile.radius
 
-      put_in(state.events, [
-        %Notmg.Event{type: :projectile_hit, data: %{
-          projectile_id: projectile.id,
-          colliding_entity_id: colliding_entity.id,
-          x: collision_x,
-          y: collision_y
-        }}
-      ])
+      update_in(state.events, fn existing_events ->
+        existing_events ++ [
+          %Notmg.Event{
+            type: :projectile_hit,
+            data: %{
+              projectile_id: projectile.id,
+              colliding_entity_id: colliding_entity.id,
+              x: collision_x,
+              y: collision_y
+            }
+          }
+        ]
+      end)
     else
       if entity.lifetime < 0 do
         state = put_in(state.entities, state.entities |> Map.delete(projectile.id))
 
-        put_in(state.events, [
-          %Notmg.Event{type: :projectile_expired, data: %{projectile_id: projectile.id}}
-        ])
+        update_in(state.events, fn existing_events ->
+          existing_events ++ [
+            %Notmg.Event{type: :projectile_expired, data: %{projectile_id: projectile.id}}
+          ]
+        end)
       else
         put_in(
           state.entities[entity.id],

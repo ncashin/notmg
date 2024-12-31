@@ -3,6 +3,8 @@ defmodule Mix.Tasks.LdtkTest do
 
   @impl Mix.Task
   def run(_args) do
-    Notmg.Maps.load_map() |> IO.inspect()
+    maps = Notmg.Maps.load_maps()
+
+    Notmg.Maps.get_map(maps, "lobby") |> IO.inspect()
   end
 end
