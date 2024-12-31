@@ -101,12 +101,13 @@ defmodule Notmg.Maps do
         fields = Map.put(entity.fields, :editor_iid, entity.editor_iid)
         fields = Enum.map(fields, fn {k, v} -> {k, v} end)
 
-        created_entity = Entity.create_entity(
-          entity.fields.type |> String.to_atom(),
-          entity.world_x,
-          entity.world_y,
-          fields
-        )
+        created_entity =
+          Entity.create_entity(
+            entity.fields.type |> String.to_atom(),
+            entity.world_x,
+            entity.world_y,
+            fields
+          )
 
         {entity.editor_iid, created_entity}
       end)

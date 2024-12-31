@@ -7,7 +7,7 @@ import {
   setInventory,
   toggleInventory,
 } from "./inventory";
-import { Entity, Map, Particle, State } from "./types";
+import { Entity, Map, Particle, ParticleColor, State } from "./types";
 
 let socket = new Socket("/socket", { params: { token: window.userToken } });
 
@@ -130,11 +130,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let particles: Particle[] = [];
 
-  const createExplosion = (x: number, y: number) => {
+  const createParticles = (
+    x: number,
+    y: number,
+    {
+      color = { r: 255, g: 255, b: 255, a: 1 },
+      minSpeed = 100,
+      maxSpeed = 150,
+      minRadius = 3,
+      maxRadius = 6,
+    }: {
+      color?: ParticleColor;
+      minSpeed?: number;
+      maxSpeed?: number;
+      minRadius?: number;
+      maxRadius?: number;
+    },
+  ) => {
     for (let i = 0; i < 10; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = 100 + Math.random() * 100;
-      const radius = 4 + Math.random() * 4;
+      const speed = minSpeed + Math.random() * (maxSpeed - minSpeed);
+      const radius = minRadius + Math.random() * (maxRadius - minRadius);
 
       particles.push({
         x: x,
@@ -143,12 +159,7 @@ document.addEventListener("DOMContentLoaded", () => {
         velocity_x: Math.cos(angle) * speed,
         velocity_y: Math.sin(angle) * speed,
         lifetime: 0.4,
-        color: {
-          r: 255,
-          g: 0,
-          b: 0,
-          a: 1,
-        },
+        color: color,
       });
     }
   };
@@ -158,6 +169,8 @@ document.addEventListener("DOMContentLoaded", () => {
       particle.x += particle.velocity_x * deltaTime;
       particle.y += particle.velocity_y * deltaTime;
       particle.lifetime -= deltaTime;
+
+      particle.radius = Math.max(1, particle.radius - deltaTime * 5);
 
       const alpha = particle.lifetime / 0.4;
       context.fillStyle = `rgba(${particle.color.r}, ${particle.color.g}, ${particle.color.b}, ${alpha})`;
@@ -193,13 +206,21 @@ document.addEventListener("DOMContentLoaded", () => {
           // TODO enemy specific hit sound
         }
         playSound(sounds.enemyHit);
-        createExplosion(event.data.x, event.data.y);
+        createParticles(event.data.x, event.data.y, {
+          color: { r: 255, g: 0, b: 0, a: 1 },
+        });
       }
 
       if (event.type === "enemy_died") {
         console.log("Enemy died", event.data);
         playSound(sounds.blowUp);
-        createExplosion(event.data.x, event.data.y);
+        createParticles(event.data.x, event.data.y, {
+          color: { r: 255, g: 0, b: 0, a: 1 },
+          maxRadius: 12,
+          minRadius: 4,
+          maxSpeed: 250,
+          minSpeed: 150,
+        });
       }
 
       if (event.type === "button_pressed") {
@@ -208,6 +229,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (event.type === "enemy_spawned") {
         playSound(sounds.enemySpawn);
+        createParticles(event.data.x, event.data.y, {
+          color: { r: 100, g: 100, b: 255, a: 1 },
+          maxRadius: 10,
+          minRadius: 5,
+          maxSpeed: 300,
+          minSpeed: 200,
+        });
       }
     });
 

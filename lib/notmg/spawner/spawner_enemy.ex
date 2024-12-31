@@ -6,12 +6,13 @@ defmodule Notmg.Spawner.Enemy do
     state = put_in(state.entities[enemy.id], enemy)
 
     update_in(state.events, fn existing_events ->
-      existing_events ++ [
-        %Notmg.Event{
-          type: :enemy_spawned,
-          data: %{enemy_id: enemy.id, x: enemy.x, y: enemy.y}
-        }
-      ]
+      existing_events ++
+        [
+          %Notmg.Event{
+            type: :enemy_spawned,
+            data: %{enemy_id: enemy.id, x: enemy.x, y: enemy.y}
+          }
+        ]
     end)
   end
 end

@@ -25,9 +25,13 @@ defmodule Notmg.Enemy.Leviathan do
       state = put_in(new_state.entities, new_state.entities |> Map.delete(entity.id))
 
       update_in(state.events, fn existing_events ->
-        existing_events ++ [
-          %Notmg.Event{type: :enemy_died, data: %{enemy_id: entity.id, x: entity.x, y: entity.y}}
-        ]
+        existing_events ++
+          [
+            %Notmg.Event{
+              type: :enemy_died,
+              data: %{enemy_id: entity.id, x: entity.x, y: entity.y}
+            }
+          ]
       end)
     else
       put_in(new_state.entities[entity.id], new_entity)

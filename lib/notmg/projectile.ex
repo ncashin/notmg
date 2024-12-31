@@ -36,26 +36,28 @@ defmodule Notmg.Projectile do
       collision_y = projectile.y + :math.sin(angle) * projectile.radius
 
       update_in(state.events, fn existing_events ->
-        existing_events ++ [
-          %Notmg.Event{
-            type: :projectile_hit,
-            data: %{
-              projectile_id: projectile.id,
-              colliding_entity_id: colliding_entity.id,
-              x: collision_x,
-              y: collision_y
+        existing_events ++
+          [
+            %Notmg.Event{
+              type: :projectile_hit,
+              data: %{
+                projectile_id: projectile.id,
+                colliding_entity_id: colliding_entity.id,
+                x: collision_x,
+                y: collision_y
+              }
             }
-          }
-        ]
+          ]
       end)
     else
       if entity.lifetime < 0 do
         state = put_in(state.entities, state.entities |> Map.delete(projectile.id))
 
         update_in(state.events, fn existing_events ->
-          existing_events ++ [
-            %Notmg.Event{type: :projectile_expired, data: %{projectile_id: projectile.id}}
-          ]
+          existing_events ++
+            [
+              %Notmg.Event{type: :projectile_expired, data: %{projectile_id: projectile.id}}
+            ]
         end)
       else
         put_in(
