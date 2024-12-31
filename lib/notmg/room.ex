@@ -1,6 +1,7 @@
 defmodule Notmg.Room do
   use GenServer
-  alias Notmg.{Maps, Player, Entity, Inventory}
+  alias Notmg.{Maps, Entity, Inventory}
+  alias Notmg.Entity.Player
   alias NotmgWeb.Endpoint
   require Logger
 
@@ -53,48 +54,10 @@ defmodule Notmg.Room do
 
     :timer.send_interval(@tick_rate, :tick)
 
-    # button_id = Entity.generate_id()
+    maps = Maps.load_maps()
+    {map, entities} = Maps.get_map(maps, room_id)
 
-    # button = %{
-    #   id: button_id,
-    #   type: :button,
-    #   update_fn: nil,
-    #   interact_fn: fn state, _interacting_entity, interactable ->
-    #     enemy = create_enemy(interactable.x, interactable.y)
-    #     put_in(state.entities[enemy.id], enemy)
-    #   end,
-    #   inventory: nil,
-    #   x: 0,
-    #   y: 0,
-    #   radius: 400,
-    #   health: 0,
-    #   max_health: 1,
-    #   collision_mask: @collision_mask_player_interactable
-    # }
-
-    map = Maps.get_map("level_0")
-
-    enemies =
-      map.entities
-      |> Enum.filter(fn entity -> entity.name != :spawn_point end)
-      |> Enum.map(fn entity ->
-        # TODO take in fields from entity, map them to opts on the create_entity function
-        Entity.create_entity(
-          entity.fields.type |> String.to_atom(),
-          entity.world_x,
-          entity.world_y
-        )
-      end)
-      |> Enum.reduce(%{}, fn entity, acc ->
-        Map.put(acc, entity.id, entity)
-      end)
-
-    {:ok,
-     %{
-       room_id: room_id,
-       entities: enemies,
-       map: map
-     }}
+    {:ok, %{room_id: room_id, map: map, entities: entities, events: []}}
   end
 
   @impl true
@@ -268,8 +231,6 @@ defmodule Notmg.Room do
   def handle_info(:tick, state) do
     delta_time = 1 / @tick_rate
 
-    state = Map.put(state, :events, [])
-
     new_state =
       state.entities
       |> Enum.reduce(state, fn {id, _entity}, state ->
@@ -286,7 +247,7 @@ defmodule Notmg.Room do
 
     Endpoint.broadcast!(room_key(state.room_id), "state", update_state)
 
-    new_state = Map.delete(new_state, :events)
+    new_state = %{new_state | events: []}
 
     {:noreply, new_state}
   end

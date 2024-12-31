@@ -24,7 +24,7 @@ window.channel = channel;
 let audioContext: AudioContext;
 type SoundBank = {
   [key: string]: AudioBuffer;
-}
+};
 const sounds: SoundBank = {};
 
 const initAudio = async () => {
@@ -38,6 +38,8 @@ const initAudio = async () => {
 
   await setupSound("enemyHit", "/assets/enemy_hit.wav");
   await setupSound("blowUp", "/assets/blow_up.wav");
+  await setupSound("buttonInteract", "/assets/button_interact.wav");
+  await setupSound("enemySpawn", "/assets/enemy_spawn.wav");
 };
 
 const playSound = (buffer: AudioBuffer) => {
@@ -80,12 +82,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const sprites = {
     player: loadImage("/assets/notmglittleguy.png"),
     leviathan: loadImage("/assets/leviathan.png"),
-    button: (entity) => {
-      drawCircle(entity.radius, entity.x, entity.y);
-      context.fillStyle = "#00ff0020";
-      context.fill();
-    },
+    button: loadImage("/assets/button.png"),
     projectile: loadImage("/assets/projectile.png"),
+    debug: loadImage("/assets/debug.png"),
+    spawner: loadImage("/assets/cave.png"),
   };
 
   initAudio();
@@ -167,13 +167,13 @@ document.addEventListener("DOMContentLoaded", () => {
         particle.y - cameraY,
         particle.radius,
         0,
-        Math.PI * 2
+        Math.PI * 2,
       );
       context.fill();
     });
   };
 
- let state: State = {
+  let state: State = {
     entities: {},
     events: [],
   };
@@ -183,11 +183,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   channel.on("state", (newState: State) => {
     newState.events.forEach((event) => {
+      if (event.type === "debug") {
+        console.log(event.data);
+      }
+
       if (event.type === "projectile_hit") {
         const entity = state.entities[event.data.colliding_entity_id];
         if (entity?.type === "leviathan") {
-          playSound(sounds.enemyHit);
+          // TODO enemy specific hit sound
         }
+        playSound(sounds.enemyHit);
         createExplosion(event.data.x, event.data.y);
       }
 
@@ -195,6 +200,14 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("Enemy died", event.data);
         playSound(sounds.blowUp);
         createExplosion(event.data.x, event.data.y);
+      }
+
+      if (event.type === "button_pressed") {
+        playSound(sounds.buttonInteract);
+      }
+
+      if (event.type === "enemy_spawned") {
+        playSound(sounds.enemySpawn);
       }
     });
 
@@ -319,9 +332,17 @@ document.addEventListener("DOMContentLoaded", () => {
     context.clearRect(0, 0, canvas.width, canvas.height);
   };
   const drawImageCentered = (image, x, y, rotation = 0) => {
+    let imageToDraw = image;
+    if (image === undefined) {
+      imageToDraw = sprites.debug;
+    }
     context.translate(x - cameraX, y - cameraY);
     context.rotate(rotation);
-    context.drawImage(image, -image.width / 2, -image.height / 2);
+    context.drawImage(
+      imageToDraw,
+      -imageToDraw.width / 2,
+      -imageToDraw.height / 2,
+    );
     context.setTransform(1, 0, 0, 1, 0, 0);
   };
   const drawHealthBar = (image, entity) => {

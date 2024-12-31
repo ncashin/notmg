@@ -1,23 +1,5 @@
-defmodule Notmg.Enemy do
+defmodule Notmg.Enemy.Leviathan do
   alias Notmg.Entity
-
-  @derive Jason.Encoder
-  defstruct ([
-               :ai_pid,
-               :angle,
-               ai_entity: true,
-               max_health: 50,
-               health: 50,
-               speed: 150,
-               projectile_speed: 300,
-               last_think_time: 0,
-               attack_cooldown: 0
-             ] ++
-               Map.keys(%Entity{}))
-            |> Enum.reject(&(&1 == :__struct__))
-
-  @attack_range 400
-  @attack_cooldown 1000
 
   def update(state, delta_time, entity) do
     current_time = System.system_time(:millisecond)
@@ -32,7 +14,7 @@ defmodule Notmg.Enemy do
         player ->
           distance = Entity.calculate_distance(entity, player)
 
-          if distance <= @attack_range do
+          if distance <= entity.attack_range do
             handle_attacking(state, current_time, entity, player)
           else
             handle_roaming(state, current_time, delta_time, entity)
@@ -42,9 +24,11 @@ defmodule Notmg.Enemy do
     if new_entity.health <= 0 do
       state = put_in(new_state.entities, new_state.entities |> Map.delete(entity.id))
 
-      put_in(state.events, [
-        %Notmg.Event{type: :enemy_died, data: %{enemy_id: entity.id, x: entity.x, y: entity.y}}
-      ])
+      update_in(state.events, fn existing_events ->
+        existing_events ++ [
+          %Notmg.Event{type: :enemy_died, data: %{enemy_id: entity.id, x: entity.x, y: entity.y}}
+        ]
+      end)
     else
       put_in(new_state.entities[entity.id], new_entity)
     end
@@ -82,7 +66,7 @@ defmodule Notmg.Enemy do
     angle = :math.atan2(player.y - entity.y, player.x - entity.x)
 
     state_with_projectile =
-      if current_time >= entity.attack_cooldown do
+      if current_time >= entity.time_since_last_attack do
         projectile_x = entity.x + :math.cos(angle) * entity.radius
         projectile_y = entity.y + :math.sin(angle) * entity.radius
 
@@ -105,10 +89,10 @@ defmodule Notmg.Enemy do
     new_entity = %{
       entity
       | angle: angle,
-        attack_cooldown:
-          if(current_time >= entity.attack_cooldown,
-            do: current_time + @attack_cooldown,
-            else: entity.attack_cooldown
+        time_since_last_attack:
+          if(current_time >= entity.time_since_last_attack,
+            do: current_time + entity.attack_cooldown,
+            else: entity.time_since_last_attack
           )
     }
 

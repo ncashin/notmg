@@ -9,3 +9,11 @@ defimpl Jason.Encoder, for: Function do
     Jason.Encode.string(inspect(fun), opts)
   end
 end
+
+defimpl Jason.Encoder, for: Tuple do
+  def encode(tuple, opts) do
+    tuple
+    |> Tuple.to_list()
+    |> Jason.Encode.list(opts)
+  end
+end
