@@ -41,6 +41,7 @@ export type Map = {
   world_y: number;
   layer_names: string[];
   layers: Record<string, CanvasImageSource>;
+  collisions: any;
 };
 
 export type InventorySlot = {

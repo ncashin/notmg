@@ -19,9 +19,17 @@ defmodule Notmg.Maps do
               world_x: nil,
               world_y: nil,
               layer_names: [],
-              entities: []
+              entities: [],
+              collisions: []
   end
 
+  @spec load_maps(
+          binary()
+          | maybe_improper_list(
+              binary() | maybe_improper_list(any(), binary() | []) | char(),
+              binary() | []
+            )
+        ) :: list()
   def load_maps(path) do
     path
     |> File.read!()
@@ -72,6 +80,20 @@ defmodule Notmg.Maps do
             end
         end
 
+      collisions =
+        case Enum.find(level.layer_instances, &(&1.identifier == "collisions")) do
+          nil ->
+            []
+
+          collisions_layer ->
+            %{
+              int_grid_width: collisions_layer.c_wid,
+              int_grid_height: collisions_layer.c_hei,
+              int_grid: collisions_layer.int_grid_csv
+            }
+          end
+
+
       %MapInstance{
         name: level.identifier,
         width: level.px_wid * @map_scale,
@@ -79,7 +101,8 @@ defmodule Notmg.Maps do
         world_x: level.world_x * @map_scale,
         world_y: level.world_y * @map_scale,
         layer_names: Enum.map(level.layer_instances, & &1.identifier),
-        entities: entities
+        entities: entities,
+        collisions: collisions
       }
     end
   end

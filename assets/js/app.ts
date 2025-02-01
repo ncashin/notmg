@@ -563,6 +563,13 @@ document.addEventListener("DOMContentLoaded", () => {
     x += newVelocityX * deltaTime;
     y += velocityY * deltaTime;
 
+    if(map){
+      const index = Math.round(x / 48)  + Math.round(y / 48) * map.collisions.int_grid_width;
+      console.log(index);
+
+      console.log( map.collisions.int_grid[index])
+    }
+
     cameraX = x - canvas.width / 2;
     cameraY = y - canvas.height / 2;
 
