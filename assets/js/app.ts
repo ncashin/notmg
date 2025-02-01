@@ -80,7 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return image;
   };
   const sprites = {
-    player: loadImage("/assets/notmglittleguy.png"),
+    player: loadImage("/assets/player.png"),
     leviathan: loadImage("/assets/leviathan.png"),
     button: loadImage("/assets/button.png"),
     projectile: loadImage("/assets/projectile.png"),
