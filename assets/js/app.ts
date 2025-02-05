@@ -9,6 +9,8 @@ import {
 } from "./inventory";
 import { Entity, Map, Particle, ParticleColor, State } from "./types";
 
+const TILE_SIZE = 32;
+
 let socket = new Socket("/socket", { params: { token: window.userToken } });
 
 export let canvas: HTMLCanvasElement;
@@ -98,7 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
       map.layers = map.layer_names.reduce((acc, layerName) => {
         if (layerName !== "entities") {
           acc[layerName] = loadImage(
-            `/assets/map/png/${map.name}__${layerName}.png`,
+            `/assets/map/png/${map.name}__${layerName}.png`
           );
         }
         return acc;
@@ -145,7 +147,7 @@ document.addEventListener("DOMContentLoaded", () => {
       maxSpeed?: number;
       minRadius?: number;
       maxRadius?: number;
-    },
+    }
   ) => {
     for (let i = 0; i < 10; i++) {
       const angle = Math.random() * Math.PI * 2;
@@ -180,7 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
         particle.y - cameraY,
         particle.radius,
         0,
-        Math.PI * 2,
+        Math.PI * 2
       );
       context.fill();
     });
@@ -262,7 +264,7 @@ document.addEventListener("DOMContentLoaded", () => {
           },
         };
       },
-      {},
+      {}
     );
 
     window.state = newState;
@@ -316,7 +318,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (event.key === "e") {
       const interact_id = Object.values(state.entities).find((entity) => {
         const distance = Math.sqrt(
-          Math.pow(entity.x - x, 2) + Math.pow(entity.y - y, 2),
+          Math.pow(entity.x - x, 2) + Math.pow(entity.y - y, 2)
         );
         return entity.id !== userId && distance < entity.radius;
       })?.id;
@@ -369,7 +371,7 @@ document.addEventListener("DOMContentLoaded", () => {
     context.drawImage(
       imageToDraw,
       -imageToDraw.width / 2,
-      -imageToDraw.height / 2,
+      -imageToDraw.height / 2
     );
     context.setTransform(1, 0, 0, 1, 0, 0);
   };
@@ -381,7 +383,7 @@ document.addEventListener("DOMContentLoaded", () => {
       entity.x - image.width / 2 - cameraX,
       entity.y - image.height / 2 + image.height - cameraY + 4,
       image.width,
-      5,
+      5
     );
     context.fillStyle = "orange";
     context.fillRect(
@@ -389,7 +391,7 @@ document.addEventListener("DOMContentLoaded", () => {
       entity.y - image.height / 2 + image.height - cameraY + 4,
       image.width *
         ((entity.health + entity.health_accumulator) / entity.max_health),
-      5,
+      5
     );
 
     context.fillStyle = "green";
@@ -397,7 +399,7 @@ document.addEventListener("DOMContentLoaded", () => {
       entity.x - image.width / 2 - cameraX,
       entity.y - image.height / 2 + image.height - cameraY + 4,
       image.width * (entity.health / entity.max_health),
-      5,
+      5
     );
     context.fillStyle = "red";
   };
@@ -449,9 +451,7 @@ document.addEventListener("DOMContentLoaded", () => {
           context.drawImage(
             layer as CanvasImageSource,
             map.world_x - cameraX,
-            map.world_y - cameraY,
-            map.width,
-            map.height,
+            map.world_y - cameraY
           );
         });
     }
@@ -466,7 +466,7 @@ document.addEventListener("DOMContentLoaded", () => {
             sprites[entity.type],
             x,
             y,
-            ((velocityX / playerSpeed) * (Math.PI * 2)) / 60,
+            ((velocityX / playerSpeed) * (Math.PI * 2)) / 60
           );
           drawHealthBar(sprites[entity.type], {
             ...entity,
@@ -506,7 +506,7 @@ document.addEventListener("DOMContentLoaded", () => {
           sprites[entity.type],
           oldEntity.x,
           oldEntity.y,
-          oldEntity.radians,
+          oldEntity.radians
         );
         drawHealthBar(sprites[entity.type], oldEntity);
 
@@ -553,21 +553,96 @@ document.addEventListener("DOMContentLoaded", () => {
     let newVelocityX = 0;
     newVelocityX += inputMap["d"] ? playerSpeed : 0;
     newVelocityX -= inputMap["a"] ? playerSpeed : 0;
-    velocityX = (velocityX + newVelocityX) / 2;
+    newVelocityX *= deltaTime;
+    velocityX = newVelocityX;
 
     let newVelocityY = 0;
     newVelocityY -= inputMap["w"] ? playerSpeed : 0;
     newVelocityY += inputMap["s"] ? playerSpeed : 0;
+    newVelocityY *= deltaTime;
     velocityY = newVelocityY;
 
-    x += newVelocityX * deltaTime;
-    y += velocityY * deltaTime;
+    let tempVelocityX = newVelocityX;
+    let tempVelocityY = newVelocityY;
 
-    if(map){
-      const index = Math.round(x / 48)  + Math.round(y / 48) * map.collisions.int_grid_width;
-      console.log(index);
+    if (map) {
+      const getTile = (x, y) => {
+        const index = x * map.collisions.int_grid_height + y;
+        return map.collisions.int_grid[index];
+      };
+      const moveX = () => {
+        const signX = Math.sign(tempVelocityX);
+        if (signX == 0) {
+          return;
+        }
 
-      console.log( map.collisions.int_grid[index])
+        const tileX = Math.floor(x / TILE_SIZE);
+        const tileY = Math.floor(y / TILE_SIZE);
+        const tileDelta =
+          tempVelocityX >= 0 ? TILE_SIZE - (x % TILE_SIZE) : x % TILE_SIZE;
+        if (Math.abs(tempVelocityX) <= tileDelta) {
+          x += tempVelocityX;
+          tempVelocityX = 0;
+          return;
+        }
+        const signedTileDelta = tileDelta * signX;
+
+        if (getTile(tileX + signX, tileY) == 1) {
+          x = Math.floor(x + signedTileDelta) - signX;
+          tempVelocityX = 0;
+          return;
+        }
+
+        x += signedTileDelta;
+        tempVelocityX -= signedTileDelta;
+        if (x % TILE_SIZE == 0) {
+          x += signX;
+          tempVelocityX -= signX;
+        }
+      };
+      const moveY = () => {
+        const signY = Math.sign(tempVelocityY);
+        if (signY == 0) {
+          return;
+        }
+
+        const tileX = Math.floor(x / TILE_SIZE);
+        const tileY = Math.floor(y / TILE_SIZE);
+        const tileDelta =
+          tempVelocityY >= 0 ? TILE_SIZE - (y % TILE_SIZE) : y % TILE_SIZE;
+        if (Math.abs(tempVelocityY) < tileDelta) {
+          y += tempVelocityY;
+          tempVelocityY = 0;
+          return;
+        }
+        const signedTileDelta = tileDelta * signY;
+        if (getTile(tileX, tileY + signY) == 1) {
+          y = Math.floor(y + signedTileDelta) - signY;
+          tempVelocityY = 0;
+          return;
+        }
+
+        y += signedTileDelta;
+        tempVelocityY -= signedTileDelta;
+        if (y % TILE_SIZE == 0) {
+          y += signY;
+          tempVelocityY -= signY;
+        }
+      };
+
+      while (tempVelocityX != 0 || tempVelocityY != 0) {
+        const tileDeltaX =
+          tempVelocityX >= 0 ? TILE_SIZE - (x % TILE_SIZE) : x % TILE_SIZE;
+        const tileDeltaY =
+          tempVelocityY >= 0 ? TILE_SIZE - (y % TILE_SIZE) : y % TILE_SIZE;
+
+
+        if (Math.abs(tileDeltaY * tempVelocityY) <= Math.abs(tileDeltaX * tempVelocityX)) {
+          moveX();
+        } else {
+          moveY();
+        }
+      }
     }
 
     cameraX = x - canvas.width / 2;

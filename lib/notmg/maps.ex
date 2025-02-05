@@ -5,7 +5,7 @@ defmodule Notmg.Maps do
     Path.join(:code.priv_dir(:notmg), "static/assets/map.ldtk")
   end
 
-  @map_scale 2.5
+  @map_scale 1
   defmodule MapEntity do
     @derive Jason.Encoder
     defstruct editor_iid: nil, name: nil, world_x: nil, world_y: nil, fields: %{}
