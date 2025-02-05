@@ -567,7 +567,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (map) {
       const getTile = (x, y) => {
-        const index = x * map.collisions.int_grid_height + y;
+        const index = x  + y * map.collisions.int_grid_width;
         return map.collisions.int_grid[index];
       };
       const moveX = () => {
