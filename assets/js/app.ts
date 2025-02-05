@@ -625,8 +625,8 @@ document.addEventListener("DOMContentLoaded", () => {
         y += signedTileDelta;
         tempVelocityY -= signedTileDelta;
         if (y % TILE_SIZE == 0) {
-          y += signY;
-          tempVelocityY -= signY;
+          y += signY * 0.0001;
+          tempVelocityY -= signY * 0.0001;
         }
       };
 
