@@ -8,8 +8,9 @@ import {
   toggleInventory,
 } from "./inventory";
 import { Entity, Map, Particle, ParticleColor, State } from "./types";
+import { moveAndCollide as moveAndCollideGrid } from "./collision";
 
-const TILE_SIZE = 32;
+export const TILE_SIZE = 32;
 
 let socket = new Socket("/socket", { params: { token: window.userToken } });
 
@@ -566,83 +567,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let tempVelocityY = newVelocityY;
 
     if (map) {
-      const getTile = (x, y) => {
-        const index = x  + y * map.collisions.int_grid_width;
-        return map.collisions.int_grid[index];
-      };
-      const moveX = () => {
-        const signX = Math.sign(tempVelocityX);
-        if (signX == 0) {
-          return;
-        }
-
-        const tileX = Math.floor(x / TILE_SIZE);
-        const tileY = Math.floor(y / TILE_SIZE);
-        const tileDelta =
-          tempVelocityX >= 0 ? TILE_SIZE - (x % TILE_SIZE) : x % TILE_SIZE;
-        if (Math.abs(tempVelocityX) <= tileDelta) {
-          x += tempVelocityX;
-          tempVelocityX = 0;
-          return;
-        }
-        const signedTileDelta = tileDelta * signX;
-
-        if (getTile(tileX + signX, tileY) == 1) {
-          x = Math.floor(x + signedTileDelta) - signX;
-          tempVelocityX = 0;
-          return;
-        }
-
-        x += signedTileDelta;
-        tempVelocityX -= signedTileDelta;
-        if (x % TILE_SIZE == 0) {
-          x += signX;
-          tempVelocityX -= signX;
-        }
-      };
-      const moveY = () => {
-        const signY = Math.sign(tempVelocityY);
-        if (signY == 0) {
-          return;
-        }
-
-        const tileX = Math.floor(x / TILE_SIZE);
-        const tileY = Math.floor(y / TILE_SIZE);
-        const tileDelta =
-          tempVelocityY >= 0 ? TILE_SIZE - (y % TILE_SIZE) : y % TILE_SIZE;
-        if (Math.abs(tempVelocityY) < tileDelta) {
-          y += tempVelocityY;
-          tempVelocityY = 0;
-          return;
-        }
-        const signedTileDelta = tileDelta * signY;
-        if (getTile(tileX, tileY + signY) == 1) {
-          y = Math.floor(y + signedTileDelta) - signY;
-          tempVelocityY = 0;
-          return;
-        }
-
-        y += signedTileDelta;
-        tempVelocityY -= signedTileDelta;
-        if (y % TILE_SIZE == 0) {
-          y += signY * 0.0001;
-          tempVelocityY -= signY * 0.0001;
-        }
-      };
-
-      while (tempVelocityX != 0 || tempVelocityY != 0) {
-        const tileDeltaX =
-          tempVelocityX >= 0 ? TILE_SIZE - (x % TILE_SIZE) : x % TILE_SIZE;
-        const tileDeltaY =
-          tempVelocityY >= 0 ? TILE_SIZE - (y % TILE_SIZE) : y % TILE_SIZE;
-
-
-        if (Math.abs(tileDeltaY * tempVelocityY) <= Math.abs(tileDeltaX * tempVelocityX)) {
-          moveX();
-        } else {
-          moveY();
-        }
-      }
+      [x, y] = moveAndCollideGrid(map, x, y, tempVelocityX, tempVelocityY);
     }
 
     cameraX = x - canvas.width / 2;
