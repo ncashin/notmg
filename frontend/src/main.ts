@@ -27,6 +27,13 @@ export const POSITION_COMPONENT_DEF: {
   x: 0,
   y: 0,
 };
+export const COLOR_COMPONENT_DEF: {
+  type: "color";
+  color: string
+} = {
+  type: "color",
+  color: "red"
+};
 const playerEntity = createEntity();
 addComponent(playerEntity, POSITION_COMPONENT_DEF);
 let position = getComponent(playerEntity, POSITION_COMPONENT_DEF);
@@ -51,9 +58,15 @@ const update = () => {
   if (i < 500) {
     const testEntity = createEntity();
     addComponent(testEntity, POSITION_COMPONENT_DEF);
+    addComponent(testEntity, COLOR_COMPONENT_DEF);
+
     let testPosition = getComponent(testEntity, POSITION_COMPONENT_DEF);
     testPosition.x = Math.random() * 1000;
     testPosition.y = Math.random() * 1000;
+
+    let testColor = getComponent(testEntity, COLOR_COMPONENT_DEF);
+    testColor.color = Math.random() < 0.5 ? "green" : "red";
+
     i++;
   }
 
