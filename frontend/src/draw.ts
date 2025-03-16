@@ -21,8 +21,7 @@ export const draw = () => {
   context.clearRect(0, 0, canvas.width, canvas.height);
 
   context.fillStyle = "red";
-  queryEntities([POSITION_COMPONENT_DEF], (entity) => {
-    const position = getComponent(entity, POSITION_COMPONENT_DEF);
+  queryEntities([POSITION_COMPONENT_DEF], ([position]) => {
     context.fillRect(position.x, position.y, 32, 32);
   });
 };
