@@ -18,7 +18,6 @@ websocket.onclose = () => {
   console.log("Disconnected from WebSocket server");
 };
 
-const playerEntity = createEntity();
 export const POSITION_COMPONENT_DEF: {
   type: "position";
   x: number;
@@ -28,11 +27,13 @@ export const POSITION_COMPONENT_DEF: {
   x: 0,
   y: 0,
 };
+const playerEntity = createEntity();
 addComponent(playerEntity, POSITION_COMPONENT_DEF);
 let position = getComponent(playerEntity, POSITION_COMPONENT_DEF);
 
 const PLAYER_SPEED = 5;
 
+let i = 0;
 const update = () => {
   if (inputMap["d"]) {
     position.x += PLAYER_SPEED;
@@ -47,7 +48,19 @@ const update = () => {
     position.y -= PLAYER_SPEED;
   }
 
+  if (i < 500) {
+    const testEntity = createEntity();
+    addComponent(testEntity, POSITION_COMPONENT_DEF);
+    let testPosition = getComponent(testEntity, POSITION_COMPONENT_DEF);
+    testPosition.x = Math.random() * 1000;
+    testPosition.y = Math.random() * 1000;
+    i++;
+  }
+
   draw();
   window.requestAnimationFrame(update);
 };
-window.requestAnimationFrame(update);
+document.addEventListener("DOMContentLoaded", () => {
+  console.log(playerEntity);
+  window.requestAnimationFrame(update);
+});
