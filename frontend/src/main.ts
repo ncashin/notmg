@@ -38,6 +38,10 @@ const playerEntity = createEntity();
 addComponent(playerEntity, POSITION_COMPONENT_DEF);
 let position = getComponent(playerEntity, POSITION_COMPONENT_DEF);
 
+addComponent(playerEntity, COLOR_COMPONENT_DEF);
+let color = getComponent(playerEntity, COLOR_COMPONENT_DEF);
+color.color = "yellow";
+
 const PLAYER_SPEED = 5;
 
 let i = 0;
