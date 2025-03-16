@@ -1,5 +1,5 @@
 import { getComponent, queryEntities } from "../../core/ecs";
-import { POSITION_COMPONENT_DEF } from "./main";
+import { COLOR_COMPONENT_DEF, POSITION_COMPONENT_DEF } from "./main";
 
 let canvas: HTMLCanvasElement;
 let context: CanvasRenderingContext2D;
@@ -20,8 +20,8 @@ document.addEventListener("DOMContentLoaded", () => {
 export const draw = () => {
   context.clearRect(0, 0, canvas.width, canvas.height);
 
-  context.fillStyle = "red";
-  queryEntities([POSITION_COMPONENT_DEF], ([position]) => {
+  queryEntities([POSITION_COMPONENT_DEF, COLOR_COMPONENT_DEF], ([position, color]) => {
+    context.fillStyle = color.color;
     context.fillRect(position.x, position.y, 32, 32);
   });
 };

@@ -24,6 +24,8 @@ export const addComponent = <ComponentType extends Component>(
   entity: Entity,
   COMPONENT_TYPE_DEF: ComponentType
 ) => {
+  console.log(toUpdateOnChange);
+
   let newComponent = structuredClone(COMPONENT_TYPE_DEF);
   if (componentPools[COMPONENT_TYPE_DEF.type] === undefined) {
     componentPools[COMPONENT_TYPE_DEF.type] = [];
@@ -44,13 +46,12 @@ export const addComponent = <ComponentType extends Component>(
       ],
       [] as Component[]
     );
-    console.log(componentPools[COMPONENT_TYPE_DEF.type][entity]);
 
     if (
       composedComponents.filter((a) => a).length ===
       parsedKeyComponentTypes.length
     ) {
-      composedPools[COMPONENT_TYPE_DEF.type][entity] = composedComponents;
+      composedPools[keyToUpdate][entity] = composedComponents;
     }
   });
 };
@@ -77,6 +78,7 @@ export const queryEntities = <ComposedType extends Component[]>(
 
   if (composedPools[combination] === undefined) {
     let poolComponents: Component[][] = [];
+    // This can be fixed so that not all entities need to be looped through this is for testing
     for (let i = 0; i < ENTITY_ID; i++) {
       let composedComponents = COMPONENT_TYPE_DEFS.reduce(
         (composedArray, COMPONENT_TYPE_DEF) => [
