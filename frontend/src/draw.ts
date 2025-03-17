@@ -1,4 +1,3 @@
-
 import { COLOR_COMPONENT_DEF, POSITION_COMPONENT_DEF, runSystem } from "./main";
 
 let canvas: HTMLCanvasElement;
