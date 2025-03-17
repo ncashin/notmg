@@ -22,13 +22,13 @@ export const {
   createEntity,
   destroyEntity,
 
-  getComponent,
-
   addComponent,
   removeComponent,
 
+  getComponent,
   queryComponents,
-  runSystemCallback,
+
+  runSystem,
 } = provideECSInstanceFunctions();
 
 export const POSITION_COMPONENT_DEF: {
