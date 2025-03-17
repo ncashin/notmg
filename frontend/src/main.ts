@@ -78,6 +78,5 @@ const update = () => {
   window.requestAnimationFrame(update);
 };
 document.addEventListener("DOMContentLoaded", () => {
-  console.log(playerEntity);
   window.requestAnimationFrame(update);
 });
