@@ -1,6 +1,6 @@
 type Entity = number;
-let ENTITY_ID = 0;
-
+type ComponentType = string;
+type Component = { type: ComponentType };
 export type ECSInstance = {
   entityIDCounter: number;
   componentPools: Record<string, Component[]>;
@@ -14,8 +14,6 @@ export const createECSInstance = () => ({
   composedPools: {},
   associatedComposedPoolKeys: {},
 });
-
-type Component = { type: string };
 
 export const createEntity = (instance: ECSInstance): Entity => {
   return instance.entityIDCounter++;
@@ -121,7 +119,7 @@ export const queryComponents = <const ComposedType extends Component[]>(
 
   let poolComponents: Component[][] = [];
   // This can be fixed so that not all entities need to be looped through this is for testing
-  for (let entityID = 0; entityID < ENTITY_ID; entityID++) {
+  for (let entityID = 0; entityID < instance.entityIDCounter; entityID++) {
     const componentTypes = COMPONENT_TYPE_DEFS.map(
       (COMPONENT_TYPE_DEF) => COMPONENT_TYPE_DEF.type
     );
@@ -149,7 +147,7 @@ export const queryComponents = <const ComposedType extends Component[]>(
   return instance.composedPools[combination];
 };
 
-export const runSystemCallback = <const ComposedType extends Component[]>(
+export const runSystem = <const ComposedType extends Component[]>(
   instance: ECSInstance,
   COMPONENT_TYPE_DEFS: ComposedType,
   lambda: (entity: Entity, components: ComposedType) => void
@@ -164,11 +162,6 @@ export const curryECSInstance = (instance: ECSInstance) => ({
   createEntity: (): Entity => createEntity(instance),
   destroyEntity: (entity: Entity) => destroyEntity(instance, entity),
 
-  getComponent: <ComponentType extends Component>(
-    entity: Entity,
-    COMPONENT_TYPE_DEF: ComponentType
-  ): ComponentType => getComponent(instance, entity, COMPONENT_TYPE_DEF),
-
   addComponent: <ComponentType extends Component>(
     entity: Entity,
     COMPONENT_TYPE_DEF: ComponentType
@@ -178,14 +171,18 @@ export const curryECSInstance = (instance: ECSInstance) => ({
     COMPONENT_TYPE_DEF: ComponentType
   ) => removeComponent(instance, entity, COMPONENT_TYPE_DEF),
 
+  getComponent: <ComponentType extends Component>(
+    entity: Entity,
+    COMPONENT_TYPE_DEF: ComponentType
+  ): ComponentType => getComponent(instance, entity, COMPONENT_TYPE_DEF),
   queryComponents: <const ComposedType extends Component[]>(
     COMPONENT_TYPE_DEFS: ComposedType
   ) => queryComponents(instance, COMPONENT_TYPE_DEFS),
 
-  runSystemCallback: <const ComposedType extends Component[]>(
+  runSystem: <const ComposedType extends Component[]>(
     COMPONENT_TYPE_DEFS: ComposedType,
     lambda: (entity: Entity, components: ComposedType) => void
-  ) => runSystemCallback(instance, COMPONENT_TYPE_DEFS, lambda),
+  ) => runSystem(instance, COMPONENT_TYPE_DEFS, lambda),
 });
 
 export const provideECSInstanceFunctions = () => {
