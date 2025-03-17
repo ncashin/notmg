@@ -40,6 +40,15 @@ export const POSITION_COMPONENT_DEF: {
   x: 0,
   y: 0,
 };
+export const RECTANGLE_COLLIDER_COMPONENT_DEF: {
+  type: "rectangleCollider";
+  width: number;
+  height: number;
+} = {
+  type: "rectangleCollider",
+  width: 64,
+  height: 64,
+};
 export const COLOR_COMPONENT_DEF: {
   type: "color";
   color: string;
@@ -47,59 +56,105 @@ export const COLOR_COMPONENT_DEF: {
   type: "color",
   color: "red",
 };
+const PLAYER_SPEED = 5;
 const playerEntity = createEntity();
 addComponent(playerEntity, POSITION_COMPONENT_DEF);
-let position = getComponent(playerEntity, POSITION_COMPONENT_DEF);
-
+addComponent(playerEntity, RECTANGLE_COLLIDER_COMPONENT_DEF);
 addComponent(playerEntity, COLOR_COMPONENT_DEF);
+
+let position = getComponent(playerEntity, POSITION_COMPONENT_DEF);
 let color = getComponent(playerEntity, COLOR_COMPONENT_DEF);
-color.color = "yellow";
+let playerCollider = getComponent(
+  playerEntity,
+  RECTANGLE_COLLIDER_COMPONENT_DEF
+);
 
-const PLAYER_SPEED = 5;
+position.x = 100;
+position.y = 100;
+color.color = "blue";
 
-let i = 1;
+let testCollisionEntity = createEntity();
+addComponent(testCollisionEntity, POSITION_COMPONENT_DEF);
+addComponent(testCollisionEntity, RECTANGLE_COLLIDER_COMPONENT_DEF);
+addComponent(testCollisionEntity, COLOR_COMPONENT_DEF);
+
+testCollisionEntity = createEntity();
+addComponent(testCollisionEntity, POSITION_COMPONENT_DEF);
+addComponent(testCollisionEntity, RECTANGLE_COLLIDER_COMPONENT_DEF);
+addComponent(testCollisionEntity, COLOR_COMPONENT_DEF);
+let testPosition = getComponent(testCollisionEntity, POSITION_COMPONENT_DEF);
+let testCollider = getComponent(
+  testCollisionEntity,
+  RECTANGLE_COLLIDER_COMPONENT_DEF
+);
+testPosition.x = 500;
+testPosition.y = 300;
+testCollider.width = 64;
+testCollider.height = 500;
+
 const update = () => {
+  let velocityX = 0;
+  let velocityY = 0;
   if (inputMap["d"]) {
-    position.x += PLAYER_SPEED;
+    velocityX += PLAYER_SPEED;
   }
   if (inputMap["a"]) {
-    position.x -= PLAYER_SPEED;
+    velocityX -= PLAYER_SPEED;
   }
   if (inputMap["s"]) {
-    position.y += PLAYER_SPEED;
+    velocityY += PLAYER_SPEED;
   }
   if (inputMap["w"]) {
-    position.y -= PLAYER_SPEED;
+    velocityY -= PLAYER_SPEED;
   }
 
-  if (i <= 20) {
-    const testEntity = createEntity();
-    addComponent(testEntity, POSITION_COMPONENT_DEF);
-    addComponent(testEntity, COLOR_COMPONENT_DEF);
+  runSystem(
+    [POSITION_COMPONENT_DEF, RECTANGLE_COLLIDER_COMPONENT_DEF],
+    (entity, [colliderPosition, collider]) => {
+      if (entity === playerEntity) return;
 
-    let testPosition = getComponent(testEntity, POSITION_COMPONENT_DEF);
-    testPosition.x = Math.random() * 1000;
-    testPosition.y = Math.random() * 1000;
+      const newPositionX = position.x + velocityX;
+      const distanceX = Math.abs(newPositionX - colliderPosition.x);
+      const horizontalOverlap =
+        distanceX < (collider.width + playerCollider.width) / 2;
 
-    let testColor = getComponent(testEntity, COLOR_COMPONENT_DEF);
-    testColor.color = Math.random() < 0.5 ? "green" : "red";
+      const newPositionY = position.y + velocityY;
+      const distanceY = Math.abs(newPositionY - colliderPosition.y);
+      const verticalOverlap =
+        distanceY < (collider.height + playerCollider.height) / 2;
 
-    i++;
-  } else {
-    destroyEntity(i - 20);
-    const testEntity = createEntity();
-    addComponent(testEntity, POSITION_COMPONENT_DEF);
-    addComponent(testEntity, COLOR_COMPONENT_DEF);
+      if (!horizontalOverlap || !verticalOverlap) return;
 
-    let testPosition = getComponent(testEntity, POSITION_COMPONENT_DEF);
-    testPosition.x = Math.random() * 1000;
-    testPosition.y = Math.random() * 1000;
+      if (distanceX >= (distanceY * (collider.width / collider.height))) {
+        if (position.x <= colliderPosition.x) {
+          velocityX =
+            colliderPosition.x -
+            collider.width / 2 -
+            (position.x + playerCollider.width / 2);
+        } else {
+          velocityX =
+            colliderPosition.x +
+            collider.width / 2 -
+            (position.x - playerCollider.width / 2);
+        }
+        return;
+      }
 
-    let testColor = getComponent(testEntity, COLOR_COMPONENT_DEF);
-    testColor.color = Math.random() < 0.5 ? "green" : "red";
-
-    i++;
-  }
+      if (position.y <= colliderPosition.y) {
+        velocityY =
+          colliderPosition.y -
+          collider.height / 2 -
+          (position.y + playerCollider.height / 2);
+      } else {
+        velocityY =
+          colliderPosition.y +
+          collider.height / 2 -
+          (position.y - playerCollider.height / 2);
+      }
+    }
+  );
+  position.x += velocityX;
+  position.y += velocityY;
 
   draw();
   window.requestAnimationFrame(update);
