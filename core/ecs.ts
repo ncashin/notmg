@@ -1,84 +1,112 @@
 type Entity = number;
 let ENTITY_ID = 0;
 
+export type ECSInstance = {
+  entityIDCounter: number;
+  componentPools: Record<string, Component[]>;
+  composedPools: Record<string, Component[][]>;
+  associatedComposedPoolKeys: Record<string, string[]>;
+};
+
+export const createECSInstance = () => ({
+  componentPools: {},
+  composedPools: {},
+  associatedComposedPoolKeys: {},
+});
+
 type Component = { type: string };
-let componentPools: Record<string, Component[]> = {};
-let composedPools: Record<string, Component[][]> = {};
 
-let associatedComposedPoolKeys: Record<string, string[]> = {};
-
-export const createEntity = (): Entity => {
-  return ENTITY_ID++;
+export const createEntity = (instance: ECSInstance): Entity => {
+  return instance.entityIDCounter++;
+};
+export const destroyEntity = (instance: ECSInstance, entity: Entity) => {
+  Object.values(instance.componentPools).forEach((composedPool) => {
+    delete composedPool[entity];
+  });
+  Object.values(instance.composedPools).forEach((composedPool) => {
+    delete composedPool[entity];
+  });
 };
 
 const lookupComponent = <ComponentType extends Component>(
+  instance: ECSInstance,
   entity: Entity,
   COMPONENT_TYPE_DEF: ComponentType
 ) => {
-  if (componentPools[COMPONENT_TYPE_DEF.type] === undefined) {
-    componentPools[COMPONENT_TYPE_DEF.type] = [];
+  if (instance.componentPools[COMPONENT_TYPE_DEF.type] === undefined) {
+    instance.componentPools[COMPONENT_TYPE_DEF.type] = [];
   }
-  return componentPools[COMPONENT_TYPE_DEF.type][entity] as ComponentType;
+  return instance.componentPools[COMPONENT_TYPE_DEF.type][
+    entity
+  ] as ComponentType;
 };
 const createComponentReference = <ComponentType extends Component>(
+  instance: ECSInstance,
   entity: Entity,
   COMPONENT_TYPE_DEF: ComponentType
 ) => {
-  if (componentPools[COMPONENT_TYPE_DEF.type] === undefined) {
-    componentPools[COMPONENT_TYPE_DEF.type] = [];
+  if (instance.componentPools[COMPONENT_TYPE_DEF.type] === undefined) {
+    instance.componentPools[COMPONENT_TYPE_DEF.type] = [];
   }
-  componentPools[COMPONENT_TYPE_DEF.type][entity] =
+  instance.componentPools[COMPONENT_TYPE_DEF.type][entity] =
     structuredClone(COMPONENT_TYPE_DEF);
 };
 const lookupAssociatedComposedPoolKeys = <ComponentType extends Component>(
+  instance: ECSInstance,
   COMPONENT_TYPE_DEF: ComponentType
 ) => {
-  if (associatedComposedPoolKeys[COMPONENT_TYPE_DEF.type] === undefined) {
-    associatedComposedPoolKeys[COMPONENT_TYPE_DEF.type] = [];
+  if (
+    instance.associatedComposedPoolKeys[COMPONENT_TYPE_DEF.type] === undefined
+  ) {
+    instance.associatedComposedPoolKeys[COMPONENT_TYPE_DEF.type] = [];
   }
-  return associatedComposedPoolKeys[COMPONENT_TYPE_DEF.type];
+  return instance.associatedComposedPoolKeys[COMPONENT_TYPE_DEF.type];
 };
 
 export const getComponent = <ComponentType extends Component>(
+  instance: ECSInstance,
   entity: Entity,
   COMPONENT_TYPE_DEF: ComponentType
 ): ComponentType => {
-  return lookupComponent(entity, COMPONENT_TYPE_DEF);
+  return lookupComponent(instance, entity, COMPONENT_TYPE_DEF);
 };
 export const addComponent = <ComponentType extends Component>(
+  instance: ECSInstance,
   entity: Entity,
   COMPONENT_TYPE_DEF: ComponentType
 ) => {
-  createComponentReference(entity, COMPONENT_TYPE_DEF);
+  createComponentReference(instance, entity, COMPONENT_TYPE_DEF);
 
-  lookupAssociatedComposedPoolKeys(COMPONENT_TYPE_DEF).forEach(
+  lookupAssociatedComposedPoolKeys(instance, COMPONENT_TYPE_DEF).forEach(
     (keyToUpdate) => {
       const parsedKeyComponentTypes = keyToUpdate.split(" ");
       let composedComponents = [];
       for (let i = 0; i < parsedKeyComponentTypes.length; i++) {
-        let component = lookupComponent(entity, {
+        let component = lookupComponent(instance, entity, {
           type: parsedKeyComponentTypes[i],
         });
         if (component === undefined) return;
         composedComponents.push(component);
       }
-      composedPools[keyToUpdate][entity] = composedComponents;
+      instance.composedPools[keyToUpdate][entity] = composedComponents;
     }
   );
 };
 export const removeComponent = <ComponentType extends Component>(
+  instance: ECSInstance,
   entity: Entity,
   COMPONENT_TYPE_DEF: ComponentType
 ) => {
-  lookupAssociatedComposedPoolKeys(COMPONENT_TYPE_DEF).forEach(
+  lookupAssociatedComposedPoolKeys(instance, COMPONENT_TYPE_DEF).forEach(
     (keyToUpdate) => {
-      delete composedPools[keyToUpdate][entity];
+      delete instance.composedPools[keyToUpdate][entity];
     }
   );
-  delete componentPools[COMPONENT_TYPE_DEF.type][entity];
+  delete instance.componentPools[COMPONENT_TYPE_DEF.type][entity];
 };
 
-export const queryEntities = <const ComposedType extends Component[]>(
+export const queryComponents = <const ComposedType extends Component[]>(
+  instance: ECSInstance,
   COMPONENT_TYPE_DEFS: ComposedType
 ) => {
   const combination = COMPONENT_TYPE_DEFS.map(
@@ -86,8 +114,8 @@ export const queryEntities = <const ComposedType extends Component[]>(
   ).reduce((previous, current) => previous + " " + current);
 
   // early return if composed pool already exists
-  if (composedPools[combination] !== undefined) {
-    return composedPools[combination];
+  if (instance.composedPools[combination] !== undefined) {
+    return instance.composedPools[combination];
   }
 
   let poolComponents: Component[][] = [];
@@ -98,7 +126,7 @@ export const queryEntities = <const ComposedType extends Component[]>(
     );
     let composedComponents = [];
     for (let i = 0; i < componentTypes.length; i++) {
-      let component = lookupComponent(entityID, {
+      let component = lookupComponent(instance, entityID, {
         type: componentTypes[i],
       });
       if (component === undefined) break;
@@ -111,19 +139,50 @@ export const queryEntities = <const ComposedType extends Component[]>(
     poolComponents[entityID] = composedComponents;
 
     COMPONENT_TYPE_DEFS.forEach((COMPONENT_TYPE_DEF) => {
-      lookupAssociatedComposedPoolKeys(COMPONENT_TYPE_DEF).push(combination);
+      lookupAssociatedComposedPoolKeys(instance, COMPONENT_TYPE_DEF).push(
+        combination
+      );
     });
   }
-  composedPools[combination] = poolComponents;
-  return composedPools[combination];
+  instance.composedPools[combination] = poolComponents;
+  return instance.composedPools[combination];
 };
 
 export const runSystemCallback = <const ComposedType extends Component[]>(
+  instance: ECSInstance,
   COMPONENT_TYPE_DEFS: ComposedType,
   lambda: (entity: Entity, components: ComposedType) => void
 ) => {
-  let queryIterator = queryEntities(COMPONENT_TYPE_DEFS).entries();
+  let queryIterator = queryComponents(instance, COMPONENT_TYPE_DEFS).entries();
   for (let [entity, components] of queryIterator) {
     lambda(entity, components as ComposedType);
   }
 };
+
+export const curryECSInstance = (instance: ECSInstance) => ({
+  createEntity: (): Entity => createEntity(instance),
+  destroyEntity: (entity: Entity) => destroyEntity(instance, entity),
+
+  getComponent: <ComponentType extends Component>(
+    entity: Entity,
+    COMPONENT_TYPE_DEF: ComponentType
+  ): ComponentType => getComponent(instance, entity, COMPONENT_TYPE_DEF),
+
+  addComponent: <ComponentType extends Component>(
+    entity: Entity,
+    COMPONENT_TYPE_DEF: ComponentType
+  ) => addComponent(instance, entity, COMPONENT_TYPE_DEF),
+  removeComponent: <ComponentType extends Component>(
+    entity: Entity,
+    COMPONENT_TYPE_DEF: ComponentType
+  ) => removeComponent(instance, entity, COMPONENT_TYPE_DEF),
+
+  queryComponents: <const ComposedType extends Component[]>(
+    COMPONENT_TYPE_DEFS: ComposedType
+  ) => queryComponents(instance, COMPONENT_TYPE_DEFS),
+
+  runSystemCallback: <const ComposedType extends Component[]>(
+    COMPONENT_TYPE_DEFS: ComposedType,
+    lambda: (entity: Entity, components: ComposedType) => void
+  ) => runSystemCallback(instance, COMPONENT_TYPE_DEFS, lambda),
+});
