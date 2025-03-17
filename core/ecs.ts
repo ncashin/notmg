@@ -21,14 +21,15 @@ const lookupComponent = <ComponentType extends Component>(
   return componentPools[COMPONENT_TYPE_DEF.type][entity] as ComponentType;
 };
 const createComponentReference = <ComponentType extends Component>(
-    entity: Entity,
-    COMPONENT_TYPE_DEF: ComponentType
-  ) => {
-    if (componentPools[COMPONENT_TYPE_DEF.type] === undefined) {
-      componentPools[COMPONENT_TYPE_DEF.type] = [];
-    }
-    componentPools[COMPONENT_TYPE_DEF.type][entity] = structuredClone(COMPONENT_TYPE_DEF);
-  };
+  entity: Entity,
+  COMPONENT_TYPE_DEF: ComponentType
+) => {
+  if (componentPools[COMPONENT_TYPE_DEF.type] === undefined) {
+    componentPools[COMPONENT_TYPE_DEF.type] = [];
+  }
+  componentPools[COMPONENT_TYPE_DEF.type][entity] =
+    structuredClone(COMPONENT_TYPE_DEF);
+};
 const lookupAssociatedComposedPoolKeys = <ComponentType extends Component>(
   COMPONENT_TYPE_DEF: ComponentType
 ) => {
@@ -78,46 +79,51 @@ export const removeComponent = <ComponentType extends Component>(
 };
 
 export const queryEntities = <const ComposedType extends Component[]>(
-  COMPONENT_TYPE_DEFS: ComposedType,
-  lambda: (arg0: ComposedType) => void
+  COMPONENT_TYPE_DEFS: ComposedType
 ) => {
-  if (COMPONENT_TYPE_DEFS.length == 1) {
-  }
-
   const combination = COMPONENT_TYPE_DEFS.map(
     (COMPONENT_TYPE_DEF) => COMPONENT_TYPE_DEF.type
   ).reduce((previous, current) => previous + " " + current);
 
-  if (composedPools[combination] === undefined) {
-    let poolComponents: Component[][] = [];
-
-    // This can be fixed so that not all entities need to be looped through this is for testing
-    for (let entityID = 0; entityID < ENTITY_ID; entityID++) {
-      const componentTypes = COMPONENT_TYPE_DEFS.map(
-        (COMPONENT_TYPE_DEF) => COMPONENT_TYPE_DEF.type
-      );
-      let composedComponents = [];
-      for (let i = 0; i < componentTypes.length; i++) {
-        let component = lookupComponent(entityID, {
-          type: componentTypes[i],
-        });
-        if (component === undefined) break;
-        composedComponents.push(component);
-      }
-
-      if (composedComponents.length < componentTypes.length) {
-        continue;
-      }
-      poolComponents[entityID] = composedComponents;
-
-      COMPONENT_TYPE_DEFS.forEach((COMPONENT_TYPE_DEF) => {
-        lookupAssociatedComposedPoolKeys(COMPONENT_TYPE_DEF).push(combination);
-      });
-    }
-    composedPools[combination] = poolComponents;
+  // early return if composed pool already exists
+  if (composedPools[combination] !== undefined) {
+    return composedPools[combination];
   }
 
-  composedPools[combination].forEach((composedComponents) => {
-    lambda(composedComponents as ComposedType);
-  });
+  let poolComponents: Component[][] = [];
+  // This can be fixed so that not all entities need to be looped through this is for testing
+  for (let entityID = 0; entityID < ENTITY_ID; entityID++) {
+    const componentTypes = COMPONENT_TYPE_DEFS.map(
+      (COMPONENT_TYPE_DEF) => COMPONENT_TYPE_DEF.type
+    );
+    let composedComponents = [];
+    for (let i = 0; i < componentTypes.length; i++) {
+      let component = lookupComponent(entityID, {
+        type: componentTypes[i],
+      });
+      if (component === undefined) break;
+      composedComponents.push(component);
+    }
+
+    if (composedComponents.length < componentTypes.length) {
+      continue;
+    }
+    poolComponents[entityID] = composedComponents;
+
+    COMPONENT_TYPE_DEFS.forEach((COMPONENT_TYPE_DEF) => {
+      lookupAssociatedComposedPoolKeys(COMPONENT_TYPE_DEF).push(combination);
+    });
+  }
+  composedPools[combination] = poolComponents;
+  return composedPools[combination];
+};
+
+export const runSystemCallback = <const ComposedType extends Component[]>(
+  COMPONENT_TYPE_DEFS: ComposedType,
+  lambda: (entity: Entity, components: ComposedType) => void
+) => {
+  let queryIterator = queryEntities(COMPONENT_TYPE_DEFS).entries();
+  for (let [entity, components] of queryIterator) {
+    lambda(entity, components as ComposedType);
+  }
 };
