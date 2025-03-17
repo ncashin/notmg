@@ -1,9 +1,4 @@
-import {
-  COLOR_COMPONENT_DEF,
-  POSITION_COMPONENT_DEF,
-  queryComponents,
-  runSystem,
-} from "./main";
+import { COLOR_COMPONENT_DEF, POSITION_COMPONENT_DEF, runSystem } from "./main";
 
 let canvas: HTMLCanvasElement;
 let context: CanvasRenderingContext2D;
