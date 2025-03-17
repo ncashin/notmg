@@ -57,7 +57,7 @@ color.color = "yellow";
 
 const PLAYER_SPEED = 5;
 
-let i = 0;
+let i = 1;
 const update = () => {
   if (inputMap["d"]) {
     position.x += PLAYER_SPEED;
@@ -72,7 +72,21 @@ const update = () => {
     position.y -= PLAYER_SPEED;
   }
 
-  if (i < 500) {
+  if (i <= 20) {
+    const testEntity = createEntity();
+    addComponent(testEntity, POSITION_COMPONENT_DEF);
+    addComponent(testEntity, COLOR_COMPONENT_DEF);
+
+    let testPosition = getComponent(testEntity, POSITION_COMPONENT_DEF);
+    testPosition.x = Math.random() * 1000;
+    testPosition.y = Math.random() * 1000;
+
+    let testColor = getComponent(testEntity, COLOR_COMPONENT_DEF);
+    testColor.color = Math.random() < 0.5 ? "green" : "red";
+
+    i++;
+  } else {
+    destroyEntity(i - 20);
     const testEntity = createEntity();
     addComponent(testEntity, POSITION_COMPONENT_DEF);
     addComponent(testEntity, COLOR_COMPONENT_DEF);
