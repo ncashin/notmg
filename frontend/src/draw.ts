@@ -1,4 +1,8 @@
-import { getComponent, queryEntities, runSystemCallback as runSystemLambda } from "../../core/ecs";
+import {
+  getComponent,
+  queryComponents,
+  runSystemCallback as runSystem,
+} from "../../core/ecs";
 import { COLOR_COMPONENT_DEF, POSITION_COMPONENT_DEF } from "./main";
 
 let canvas: HTMLCanvasElement;
@@ -20,9 +24,9 @@ document.addEventListener("DOMContentLoaded", () => {
 export const draw = () => {
   context.clearRect(0, 0, canvas.width, canvas.height);
 
-  runSystemLambda(
+  runSystem(
     [POSITION_COMPONENT_DEF, COLOR_COMPONENT_DEF],
-    (entity, [position, color]) => {
+    (_entity, [position, color]) => {
       context.fillStyle = color.color;
       context.fillRect(position.x, position.y, 32, 32);
     }
