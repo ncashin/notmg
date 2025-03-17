@@ -125,7 +125,19 @@ const update = () => {
 
       if (!horizontalOverlap || !verticalOverlap) return;
 
-      if (distanceX >= (distanceY * (collider.width / collider.height))) {
+      const oldDistanceX = Math.abs(position.x - colliderPosition.x);
+      let priorHorizontalOverlap =
+        oldDistanceX < (collider.width + playerCollider.width) / 2;
+
+      const oldDistanceY = Math.abs(position.y - colliderPosition.y);
+      let priorVerticalOverlap =
+        oldDistanceY < (collider.height + playerCollider.height) / 2;
+
+      if (!priorHorizontalOverlap && !priorVerticalOverlap) {
+        priorVerticalOverlap =
+          oldDistanceX >= oldDistanceY * (collider.width / collider.height);
+      }
+      if (priorVerticalOverlap) {
         if (position.x <= colliderPosition.x) {
           velocityX =
             colliderPosition.x -
