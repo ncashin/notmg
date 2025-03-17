@@ -167,7 +167,7 @@ export const runSystem = <const ComposedType extends Component[]>(
 ) => {
   Object.entries(queryComponents(instance, COMPONENT_TYPE_DEFS)).forEach(
     ([entity, components]) =>
-      lambda(entity as any as number, components as any as ComposedType)
+      lambda(Number.parseInt(entity), components as any as ComposedType)
   );
 };
 
