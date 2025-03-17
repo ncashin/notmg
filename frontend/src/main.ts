@@ -1,8 +1,8 @@
 import "./style.css";
 import "./draw";
 import { draw } from "./draw";
-import { addComponent, createEntity, getComponent } from "../../core/ecs";
 import { inputMap } from "./input";
+import { provideECSInstanceFunctions } from "../../core/ecs";
 
 const websocket = new WebSocket("ws://localhost:3000");
 websocket.onopen = () => {
@@ -18,6 +18,19 @@ websocket.onclose = () => {
   console.log("Disconnected from WebSocket server");
 };
 
+export const {
+  createEntity,
+  destroyEntity,
+
+  getComponent,
+
+  addComponent,
+  removeComponent,
+
+  queryComponents,
+  runSystemCallback,
+} = provideECSInstanceFunctions();
+
 export const POSITION_COMPONENT_DEF: {
   type: "position";
   x: number;
@@ -29,10 +42,10 @@ export const POSITION_COMPONENT_DEF: {
 };
 export const COLOR_COMPONENT_DEF: {
   type: "color";
-  color: string
+  color: string;
 } = {
   type: "color",
-  color: "red"
+  color: "red",
 };
 const playerEntity = createEntity();
 addComponent(playerEntity, POSITION_COMPONENT_DEF);

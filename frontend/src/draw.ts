@@ -1,9 +1,5 @@
-import {
-  getComponent,
-  queryComponents,
-  runSystemCallback as runSystem,
-} from "../../core/ecs";
-import { COLOR_COMPONENT_DEF, POSITION_COMPONENT_DEF } from "./main";
+
+import { COLOR_COMPONENT_DEF, POSITION_COMPONENT_DEF, runSystemCallback } from "./main";
 
 let canvas: HTMLCanvasElement;
 let context: CanvasRenderingContext2D;
@@ -24,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
 export const draw = () => {
   context.clearRect(0, 0, canvas.width, canvas.height);
 
-  runSystem(
+  runSystemCallback(
     [POSITION_COMPONENT_DEF, COLOR_COMPONENT_DEF],
     (_entity, [position, color]) => {
       context.fillStyle = color.color;

@@ -9,6 +9,7 @@ export type ECSInstance = {
 };
 
 export const createECSInstance = () => ({
+  entityIDCounter: 0,
   componentPools: {},
   composedPools: {},
   associatedComposedPoolKeys: {},
@@ -186,3 +187,7 @@ export const curryECSInstance = (instance: ECSInstance) => ({
     lambda: (entity: Entity, components: ComposedType) => void
   ) => runSystemCallback(instance, COMPONENT_TYPE_DEFS, lambda),
 });
+
+export const provideECSInstanceFunctions = () => {
+  return curryECSInstance(createECSInstance());
+};
