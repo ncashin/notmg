@@ -1,11 +1,11 @@
 type Entity = number;
-type ComponentType = string;
-type Component = { type: ComponentType };
+type ComponentTypeString = string;
+type Component = { type: ComponentTypeString };
 export type ECSInstance = {
   entityIDCounter: number;
-  componentPools: Record<string, Record<Entity, Component>>;
-  composedPools: Record<string, Record<Entity, Component[]>>;
-  associatedComposedPoolKeys: Record<string, string[]>;
+  componentPools: Record<ComponentTypeString, Record<Entity, Component>>;
+  composedPools: Record<ComponentTypeString, Record<Entity, Component[]>>;
+  associatedComposedPoolKeys: Record<ComponentTypeString, string[]>;
 };
 
 export const createECSInstance = () => ({
@@ -36,12 +36,18 @@ const lookupComponent = <ComponentType extends Component>(
   entity: Entity,
   COMPONENT_TYPE_DEF: ComponentType
 ) => {
-  if (instance.componentPools[COMPONENT_TYPE_DEF.type] === undefined) {
-    instance.componentPools[COMPONENT_TYPE_DEF.type] = {};
-  }
-  return instance.componentPools[COMPONENT_TYPE_DEF.type][
+  return lookupComponentPool(instance, COMPONENT_TYPE_DEF.type)[
     entity
   ] as ComponentType;
+};
+const lookupComponentPool = (
+  instance: ECSInstance,
+  componentType: ComponentTypeString
+) => {
+  if (instance.componentPools[componentType] === undefined) {
+    instance.componentPools[componentType] = {};
+  }
+  return instance.componentPools[componentType];
 };
 const createComponentReference = <ComponentType extends Component>(
   instance: ECSInstance,
@@ -107,7 +113,7 @@ export const removeComponent = <ComponentType extends Component>(
       }
     }
   );
-  delete instance.componentPools[COMPONENT_TYPE_DEF.type][entity];
+  delete lookupComponentPool(instance, COMPONENT_TYPE_DEF.type)[entity];
 };
 
 export const queryComponents = <const ComposedType extends Component[]>(
@@ -125,13 +131,14 @@ export const queryComponents = <const ComposedType extends Component[]>(
 
   let poolComponents: Record<Entity, Component[]> = {};
   // This can be fixed so that not all entities need to be looped through this is for testing
-  for (let entityID = 0; entityID < instance.entityIDCounter; entityID++) {
-    const componentTypes = COMPONENT_TYPE_DEFS.map(
-      (COMPONENT_TYPE_DEF) => COMPONENT_TYPE_DEF.type
-    );
-    let composedComponents = [];
-    for (let i = 0; i < componentTypes.length; i++) {
-      let component = lookupComponent(instance, entityID, {
+  const componentTypes = COMPONENT_TYPE_DEFS.map(
+    (COMPONENT_TYPE_DEF) => COMPONENT_TYPE_DEF.type
+  );
+  let componentPool = lookupComponentPool(instance, componentTypes[0]);
+  for (let [entityID, component] of Object.entries(componentPool)) {
+    let composedComponents = [component];
+    for (let i = 1; i < componentTypes.length; i++) {
+      let component = lookupComponent(instance, entityID as any as number, {
         type: componentTypes[i],
       });
       if (component === undefined) break;
@@ -141,7 +148,7 @@ export const queryComponents = <const ComposedType extends Component[]>(
     if (composedComponents.length < componentTypes.length) {
       continue;
     }
-    poolComponents[entityID] = composedComponents;
+    poolComponents[entityID as any as number] = composedComponents;
 
     COMPONENT_TYPE_DEFS.forEach((COMPONENT_TYPE_DEF) => {
       lookupAssociatedComposedPoolKeys(instance, COMPONENT_TYPE_DEF).push(
