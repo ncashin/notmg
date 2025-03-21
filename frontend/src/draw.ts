@@ -21,9 +21,16 @@ document.addEventListener("DOMContentLoaded", () => {
   context = canvas.getContext("2d") as CanvasRenderingContext2D;
 });
 
+window.ENABLE_DEBUG_DRAW = true;
 export const draw = () => {
   context.clearRect(0, 0, canvas.width, canvas.height);
+  
+  if (window.ENABLE_DEBUG_DRAW) {
+    debugDraw();
+  }
+};
 
+export const debugDraw = () => {
   runSystem(
     [POSITION_COMPONENT_DEF, AABB_COLLIDER_COMPONENT_DEF, COLOR_COMPONENT_DEF],
     (_entity, [position, collider, color]) => {
