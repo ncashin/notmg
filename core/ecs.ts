@@ -172,6 +172,8 @@ export const runSystem = <const ComposedType extends Component[]>(
 };
 
 export const curryECSInstance = (instance: ECSInstance) => ({
+  ecsInstance: instance,
+
   createEntity: (): Entity => createEntity(instance),
   destroyEntity: (entity: Entity) => destroyEntity(instance, entity),
 

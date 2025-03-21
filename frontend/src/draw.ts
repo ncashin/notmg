@@ -1,9 +1,8 @@
 import {
-  COLOR_COMPONENT_DEF,
+  AABB_COLLIDER_COMPONENT_DEF,
   POSITION_COMPONENT_DEF,
-  RECTANGLE_COLLIDER_COMPONENT_DEF,
-  runSystem,
-} from "./main";
+} from "../../core/collision";
+import { COLOR_COMPONENT_DEF, runSystem } from "./main";
 
 let canvas: HTMLCanvasElement;
 let context: CanvasRenderingContext2D;
@@ -25,19 +24,15 @@ export const draw = () => {
   context.clearRect(0, 0, canvas.width, canvas.height);
 
   runSystem(
-    [
-      POSITION_COMPONENT_DEF,
-      COLOR_COMPONENT_DEF,
-      RECTANGLE_COLLIDER_COMPONENT_DEF,
-    ],
-    (_entity, [position, color, rectangleCollider]) => {
+    [POSITION_COMPONENT_DEF, AABB_COLLIDER_COMPONENT_DEF, COLOR_COMPONENT_DEF],
+    (_entity, [position, collider, color]) => {
       context.strokeStyle = color.color;
 
       context.strokeRect(
-        position.x - rectangleCollider.width / 2,
-        position.y - rectangleCollider.height / 2,
-        rectangleCollider.width,
-        rectangleCollider.height
+        position.x - collider.width / 2,
+        position.y - collider.height / 2,
+        collider.width,
+        collider.height
       );
     }
   );
