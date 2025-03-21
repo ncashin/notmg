@@ -1,6 +1,7 @@
 import {
   AABB_COLLIDER_COMPONENT_DEF,
   POSITION_COMPONENT_DEF,
+  VELOCITY_COMPONENT_DEF,
 } from "../../core/collision";
 import { COLOR_COMPONENT_DEF, runSystem } from "./main";
 
@@ -34,6 +35,19 @@ export const draw = () => {
         collider.width,
         collider.height
       );
+    }
+  );
+
+  context.strokeStyle = "purple";
+  runSystem(
+    [POSITION_COMPONENT_DEF, VELOCITY_COMPONENT_DEF],
+    (_entity, [position, velocity]) => {
+      context.beginPath();
+      context.moveTo(position.x, position.y);
+      context.lineTo(position.x + velocity.x, position.y + velocity.y);
+      context.closePath();
+      context.stroke();
+      context.moveTo(0, 0);
     }
   );
 };

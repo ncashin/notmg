@@ -47,10 +47,9 @@ export const COLOR_COMPONENT_DEF: {
   type: "color",
   color: "red",
 };
-const PLAYER_SPEED = 0.5;
+const PLAYER_SPEED = 1;
 const playerEntity = createKinematicEntity(ecsInstance);
 addComponent(playerEntity, COLOR_COMPONENT_DEF);
-
 
 let position = getComponent(playerEntity, POSITION_COMPONENT_DEF);
 let velocity = getComponent(playerEntity, VELOCITY_COMPONENT_DEF);
@@ -59,6 +58,17 @@ let color = getComponent(playerEntity, COLOR_COMPONENT_DEF);
 position.x = 100;
 position.y = 100;
 color.color = "blue";
+
+const movementTestEntity = createKinematicEntity(ecsInstance);
+addComponent(movementTestEntity, COLOR_COMPONENT_DEF);
+
+let moveTestPosition = getComponent(movementTestEntity, POSITION_COMPONENT_DEF);
+let moveTestVelocity = getComponent(movementTestEntity, VELOCITY_COMPONENT_DEF);
+let moveTestColor = getComponent(movementTestEntity, COLOR_COMPONENT_DEF);
+
+moveTestPosition.x = 1000;
+moveTestPosition.y = 300;
+moveTestColor.color = "green";
 
 //testCollider
 let testCollisionEntity = createEntity();
@@ -84,7 +94,7 @@ testPosition.y = 300;
 testCollider.width = 64;
 testCollider.height = 500;
 
-const DAMPING_FORCE = 0.05;
+const DAMPING_FORCE = 0.2;
 const update = () => {
   if (inputMap["d"]) {
     velocity.x += PLAYER_SPEED;
@@ -99,8 +109,25 @@ const update = () => {
     velocity.y -= PLAYER_SPEED;
   }
 
-  velocity.x -= velocity.x * DAMPING_FORCE
-  velocity.y -= velocity.y * DAMPING_FORCE
+  velocity.x -= velocity.x * DAMPING_FORCE;
+  velocity.y -= velocity.y * DAMPING_FORCE;
+
+  if (inputMap["ArrowRight"]) {
+    moveTestVelocity.x += PLAYER_SPEED;
+  }
+  if (inputMap["ArrowLeft"]) {
+    moveTestVelocity.x -= PLAYER_SPEED;
+  }
+  if (inputMap["ArrowDown"]) {
+    moveTestVelocity.y += PLAYER_SPEED;
+  }
+  if (inputMap["ArrowUp"]) {
+    moveTestVelocity.y -= PLAYER_SPEED;
+  }
+
+  moveTestVelocity.x -= moveTestVelocity.x * DAMPING_FORCE;
+  moveTestVelocity.y -= moveTestVelocity.y * DAMPING_FORCE;
+
 
   updateCollisionSystem(ecsInstance);
   draw();
