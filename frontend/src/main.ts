@@ -47,7 +47,7 @@ export const COLOR_COMPONENT_DEF: {
   type: "color",
   color: "red",
 };
-const PLAYER_SPEED = 1;
+const PLAYER_SPEED = 1.5;
 const playerEntity = createKinematicEntity(ecsInstance);
 addComponent(playerEntity, COLOR_COMPONENT_DEF);
 
@@ -90,27 +90,25 @@ let testCollider = getComponent(
 );
 
 testPosition.x = 500;
-testPosition.y = 300;
-testCollider.width = 64;
-testCollider.height = 500;
+testPosition.y = 700;
+testCollider.width = 1000;
+testCollider.height = 64;
 
 const DAMPING_FORCE = 0.2;
 const update = () => {
+  if (velocity.y === 0 && inputMap[" "]) {
+    console.log("HIT");
+    velocity.y -= 20;
+  }
+
   if (inputMap["d"]) {
     velocity.x += PLAYER_SPEED;
   }
   if (inputMap["a"]) {
     velocity.x -= PLAYER_SPEED;
   }
-  if (inputMap["s"]) {
-    velocity.y += PLAYER_SPEED;
-  }
-  if (inputMap["w"]) {
-    velocity.y -= PLAYER_SPEED;
-  }
-
   velocity.x -= velocity.x * DAMPING_FORCE;
-  velocity.y -= velocity.y * DAMPING_FORCE;
+  velocity.y += 2;
 
   if (inputMap["ArrowRight"]) {
     moveTestVelocity.x += PLAYER_SPEED;
@@ -127,7 +125,6 @@ const update = () => {
 
   moveTestVelocity.x -= moveTestVelocity.x * DAMPING_FORCE;
   moveTestVelocity.y -= moveTestVelocity.y * DAMPING_FORCE;
-
 
   updateCollisionSystem(ecsInstance);
   draw();
