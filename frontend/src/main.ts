@@ -86,7 +86,7 @@ addComponent(testCollisionEntity, COLOR_COMPONENT_DEF);
 let testPosition = getComponent(testCollisionEntity, POSITION_COMPONENT_DEF);
 let testCollider = getComponent(
   testCollisionEntity,
-  AABB_COLLIDER_COMPONENT_DEF
+  AABB_COLLIDER_COMPONENT_DEF,
 );
 
 testPosition.x = 500;
