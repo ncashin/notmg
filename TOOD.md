@@ -1,0 +1,4 @@
+- bring back notmg style movement
+- make character be able to throw projectile
+- level editing in-game, _the GM can mutate the world, part of lore_
+- multiplayer, ezpz, lemon squeeze
