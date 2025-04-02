@@ -110,11 +110,11 @@ export const updateCollisionSystem = (ecsInstance: ECSInstance) => {
               (movingPosition.y - movingCollider.height / 2);
             movingPosition.y += remainingVelocity;
           }
-        }
+        },
       );
 
       movingPosition.x += movingVelocity.x;
       movingPosition.y += movingVelocity.y;
-    }
+    },
   );
 };

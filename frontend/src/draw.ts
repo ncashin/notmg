@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
 window.ENABLE_DEBUG_DRAW = true;
 export const draw = () => {
   context.clearRect(0, 0, canvas.width, canvas.height);
-  
+
   if (window.ENABLE_DEBUG_DRAW) {
     debugDraw();
   }
@@ -40,9 +40,9 @@ export const debugDraw = () => {
         position.x - collider.width / 2,
         position.y - collider.height / 2,
         collider.width,
-        collider.height
+        collider.height,
       );
-    }
+    },
   );
 
   context.strokeStyle = "purple";
@@ -55,6 +55,6 @@ export const debugDraw = () => {
       context.closePath();
       context.stroke();
       context.moveTo(0, 0);
-    }
+    },
   );
 };
