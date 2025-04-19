@@ -2,12 +2,10 @@ import "./style.css";
 import "./draw";
 import { draw } from "./draw";
 import { inputMap } from "./input";
-import { provideECSInstanceFunctions } from "../../core/ecs";
-import {
-  POSITION_COMPONENT_DEF,
-} from "../../core/collision";
+import { ECSInstance, provideECSInstanceFunctions } from "../../core/ecs";
+import { POSITION_COMPONENT_DEF } from "../../core/collision";
 
-export const {
+export let {
   ecsInstance,
 
   createEntity,
@@ -28,23 +26,36 @@ export const updateObjectRecursive = (object: any, objectToUpdateWith: any) => {
   });
 };
 
+let playerEntity: number | undefined = undefined;
+export const mergePacket = (packet) => {
+  Object.entries(packet).forEach(([entity, components]) => {
+    Object.entries(components).forEach(([type, component]) => {
+      component.type = type;
+      console.log(entity, component);
+      const existingComponent = getComponent(entity, component);
+      if (existingComponent === undefined) {
+        addComponent(entity, component);
+        return;
+      }
+      updateObjectRecursive(existingComponent, component);
+    });
+  });
+};
 const websocket = new WebSocket("ws://localhost:3000");
 websocket.onopen = () => {
   console.log("Connected to WebSocket server");
 };
-let playerEntity: number | undefined = undefined;
 websocket.onmessage = (event) => {
-  const [entityString, componentString] = event.data.split("*");
-  const entity = Number.parseInt(entityString);
-  playerEntity = entity;
-  const messageComponent = JSON.parse(componentString);
-  const existingComponent = getComponent(entity, messageComponent);
-  if (existingComponent === undefined) {
-    addComponent(entity, messageComponent);
-    console.log(ecsInstance);
+  const messageObject = JSON.parse(event.data);
+  if (messageObject.type === "initialization") {
+    playerEntity = messageObject.playerEntity;
+    mergePacket(messageObject.catchupPacket);
     return;
   }
-  updateObjectRecursive(existingComponent, messageComponent);
+
+  if (messageObject.type === "update") {
+    mergePacket(messageObject.packet);
+  }
 };
 websocket.onerror = (error) => {
   console.error("WebSocket error:", error);
@@ -54,11 +65,16 @@ websocket.onclose = () => {
 };
 
 const DAMPING_FORCE = 0.2;
-const PLAYER_SPEED = 1;
+const PLAYER_SPEED = 3;
 const update = () => {
+  if (playerEntity === undefined) {
+    window.requestAnimationFrame(update);
+    return;
+  }
+
   // updateCollisionSystem(ecsInstance);
-  if (playerEntity != undefined) {
-    let position = getComponent(playerEntity, POSITION_COMPONENT_DEF);
+  let position = getComponent(playerEntity, POSITION_COMPONENT_DEF);
+  if (position !== undefined) {
     if (inputMap["d"]) {
       position.x += PLAYER_SPEED;
     }
