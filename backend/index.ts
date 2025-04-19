@@ -5,6 +5,7 @@ import {
   VELOCITY_COMPONENT_DEF,
 } from "../core/collision";
 import { Component, Entity, provideECSInstanceFunctions } from "../core/ecs";
+import { mergeDeep } from "../core/objectMerge";
 
 console.log("Hello via Bun!");
 
@@ -14,10 +15,10 @@ export const {
   createEntity,
   destroyEntity,
 
-  addComponent,
+  addComponent: addComponentRaw,
   removeComponent,
 
-  getComponent,
+  getComponent: getComponentRaw,
   queryComponents,
 
   runQuery,
@@ -27,27 +28,6 @@ type WebSocketData = {
   entity: number;
 };
 let connectedSockets: Array<ServerWebSocket<WebSocketData>> = [];
-
-export function isObject(item) {
-  return (item && typeof item === 'object' && !Array.isArray(item));
-}
-export function mergeDeep(target, ...sources) {
-  if (!sources.length) return target;
-  const source = sources.shift();
-
-  if (isObject(target) && isObject(source)) {
-    for (const key in source) {
-      if (isObject(source[key])) {
-        if (!target[key]) Object.assign(target, { [key]: {} });
-        mergeDeep(target[key], source[key]);
-      } else {
-        Object.assign(target, { [key]: source[key] });
-      }
-    }
-  }
-
-  return mergeDeep(target, ...sources);
-}
 
 let catchupPacket: any = {};
 let updatePacket: any = {};
@@ -63,11 +43,11 @@ const sendUpdatePacket = () => {
   mergeDeep(catchupPacket, updatePacket);
   updatePacket = {};
 };
-export const getNetworkedComponent = <T extends Component>(
+export const getComponent = <T extends Component>(
   entity: Entity,
   component: T
 ) => {
-  return new Proxy(getComponent(entity, component), {
+  return new Proxy(getComponentRaw(entity, component), {
     set: (
       target: any,
       property: string | symbol,
@@ -83,12 +63,12 @@ export const getNetworkedComponent = <T extends Component>(
     },
   });
 };
-export const addNetworkedComponent = (entity: Entity, component: Component) => {
+export const addComponent = (entity: Entity, component: Component) => {
   if (updatePacket[entity] === undefined) updatePacket[entity] = {};
   if (updatePacket[entity][component.type])
     updatePacket[entity][component.type] = {};
   updatePacket[entity][component.type] = component;
-  addComponent(entity, component);
+  addComponentRaw(entity, component);
 };
 
 const server = Bun.serve<WebSocketData, {}>({
@@ -115,14 +95,14 @@ const server = Bun.serve<WebSocketData, {}>({
         })
       );
       connectedSockets.push(websocket);
-      addNetworkedComponent(websocket.data.entity, POSITION_COMPONENT_DEF);
-      addNetworkedComponent(websocket.data.entity, VELOCITY_COMPONENT_DEF);
-      addNetworkedComponent(websocket.data.entity, AABB_COLLIDER_COMPONENT_DEF);
+      addComponent(websocket.data.entity, POSITION_COMPONENT_DEF);
+      addComponent(websocket.data.entity, VELOCITY_COMPONENT_DEF);
+      addComponent(websocket.data.entity, AABB_COLLIDER_COMPONENT_DEF);
     },
     message(websocket, message) {
       if (typeof message !== "string") return;
       const [x, y] = message.split(" ").map(Number.parseFloat);
-      let position = getNetworkedComponent(
+      let position = getComponent(
         websocket.data.entity,
         POSITION_COMPONENT_DEF
       );
