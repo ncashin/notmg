@@ -4,6 +4,7 @@ import { draw } from "./draw";
 import { inputMap } from "./input";
 import { ECSInstance, provideECSInstanceFunctions } from "../../core/ecs";
 import { POSITION_COMPONENT_DEF } from "../../core/collision";
+import { mergeDeep } from "../../core/objectMerge";
 
 export let {
   ecsInstance,
@@ -20,12 +21,6 @@ export let {
   runQuery,
 } = provideECSInstanceFunctions();
 
-export const updateObjectRecursive = (object: any, objectToUpdateWith: any) => {
-  Object.entries(objectToUpdateWith).forEach(([key, value]) => {
-    object[key] = value;
-  });
-};
-
 let playerEntity: number | undefined = undefined;
 export const mergePacket = (packet) => {
   Object.entries(packet).forEach(([entity, components]) => {
@@ -37,7 +32,7 @@ export const mergePacket = (packet) => {
         addComponent(entity, component);
         return;
       }
-      updateObjectRecursive(existingComponent, component);
+      mergeDeep(existingComponent, component);
     });
   });
 };
@@ -47,14 +42,17 @@ websocket.onopen = () => {
 };
 websocket.onmessage = (event) => {
   const messageObject = JSON.parse(event.data);
-  if (messageObject.type === "initialization") {
-    playerEntity = messageObject.playerEntity;
-    mergePacket(messageObject.catchupPacket);
-    return;
-  }
+  switch (messageObject.type) {
+    case "initialization":
+      playerEntity = messageObject.playerEntity;
+      mergePacket(messageObject.catchupPacket);
+      break;
+    case "update":
+      mergePacket(messageObject.packet);
+      break;
 
-  if (messageObject.type === "update") {
-    mergePacket(messageObject.packet);
+    default:
+      console.log(messageObject);
   }
 };
 websocket.onerror = (error) => {
