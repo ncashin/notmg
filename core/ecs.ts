@@ -1,6 +1,6 @@
-type Entity = number;
-type ComponentTypeString = string;
-type Component = { type: ComponentTypeString };
+export type Entity = number;
+export type ComponentTypeString = string;
+export type Component = { type: ComponentTypeString };
 export type ECSInstance = {
   entityIDCounter: number;
   componentPools: Record<ComponentTypeString, Record<Entity, Component>>;
@@ -85,7 +85,6 @@ export const addComponent = <ComponentType extends Component>(
   COMPONENT_TYPE_DEF: ComponentType,
 ) => {
   createComponentReference(instance, entity, COMPONENT_TYPE_DEF);
-
   lookupAssociatedComposedPoolKeys(instance, COMPONENT_TYPE_DEF).forEach(
     (keyToUpdate) => {
       const parsedKeyComponentTypes = keyToUpdate.split(" ");
@@ -130,11 +129,18 @@ export const queryComponents = <const ComposedType extends Component[]>(
   }
 
   let poolComponents: Record<Entity, Component[]> = {};
-  // This can be fixed so that not all entities need to be looped through this is for testing
   const componentTypes = COMPONENT_TYPE_DEFS.map(
     (COMPONENT_TYPE_DEF) => COMPONENT_TYPE_DEF.type,
   );
+
+  COMPONENT_TYPE_DEFS.forEach((COMPONENT_TYPE_DEF) => {
+    lookupAssociatedComposedPoolKeys(instance, COMPONENT_TYPE_DEF).push(
+      combination
+    );
+  });
+
   let componentPool = lookupComponentPool(instance, componentTypes[0]);
+
   for (let [entityID, component] of Object.entries(componentPool)) {
     let composedComponents = [component];
     for (let i = 1; i < componentTypes.length; i++) {
@@ -149,18 +155,12 @@ export const queryComponents = <const ComposedType extends Component[]>(
       continue;
     }
     poolComponents[entityID as any as number] = composedComponents;
-
-    COMPONENT_TYPE_DEFS.forEach((COMPONENT_TYPE_DEF) => {
-      lookupAssociatedComposedPoolKeys(instance, COMPONENT_TYPE_DEF).push(
-        combination,
-      );
-    });
   }
   instance.composedPools[combination] = poolComponents;
   return instance.composedPools[combination] as Record<number, ComposedType>;
 };
 
-export const runSystem = <const ComposedType extends Component[]>(
+export const runQuery = <const ComposedType extends Component[]>(
   instance: ECSInstance,
   COMPONENT_TYPE_DEFS: ComposedType,
   lambda: (entity: Entity, components: ComposedType) => void,
@@ -194,10 +194,10 @@ export const curryECSInstance = (instance: ECSInstance) => ({
     COMPONENT_TYPE_DEFS: ComposedType,
   ) => queryComponents(instance, COMPONENT_TYPE_DEFS),
 
-  runSystem: <const ComposedType extends Component[]>(
+  runQuery: <const ComposedType extends Component[]>(
     COMPONENT_TYPE_DEFS: ComposedType,
-    lambda: (entity: Entity, components: ComposedType) => void,
-  ) => runSystem(instance, COMPONENT_TYPE_DEFS, lambda),
+    lambda: (entity: Entity, components: ComposedType) => void
+  ) => runQuery(instance, COMPONENT_TYPE_DEFS, lambda),
 });
 
 export const provideECSInstanceFunctions = () => {

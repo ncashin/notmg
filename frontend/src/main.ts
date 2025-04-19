@@ -11,20 +11,6 @@ import {
   VELOCITY_COMPONENT_DEF,
 } from "../../core/collision";
 
-const websocket = new WebSocket("ws://localhost:3000");
-websocket.onopen = () => {
-  console.log("Connected to WebSocket server");
-};
-websocket.onmessage = (event) => {
-  console.log("Received:", event.data);
-};
-websocket.onerror = (error) => {
-  console.error("WebSocket error:", error);
-};
-websocket.onclose = () => {
-  console.log("Disconnected from WebSocket server");
-};
-
 export const {
   ecsInstance,
 
@@ -37,20 +23,16 @@ export const {
   getComponent,
   queryComponents,
 
-  runSystem,
+  runQuery,
 } = provideECSInstanceFunctions();
 
-export const COLOR_COMPONENT_DEF: {
-  type: "color";
-  color: string;
-} = {
-  type: "color",
-  color: "red",
+export const updateObjectRecursive = (object: any, objectToUpdateWith: any) => {
+  Object.entries(objectToUpdateWith).forEach(([key, value]) => {
+    object[key] = value;
+  });
 };
-const PLAYER_SPEED = 1.5;
-const playerEntity = createKinematicEntity(ecsInstance);
-addComponent(playerEntity, COLOR_COMPONENT_DEF);
 
+<<<<<<< HEAD
 let position = getComponent(playerEntity, POSITION_COMPONENT_DEF);
 let velocity = getComponent(playerEntity, VELOCITY_COMPONENT_DEF);
 let color = getComponent(playerEntity, COLOR_COMPONENT_DEF);
@@ -93,43 +75,57 @@ testPosition.x = 500;
 testPosition.y = 700;
 testCollider.width = 1000;
 testCollider.height = 64;
+=======
+const websocket = new WebSocket("ws://localhost:3000");
+websocket.onopen = () => {
+  console.log("Connected to WebSocket server");
+};
+let playerEntity: number | undefined = undefined;
+websocket.onmessage = (event) => {
+  const [entityString, componentString] = event.data.split("*");
+  const entity = Number.parseInt(entityString);
+  playerEntity = entity;
+  const messageComponent = JSON.parse(componentString);
+  const existingComponent = getComponent(entity, messageComponent);
+  if (existingComponent === undefined) {
+    addComponent(entity, messageComponent);
+    console.log(ecsInstance);
+    return;
+  }
+  updateObjectRecursive(existingComponent, messageComponent);
+};
+websocket.onerror = (error) => {
+  console.error("WebSocket error:", error);
+};
+websocket.onclose = () => {
+  console.log("Disconnected from WebSocket server");
+};
+>>>>>>> 78a1fa6 (oops)
 
 const DAMPING_FORCE = 0.2;
+const PLAYER_SPEED = 1;
 const update = () => {
-  if (velocity.y === 0 && inputMap[" "]) {
-    console.log("HIT");
-    velocity.y -= 20;
+  // updateCollisionSystem(ecsInstance);
+  if (playerEntity != undefined) {
+    let position = getComponent(playerEntity, POSITION_COMPONENT_DEF);
+    if (inputMap["d"]) {
+      position.x += PLAYER_SPEED;
+    }
+    if (inputMap["a"]) {
+      position.x -= PLAYER_SPEED;
+    }
+    if (inputMap["s"]) {
+      position.y += PLAYER_SPEED;
+    }
+    if (inputMap["w"]) {
+      position.y -= PLAYER_SPEED;
+    }
+    websocket.send(position.x.toString() + " " + position.y.toString());
   }
-
-  if (inputMap["d"]) {
-    velocity.x += PLAYER_SPEED;
-  }
-  if (inputMap["a"]) {
-    velocity.x -= PLAYER_SPEED;
-  }
-  velocity.x -= velocity.x * DAMPING_FORCE;
-  velocity.y += 2;
-
-  if (inputMap["ArrowRight"]) {
-    moveTestVelocity.x += PLAYER_SPEED;
-  }
-  if (inputMap["ArrowLeft"]) {
-    moveTestVelocity.x -= PLAYER_SPEED;
-  }
-  if (inputMap["ArrowDown"]) {
-    moveTestVelocity.y += PLAYER_SPEED;
-  }
-  if (inputMap["ArrowUp"]) {
-    moveTestVelocity.y -= PLAYER_SPEED;
-  }
-
-  moveTestVelocity.x -= moveTestVelocity.x * DAMPING_FORCE;
-  moveTestVelocity.y -= moveTestVelocity.y * DAMPING_FORCE;
-
-  updateCollisionSystem(ecsInstance);
   draw();
   window.requestAnimationFrame(update);
 };
+
 document.addEventListener("DOMContentLoaded", () => {
   window.requestAnimationFrame(update);
 });

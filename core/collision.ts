@@ -1,5 +1,5 @@
 import { ecsInstance } from "../frontend/src/main";
-import { addComponent, createEntity, ECSInstance, runSystem } from "./ecs";
+import { addComponent, createEntity, ECSInstance, runQuery } from "./ecs";
 
 export const POSITION_COMPONENT_DEF: {
   type: "position";
@@ -38,7 +38,7 @@ export const createKinematicEntity = (ecsInstance: ECSInstance) => {
 };
 
 export const updateCollisionSystem = (ecsInstance: ECSInstance) => {
-  runSystem(
+  runQuery(
     ecsInstance,
     [
       POSITION_COMPONENT_DEF,
@@ -46,7 +46,7 @@ export const updateCollisionSystem = (ecsInstance: ECSInstance) => {
       AABB_COLLIDER_COMPONENT_DEF,
     ],
     (movingEntity, [movingPosition, movingVelocity, movingCollider]) => {
-      runSystem(
+      runQuery(
         ecsInstance,
         [POSITION_COMPONENT_DEF, AABB_COLLIDER_COMPONENT_DEF],
         (entity, [colliderPosition, collider]) => {
