@@ -3,7 +3,7 @@ import {
   POSITION_COMPONENT_DEF,
   VELOCITY_COMPONENT_DEF,
 } from "../../core/collision";
-import { COLOR_COMPONENT_DEF, runSystem } from "./main";
+import { runQuery } from "./main";
 
 let canvas: HTMLCanvasElement;
 let context: CanvasRenderingContext2D;
@@ -31,11 +31,10 @@ export const draw = () => {
 };
 
 export const debugDraw = () => {
-  runSystem(
-    [POSITION_COMPONENT_DEF, AABB_COLLIDER_COMPONENT_DEF, COLOR_COMPONENT_DEF],
-    (_entity, [position, collider, color]) => {
-      context.strokeStyle = color.color;
-
+  context.strokeStyle = "blue";
+  runQuery(
+    [POSITION_COMPONENT_DEF, AABB_COLLIDER_COMPONENT_DEF],
+    (_entity, [position, collider]) => {
       context.strokeRect(
         position.x - collider.width / 2,
         position.y - collider.height / 2,
@@ -46,7 +45,7 @@ export const debugDraw = () => {
   );
 
   context.strokeStyle = "purple";
-  runSystem(
+  runQuery(
     [POSITION_COMPONENT_DEF, VELOCITY_COMPONENT_DEF],
     (_entity, [position, velocity]) => {
       context.beginPath();

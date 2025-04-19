@@ -13,6 +13,10 @@
   "devDependencies": {
     "typescript": "~5.7.2",
     "vite": "^6.2.0",
+<<<<<<< HEAD
     "prettier": "^3.5.3"
+=======
+    "@types/bun": "latest"
+>>>>>>> 78a1fa6 (oops)
   }
 }
