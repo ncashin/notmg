@@ -2,27 +2,11 @@ import { ServerWebSocket } from "bun";
 import {
   AABB_COLLIDER_COMPONENT_DEF,
   POSITION_COMPONENT_DEF,
+  updateCollisionSystem,
   VELOCITY_COMPONENT_DEF,
 } from "../core/collision";
 import { Component, Entity, provideECSInstanceFunctions } from "../core/ecs";
 import { mergeDeep } from "../core/objectMerge";
-
-console.log("Hello via Bun!");
-
-export const {
-  ecsInstance,
-
-  createEntity,
-  destroyEntity,
-
-  addComponent: addComponentRaw,
-  removeComponent,
-
-  getComponent: getComponentRaw,
-  queryComponents,
-
-  runQuery,
-} = provideECSInstanceFunctions();
 
 type WebSocketData = {
   entity: number;
@@ -43,34 +27,49 @@ const sendUpdatePacket = () => {
   mergeDeep(catchupPacket, updatePacket);
   updatePacket = {};
 };
-export const getComponent = <T extends Component>(
-  entity: Entity,
-  component: T
-) => {
-  return new Proxy(getComponentRaw(entity, component), {
+
+export const {
+  ecsInstance,
+
+  createEntity,
+  destroyEntity,
+
+  addComponent,
+  removeComponent,
+
+  getComponent,
+  queryComponents,
+
+  runQuery,
+} = provideECSInstanceFunctions({
+  addComponentCallback: (entity, component) => {
+    if (updatePacket[entity] === undefined) {
+      updatePacket[entity] = {};
+    }
+    if (updatePacket[entity][component.type]) {
+      updatePacket[entity][component.type] = {};
+    }
+    updatePacket[entity][component.type] = component;
+  },
+  componentProxyHandler: {
     set: (
-      target: any,
+      entity: Entity,
+      component: any & Component,
       property: string | symbol,
-      newValue: any,
-      _receiver: any
+      newValue: any
     ) => {
-      if (updatePacket[entity] === undefined) updatePacket[entity] = {};
-      if (updatePacket[entity][component.type] === undefined)
+      if (updatePacket[entity] === undefined) {
+        updatePacket[entity] = {};
+      }
+      if (updatePacket[entity][component.type] === undefined) {
         updatePacket[entity][component.type] = {};
+      }
       updatePacket[entity][component.type][property] = newValue;
-      target[property] = newValue;
+      component[property] = newValue;
       return true;
     },
-  });
-};
-export const addComponent = (entity: Entity, component: Component) => {
-  if (updatePacket[entity] === undefined) updatePacket[entity] = {};
-  if (updatePacket[entity][component.type])
-    updatePacket[entity][component.type] = {};
-  updatePacket[entity][component.type] = component;
-  addComponentRaw(entity, component);
-};
-
+  },
+});
 const server = Bun.serve<WebSocketData, {}>({
   port: 3000,
   fetch(req, server) {
@@ -115,6 +114,6 @@ const server = Bun.serve<WebSocketData, {}>({
 
 setInterval(() => {
   sendUpdatePacket();
-}, 1000);
+}, 16);
 
 console.log(`WebSocket server listening on port ${server.port}`);
