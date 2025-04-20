@@ -29,7 +29,15 @@ let playerEntity: number | undefined = undefined;
 export const mergePacket = (packet) => {
   console.log(packet);
   Object.entries(packet).forEach(([entity, components]) => {
+    if (components === null) {
+      destroyEntity(Number.parseInt(entity));
+      return;
+    }
     Object.entries(components).forEach(([type, component]) => {
+      if (component === null) {
+        removeComponent(Number.parseInt(entity), { type });
+        return;
+      }
       component.type = type;
 
       const existingComponent = getComponent(entity, component);
