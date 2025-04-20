@@ -13,6 +13,8 @@ export type ECSInstance = {
   removeComponentCallback:
     | undefined
     | ((entity: Entity, COMPONENT_TYPE_DEF: Component) => void);
+  destroyEntityCallback?: (entity: Entity) => void;
+
   componentProxyHandler: undefined | ComponentProxyHandler;
 };
 
@@ -26,6 +28,7 @@ export type ECSInstanceCreateInfo = {
     entity: Entity,
     COMPONENT_TYPE_DEF: Component
   ) => void;
+  destroyEntityCallback?: (entity: Entity) => void;
   componentProxyHandler?: ComponentProxyHandler;
 };
 
@@ -54,6 +57,12 @@ export const destroyEntity = (instance: ECSInstance, entity: Entity) => {
       delete composedPool[entity];
     }
   });
+
+  if (instance.destroyEntityCallback) {
+    instance.destroyEntityCallback(
+      entity,
+    );
+  }
 };
 
 const lookupComponent = <ComponentType extends Component>(

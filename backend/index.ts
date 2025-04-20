@@ -46,11 +46,20 @@ export const {
     if (updatePacket[entity] === undefined) {
       updatePacket[entity] = {};
     }
-    if (updatePacket[entity][component.type]) {
-      updatePacket[entity][component.type] = {};
-    }
     updatePacket[entity][component.type] = component;
   },
+  removeComponentCallback: (entity, component) => {
+    if (updatePacket[entity] === undefined) {
+      updatePacket[entity] = {};
+    }
+    updatePacket[entity][component.type] = null;
+  },
+
+
+  destroyEntityCallback: (entity) => {
+    updatePacket[entity] = null;
+  },
+
   componentProxyHandler: {
     set: (
       entity: Entity,
@@ -108,7 +117,9 @@ const server = Bun.serve<WebSocketData, {}>({
       position.x = x;
       position.y = y;
     },
-    close(_websocket) {},
+    close(websocket) {
+      destroyEntity(websocket.data.entity);
+    },
   },
 });
 
