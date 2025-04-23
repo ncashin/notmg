@@ -7,6 +7,7 @@ import {
 } from "../core/collision";
 import { Component, Entity, provideECSInstanceFunctions } from "../core/ecs";
 import { mergeDeep } from "../core/objectMerge";
+import { PROJECTILE_COMPONENT_DEF, SPRITE_COMPONENT_DEF } from "../core/game";
 
 type WebSocketData = {
   entity: number;
@@ -55,7 +56,6 @@ export const {
     updatePacket[entity][component.type] = null;
   },
 
-
   destroyEntityCallback: (entity) => {
     updatePacket[entity] = null;
   },
@@ -79,6 +79,36 @@ export const {
     },
   },
 });
+
+export const createPlayerEntity = (entity: Entity) => {
+  addComponent(entity, POSITION_COMPONENT_DEF);
+  addComponent(entity, VELOCITY_COMPONENT_DEF);
+  addComponent(entity, AABB_COLLIDER_COMPONENT_DEF);
+  addComponent(entity, {
+    ...SPRITE_COMPONENT_DEF,
+    imageSrc: "/female.svg",
+    size: 80,
+  });
+};
+
+export const createProjectile = (entity: Entity, x: number, y: number, velocityX: number, velocityY: number) => {
+  addComponent(entity, { ...POSITION_COMPONENT_DEF, x, y });
+  addComponent(entity, {...PROJECTILE_COMPONENT_DEF, velocityX, velocityY});
+  // addComponent(entity, AABB_COLLIDER_COMPONENT_DEF);
+  addComponent(entity, {
+    ...SPRITE_COMPONENT_DEF,
+    imageSrc: "/vite.svg",
+    size: 80,
+  });
+};
+
+export const createBossEntity = (entity: Entity) => {
+  addComponent(entity, { ...POSITION_COMPONENT_DEF, x: 1000, y: 500 });
+  addComponent(entity, VELOCITY_COMPONENT_DEF);
+  addComponent(entity, AABB_COLLIDER_COMPONENT_DEF);
+  addComponent(entity, { ...SPRITE_COMPONENT_DEF, imageSrc: "/boss.png" });
+};
+
 const server = Bun.serve<WebSocketData, {}>({
   port: 3000,
   fetch(req, server) {
@@ -103,9 +133,7 @@ const server = Bun.serve<WebSocketData, {}>({
         })
       );
       connectedSockets.push(websocket);
-      addComponent(websocket.data.entity, POSITION_COMPONENT_DEF);
-      addComponent(websocket.data.entity, VELOCITY_COMPONENT_DEF);
-      addComponent(websocket.data.entity, AABB_COLLIDER_COMPONENT_DEF);
+      createPlayerEntity(websocket.data.entity);
     },
     message(websocket, message) {
       if (typeof message !== "string") return;
@@ -123,7 +151,22 @@ const server = Bun.serve<WebSocketData, {}>({
   },
 });
 
+let count = 0;
 setInterval(() => {
+  if (count <= 0) {
+    createProjectile(100, 500, 500, 5, 0);
+    createBossEntity(createEntity());
+    count = 10000;
+  }
+  count--;
+
+  runQuery(
+    [POSITION_COMPONENT_DEF, PROJECTILE_COMPONENT_DEF],
+    (_entity, [position, projectile]) => {
+      position.x += projectile.velocityX;
+      position.y += projectile.velocityY;
+    }
+  );
   sendUpdatePacket();
 }, 16);
 

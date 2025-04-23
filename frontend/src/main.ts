@@ -2,10 +2,9 @@ import "./style.css";
 import "./draw";
 import { draw } from "./draw";
 import { inputMap } from "./input";
-import { ECSInstance, provideECSInstanceFunctions } from "../../core/ecs";
+import { provideECSInstanceFunctions } from "../../core/ecs";
 import {
   POSITION_COMPONENT_DEF,
-  updateCollisionSystem,
   VELOCITY_COMPONENT_DEF,
 } from "../../core/collision";
 import { mergeDeep } from "../../core/objectMerge";
@@ -100,7 +99,7 @@ const update = () => {
     return;
   }
 
-  const rawInterpolationPercent = (Date.now() - timeUpdateReceived) / 8 / 1000;
+  const rawInterpolationPercent = (Date.now() - timeUpdateReceived) / 1000;
   const interpolationPercent = Math.cbrt(rawInterpolationPercent);
   runQuery([POSITION_COMPONENT_DEF], (entity, [serverPosition]) => {
     let clientPosition = getComponent(entity, CLIENT_POSITION_COMPONENT_DEF);

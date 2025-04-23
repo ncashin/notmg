@@ -19,6 +19,8 @@ export const VELOCITY_COMPONENT_DEF: {
   x: 0,
   y: 0,
 };
+
+
 export const AABB_COLLIDER_COMPONENT_DEF: {
   type: "aabbCollider";
   width: number;
