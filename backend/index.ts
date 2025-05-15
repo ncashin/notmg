@@ -19,16 +19,16 @@ type WebSocketData = {
 const connectedSockets: Array<ServerWebSocket<WebSocketData>> = [];
 
 const catchupPacket: any = {};
-let updatePacket: any = {};
+let updatePacket: Record<string | number, any> = {};
 const sendUpdatePacket = () => {
-  connectedSockets.forEach((socket) => {
+  for (const socket of connectedSockets) {
     socket.send(
       JSON.stringify({
         type: "update",
         packet: updatePacket,
       }),
     );
-  });
+  }
   mergeDeep(catchupPacket, updatePacket);
   updatePacket = {};
 };
@@ -164,7 +164,7 @@ const server = Bun.serve<WebSocketData, {}>({
 let count = 0;
 setInterval(() => {
   if (count <= 0) {
-    createProjectile(100, 500, 500, 5, 0);
+    createProjectile(100, 500, 500, 0.5, 0.5);
     createBossEntity(createEntity());
     count = 10000;
   }
