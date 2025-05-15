@@ -104,23 +104,32 @@ const lookupAssociatedComposedPoolKeys = <ComponentType extends Component>(
   return instance.associatedComposedPoolKeys[COMPONENT_TYPE_DEF.type];
 };
 
+export const createComponentProxy = <ComponentType extends Component>(
+  instance: ECSInstance,
+  entity: Entity,
+  COMPONENT_TYPE_DEF: ComponentType,
+) => {
+  return new Proxy(lookupComponent(instance, entity, COMPONENT_TYPE_DEF), {
+    set: (
+      target: any,
+      property: string | symbol,
+      newValue: any,
+      _receiver: any,
+    ) =>
+      instance.componentProxyHandler?.set(entity, target, property, newValue),
+  });
+};
+
 export const getComponent = <ComponentType extends Component>(
   instance: ECSInstance,
   entity: Entity,
   COMPONENT_TYPE_DEF: ComponentType,
 ): ComponentType => {
+  const component = lookupComponent(instance, entity, COMPONENT_TYPE_DEF);
   if (instance.componentProxyHandler !== undefined) {
-    return new Proxy(lookupComponent(instance, entity, COMPONENT_TYPE_DEF), {
-      set: (
-        target: any,
-        property: string | symbol,
-        newValue: any,
-        _receiver: any,
-      ) =>
-        instance.componentProxyHandler.set(entity, target, property, newValue),
-    });
+    return createComponentProxy(instance, entity, component);
   }
-  return lookupComponent(instance, entity, COMPONENT_TYPE_DEF);
+  return component;
 };
 export const addComponent = <ComponentType extends Component>(
   instance: ECSInstance,
@@ -128,24 +137,27 @@ export const addComponent = <ComponentType extends Component>(
   COMPONENT_TYPE_DEF: ComponentType,
 ) => {
   createComponentReference(instance, entity, COMPONENT_TYPE_DEF);
-  lookupAssociatedComposedPoolKeys(instance, COMPONENT_TYPE_DEF).forEach(
-    (keyToUpdate) => {
-      const parsedKeyComponentTypes = keyToUpdate.split(" ");
-      const composedComponents = [];
-      for (let i = 0; i < parsedKeyComponentTypes.length; i++) {
-        const component = lookupComponent(instance, entity, {
-          type: parsedKeyComponentTypes[i],
-        });
-        if (component === undefined) return;
-        composedComponents.push(component);
-      }
+  for (const keyToUpdate of lookupAssociatedComposedPoolKeys(
+    instance,
+    COMPONENT_TYPE_DEF,
+  )) {
+    const parsedKeyComponentTypes = keyToUpdate.split(" ");
+    const composedComponents = [];
+    for (let i = 0; i < parsedKeyComponentTypes.length; i++) {
+      const component = lookupComponent(instance, entity, {
+        type: parsedKeyComponentTypes[i],
+      });
+      if (component === undefined) continue;
+      composedComponents.push(component);
+    }
+    if (composedComponents.length === parsedKeyComponentTypes.length) {
       instance.composedPools[keyToUpdate][entity] = composedComponents;
-    },
-  );
+    }
+  }
   if (instance.addComponentCallback) {
     instance.addComponentCallback(
       entity,
-      getComponent(instance, entity, COMPONENT_TYPE_DEF),
+      lookupComponent(instance, entity, COMPONENT_TYPE_DEF),
     );
   }
 };
@@ -154,13 +166,14 @@ export const removeComponent = <ComponentType extends Component>(
   entity: Entity,
   COMPONENT_TYPE_DEF: ComponentType,
 ) => {
-  lookupAssociatedComposedPoolKeys(instance, COMPONENT_TYPE_DEF).forEach(
-    (keyToUpdate) => {
-      if (instance.composedPools[keyToUpdate][entity] !== undefined) {
-        delete instance.composedPools[keyToUpdate][entity];
-      }
-    },
-  );
+  for (const keyToUpdate of lookupAssociatedComposedPoolKeys(
+    instance,
+    COMPONENT_TYPE_DEF,
+  )) {
+    if (instance.composedPools[keyToUpdate][entity] !== undefined) {
+      delete instance.composedPools[keyToUpdate][entity];
+    }
+  }
   if (instance.removeComponentCallback) {
     instance.removeComponentCallback(entity, COMPONENT_TYPE_DEF);
   }
@@ -173,7 +186,7 @@ export const queryComponents = <const ComposedType extends Component[]>(
 ) => {
   const combination = COMPONENT_TYPE_DEFS.map(
     (COMPONENT_TYPE_DEF) => COMPONENT_TYPE_DEF.type,
-  ).reduce((previous, current) => previous + " " + current);
+  ).reduce((previous, current) => `${previous} ${current}`);
 
   // early return if composed pool already exists
   if (instance.composedPools[combination] !== undefined) {
@@ -185,11 +198,11 @@ export const queryComponents = <const ComposedType extends Component[]>(
     (COMPONENT_TYPE_DEF) => COMPONENT_TYPE_DEF.type,
   );
 
-  COMPONENT_TYPE_DEFS.forEach((COMPONENT_TYPE_DEF) => {
+  for (const COMPONENT_TYPE_DEF of COMPONENT_TYPE_DEFS) {
     lookupAssociatedComposedPoolKeys(instance, COMPONENT_TYPE_DEF).push(
       combination,
     );
-  });
+  }
 
   const componentPool = lookupComponentPool(instance, componentTypes[0]);
 
@@ -217,10 +230,19 @@ export const runQuery = <const ComposedType extends Component[]>(
   COMPONENT_TYPE_DEFS: ComposedType,
   lambda: (entity: Entity, components: ComposedType) => void,
 ) => {
-  Object.entries(queryComponents(instance, COMPONENT_TYPE_DEFS)).forEach(
-    ([entity, components]) =>
-      lambda(Number.parseInt(entity), components as any as ComposedType),
-  );
+  for (const [entity, components] of Object.entries(
+    queryComponents(instance, COMPONENT_TYPE_DEFS),
+  )) {
+    if (instance.componentProxyHandler) {
+      const componentProxies = components.map((component) =>
+        createComponentProxy(instance, Number.parseInt(entity), component),
+      ) as ComposedType;
+      lambda(Number.parseInt(entity), componentProxies);
+      continue;
+    }
+
+    lambda(Number.parseInt(entity), components as any as ComposedType);
+  }
 };
 
 export const curryECSInstance = (instance: ECSInstance) => ({
