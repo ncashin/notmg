@@ -14,13 +14,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const updateCanvasSize = () => {
     canvas.width = Math.floor(window.innerWidth);
     canvas.height = Math.floor(window.innerHeight);
-    canvas.style.width = window.innerWidth + "px";
-    canvas.style.height = window.innerHeight + "px";
+    canvas.style.width = `${window.innerWidth}px`;
+    canvas.style.height = `${window.innerHeight}px`;
   };
   canvas.addEventListener("resize", updateCanvasSize);
   updateCanvasSize();
   context = canvas.getContext("2d") as CanvasRenderingContext2D;
 });
+
+declare global {
+  interface Window {
+    ENABLE_DEBUG_DRAW: boolean;
+  }
+}
 
 window.ENABLE_DEBUG_DRAW = true;
 export const draw = () => {
