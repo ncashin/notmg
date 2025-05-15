@@ -26,20 +26,62 @@ document.addEventListener("DOMContentLoaded", () => {
 
 declare global {
   interface Window {
-    ENABLE_DEBUG_DRAW: boolean;
+    DEBUG_DRAW: boolean;
   }
 }
 
-window.ENABLE_DEBUG_DRAW = true;
+window.DEBUG_DRAW = true;
 export const draw = () => {
   context.clearRect(0, 0, canvas.width, canvas.height);
 
-  if (window.ENABLE_DEBUG_DRAW) {
-    debugDraw();
+  drawSprites();
+  drawProjectiles();
+
+  if (window.DEBUG_DRAW) {
+    drawAABB();
+    drawVelocity();
   }
+
+  drawInventory();
 };
 
-export const inventoryDraw = () => {
+const drawSprites = () => {
+  runQuery(
+    [CLIENT_POSITION_COMPONENT_DEF, SPRITE_COMPONENT_DEF],
+    (_entity, [position, sprite]) => {
+      const image = new Image();
+      image.src = sprite.imageSrc;
+      context.drawImage(
+        image,
+        position.x - sprite.size / 2,
+        position.y - sprite.size / 2,
+        sprite.size,
+        sprite.size,
+      );
+    },
+  );
+};
+
+const drawProjectiles = () => {
+  runQuery(
+    [POSITION_COMPONENT_DEF, PROJECTILE_COMPONENT_DEF],
+    (_entity, [position, projectile]) => {
+      // Draw white background circle
+      context.fillStyle = "white";
+      context.beginPath();
+      context.arc(position.x, position.y, projectile.radius, 0, Math.PI * 2);
+      context.fill();
+
+      // Draw wireframe circle
+      context.strokeStyle = "red";
+      context.beginPath();
+      context.arc(position.x, position.y, projectile.radius, 0, Math.PI * 2);
+      context.stroke();
+    },
+  );
+};
+
+export const drawInventory = () => {
   const inventoryCell = new Image();
   inventoryCell.src = "/inventorycell.png";
 
@@ -69,7 +111,7 @@ export const inventoryDraw = () => {
   );
 };
 
-export const debugDraw = () => {
+const drawAABB = () => {
   context.strokeStyle = "blue";
   runQuery(
     [CLIENT_POSITION_COMPONENT_DEF, AABB_COLLIDER_COMPONENT_DEF],
@@ -82,21 +124,9 @@ export const debugDraw = () => {
       );
     },
   );
-  runQuery(
-    [CLIENT_POSITION_COMPONENT_DEF, SPRITE_COMPONENT_DEF],
-    (_entity, [position, sprite]) => {
-      const image = new Image();
-      image.src = sprite.imageSrc;
-      context.drawImage(
-        image,
-        position.x - sprite.size / 2,
-        position.y - sprite.size / 2,
-        sprite.size,
-        sprite.size,
-      );
-    },
-  );
+};
 
+const drawVelocity = () => {
   context.strokeStyle = "purple";
   runQuery(
     [POSITION_COMPONENT_DEF, VELOCITY_COMPONENT_DEF],
@@ -109,23 +139,4 @@ export const debugDraw = () => {
       context.moveTo(0, 0);
     },
   );
-
-  // Draw projectiles as wireframe circles with white background
-  runQuery(
-    [POSITION_COMPONENT_DEF, PROJECTILE_COMPONENT_DEF],
-    (_entity, [position, projectile]) => {
-      // Draw white background circle
-      context.fillStyle = "white";
-      context.beginPath();
-      context.arc(position.x, position.y, projectile.radius, 0, Math.PI * 2);
-      context.fill();
-
-      // Draw wireframe circle
-      context.strokeStyle = "red";
-      context.beginPath();
-      context.arc(position.x, position.y, projectile.radius, 0, Math.PI * 2);
-      context.stroke();
-    },
-  );
-  inventoryDraw();
 };
