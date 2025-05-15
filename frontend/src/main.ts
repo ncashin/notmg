@@ -55,7 +55,7 @@ export const mergePacket = (packet: Packet) => {
 };
 
 let timeUpdateReceived = Date.now();
-const websocket = new WebSocket("ws://localhost:3000");
+const websocket = new WebSocket(`ws://${window.location.hostname}:3000`);
 websocket.onopen = () => {
   console.log("Connected to WebSocket server");
 };
