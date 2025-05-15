@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
     canvas.style.width = `${window.innerWidth}px`;
     canvas.style.height = `${window.innerHeight}px`;
   };
-  canvas.addEventListener("resize", updateCanvasSize);
+  window.addEventListener("resize", updateCanvasSize);
   updateCanvasSize();
   context = canvas.getContext("2d") as CanvasRenderingContext2D;
 });
