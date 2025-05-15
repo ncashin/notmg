@@ -1,20 +1,24 @@
-import { ServerWebSocket } from "bun";
+import type { ServerWebSocket } from "bun";
 import {
   AABB_COLLIDER_COMPONENT_DEF,
   POSITION_COMPONENT_DEF,
-  updateCollisionSystem,
   VELOCITY_COMPONENT_DEF,
+  updateCollisionSystem,
 } from "../core/collision";
-import { Component, Entity, provideECSInstanceFunctions } from "../core/ecs";
-import { mergeDeep } from "../core/objectMerge";
+import {
+  type Component,
+  type Entity,
+  provideECSInstanceFunctions,
+} from "../core/ecs";
 import { PROJECTILE_COMPONENT_DEF, SPRITE_COMPONENT_DEF } from "../core/game";
+import { mergeDeep } from "../core/objectMerge";
 
 type WebSocketData = {
   entity: number;
 };
-let connectedSockets: Array<ServerWebSocket<WebSocketData>> = [];
+const connectedSockets: Array<ServerWebSocket<WebSocketData>> = [];
 
-let catchupPacket: any = {};
+const catchupPacket: any = {};
 let updatePacket: any = {};
 const sendUpdatePacket = () => {
   connectedSockets.forEach((socket) => {
@@ -22,7 +26,7 @@ const sendUpdatePacket = () => {
       JSON.stringify({
         type: "update",
         packet: updatePacket,
-      })
+      }),
     );
   });
   mergeDeep(catchupPacket, updatePacket);
@@ -65,7 +69,7 @@ export const {
       entity: Entity,
       component: any & Component,
       property: string | symbol,
-      newValue: any
+      newValue: any,
     ) => {
       if (updatePacket[entity] === undefined) {
         updatePacket[entity] = {};
@@ -91,9 +95,15 @@ export const createPlayerEntity = (entity: Entity) => {
   });
 };
 
-export const createProjectile = (entity: Entity, x: number, y: number, velocityX: number, velocityY: number) => {
+export const createProjectile = (
+  entity: Entity,
+  x: number,
+  y: number,
+  velocityX: number,
+  velocityY: number,
+) => {
   addComponent(entity, { ...POSITION_COMPONENT_DEF, x, y });
-  addComponent(entity, {...PROJECTILE_COMPONENT_DEF, velocityX, velocityY});
+  addComponent(entity, { ...PROJECTILE_COMPONENT_DEF, velocityX, velocityY });
   // addComponent(entity, AABB_COLLIDER_COMPONENT_DEF);
   addComponent(entity, {
     ...SPRITE_COMPONENT_DEF,
@@ -130,7 +140,7 @@ const server = Bun.serve<WebSocketData, {}>({
           type: "initialization",
           playerEntity: websocket.data.entity,
           catchupPacket: catchupPacket,
-        })
+        }),
       );
       connectedSockets.push(websocket);
       createPlayerEntity(websocket.data.entity);
@@ -138,9 +148,9 @@ const server = Bun.serve<WebSocketData, {}>({
     message(websocket, message) {
       if (typeof message !== "string") return;
       const [x, y] = message.split(" ").map(Number.parseFloat);
-      let position = getComponent(
+      const position = getComponent(
         websocket.data.entity,
-        POSITION_COMPONENT_DEF
+        POSITION_COMPONENT_DEF,
       );
       position.x = x;
       position.y = y;
@@ -165,7 +175,7 @@ setInterval(() => {
     (_entity, [position, projectile]) => {
       position.x += projectile.velocityX;
       position.y += projectile.velocityY;
-    }
+    },
   );
   sendUpdatePacket();
 }, 16);
