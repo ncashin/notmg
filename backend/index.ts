@@ -169,15 +169,9 @@ const server = Bun.serve<WebSocketData, undefined>({
   },
 });
 
-let count = 0;
-setInterval(() => {
-  if (count <= 0) {
-    createProjectile(createEntity(), 500, 500, 0.5, 0.5);
-    createBossEntity(createEntity());
-    count = 10000;
-  }
-  count--;
+createBossEntity(createEntity());
 
+setInterval(() => {
   runQuery(
     [POSITION_COMPONENT_DEF, PROJECTILE_COMPONENT_DEF],
     (entity, [position, projectile]) => {
