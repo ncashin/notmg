@@ -8,12 +8,12 @@
     "backend": "bun run --watch backend/index.ts",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "format": "prettier --write ."
+    "format": "biome check --write ./backend ./core ./frontend"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@types/bun": "latest",
     "typescript": "~5.7.2",
-    "vite": "^6.2.0",
-    "prettier": "^3.5.3",
-    "@types/bun": "latest"
+    "vite": "^6.2.0"
   }
 }

@@ -1,4 +1,4 @@
-export let inputMap: any = {};
+export const inputMap: any = {};
 document.addEventListener("keydown", (event) => {
   inputMap[event.key] = true;
 });

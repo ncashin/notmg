@@ -1,15 +1,15 @@
 import "./style.css";
 import "./draw";
-import { draw } from "./draw";
-import { inputMap } from "./input";
-import { provideECSInstanceFunctions } from "../../core/ecs";
 import {
   POSITION_COMPONENT_DEF,
   VELOCITY_COMPONENT_DEF,
 } from "../../core/collision";
+import { provideECSInstanceFunctions } from "../../core/ecs";
 import { mergeDeep } from "../../core/objectMerge";
+import { draw } from "./draw";
+import { inputMap } from "./input";
 
-export let {
+export const {
   ecsInstance,
 
   createEntity,
@@ -120,8 +120,8 @@ const update = () => {
   });
 
   // updateCollisionSystem(ecsInstance);
-  let position = getComponent(playerEntity, CLIENT_POSITION_COMPONENT_DEF);
-  let velocity = getComponent(playerEntity, VELOCITY_COMPONENT_DEF);
+  const position = getComponent(playerEntity, CLIENT_POSITION_COMPONENT_DEF);
+  const velocity = getComponent(playerEntity, VELOCITY_COMPONENT_DEF);
 
   if (position !== undefined) {
     if (inputMap["d"]) {

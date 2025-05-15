@@ -32,7 +32,7 @@ export const draw = () => {
 };
 
 export const inventoryDraw = () => {
-  let inventoryCell = new Image();
+  const inventoryCell = new Image();
   inventoryCell.src = "/inventorycell.png";
 
   const padding = 4;
@@ -43,21 +43,21 @@ export const inventoryDraw = () => {
       context.drawImage(
         inventoryCell,
         column * 32 + padding,
-        row * 32 + padding
+        row * 32 + padding,
       );
     }
   }
 
   const healthSize = 64;
   const healthPadding = 10;
-  let health = new Image();
+  const health = new Image();
   health.src = "/heart.svg";
   context.drawImage(
     health,
     0 + healthPadding,
     canvas.height - healthSize - healthPadding,
     healthSize,
-    healthSize
+    healthSize,
   );
 };
 
@@ -70,23 +70,23 @@ export const debugDraw = () => {
         position.x - collider.width / 2,
         position.y - collider.height / 2,
         collider.width,
-        collider.height
+        collider.height,
       );
-    }
+    },
   );
   runQuery(
     [CLIENT_POSITION_COMPONENT_DEF, SPRITE_COMPONENT_DEF],
     (_entity, [position, sprite]) => {
-      let image = new Image();
+      const image = new Image();
       image.src = sprite.imageSrc;
       context.drawImage(
         image,
         position.x - sprite.size / 2,
         position.y - sprite.size / 2,
         sprite.size,
-        sprite.size
+        sprite.size,
       );
-    }
+    },
   );
 
   context.strokeStyle = "purple";
@@ -99,7 +99,7 @@ export const debugDraw = () => {
       context.closePath();
       context.stroke();
       context.moveTo(0, 0);
-    }
+    },
   );
   inventoryDraw();
 };

@@ -1,5 +1,5 @@
 import { ecsInstance } from "../frontend/src/main";
-import { addComponent, createEntity, ECSInstance, runQuery } from "./ecs";
+import { type ECSInstance, addComponent, createEntity, runQuery } from "./ecs";
 
 export const POSITION_COMPONENT_DEF: {
   type: "position";
@@ -19,7 +19,6 @@ export const VELOCITY_COMPONENT_DEF: {
   x: 0,
   y: 0,
 };
-
 
 export const AABB_COLLIDER_COMPONENT_DEF: {
   type: "aabbCollider";
@@ -67,7 +66,7 @@ export const updateCollisionSystem = (ecsInstance: ECSInstance) => {
           if (!horizontalOverlap || !verticalOverlap) return;
 
           const oldDistanceX = Math.abs(movingPosition.x - colliderPosition.x);
-          let priorHorizontalOverlap =
+          const priorHorizontalOverlap =
             oldDistanceX < (collider.width + movingCollider.width) / 2;
 
           const oldDistanceY = Math.abs(movingPosition.y - colliderPosition.y);
