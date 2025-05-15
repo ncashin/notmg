@@ -1,4 +1,3 @@
-import { ecsInstance } from "../frontend/src/main";
 import { type ECSInstance, addComponent, createEntity, runQuery } from "./ecs";
 
 export const POSITION_COMPONENT_DEF: {

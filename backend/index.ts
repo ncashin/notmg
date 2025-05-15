@@ -3,7 +3,6 @@ import {
   AABB_COLLIDER_COMPONENT_DEF,
   POSITION_COMPONENT_DEF,
   VELOCITY_COMPONENT_DEF,
-  updateCollisionSystem,
 } from "../core/collision";
 import {
   type Component,
@@ -11,6 +10,7 @@ import {
   provideECSInstanceFunctions,
 } from "../core/ecs";
 import { PROJECTILE_COMPONENT_DEF, SPRITE_COMPONENT_DEF } from "../core/game";
+import type { Packet } from "../core/network";
 import { mergeDeep } from "../core/objectMerge";
 
 type WebSocketData = {
@@ -18,8 +18,9 @@ type WebSocketData = {
 };
 const connectedSockets: Array<ServerWebSocket<WebSocketData>> = [];
 
-const catchupPacket: any = {};
-let updatePacket: Record<string | number, any> = {};
+const catchupPacket: Packet = {};
+let updatePacket: Packet = {};
+
 const sendUpdatePacket = () => {
   for (const socket of connectedSockets) {
     socket.send(
@@ -48,13 +49,13 @@ export const {
   runQuery,
 } = provideECSInstanceFunctions({
   addComponentCallback: (entity, component) => {
-    if (updatePacket[entity] === undefined) {
+    if (updatePacket[entity] === undefined || updatePacket[entity] === null) {
       updatePacket[entity] = {};
     }
     updatePacket[entity][component.type] = component;
   },
   removeComponentCallback: (entity, component) => {
-    if (updatePacket[entity] === undefined) {
+    if (updatePacket[entity] === undefined || updatePacket[entity] === null) {
       updatePacket[entity] = {};
     }
     updatePacket[entity][component.type] = null;
@@ -65,19 +66,18 @@ export const {
   },
 
   componentProxyHandler: {
-    set: (
-      entity: Entity,
-      component: any & Component,
-      property: string | symbol,
-      newValue: any,
-    ) => {
-      if (updatePacket[entity] === undefined) {
+    set: (entity, component, property, newValue) => {
+      if (updatePacket[entity] === undefined || updatePacket[entity] === null) {
         updatePacket[entity] = {};
       }
-      if (updatePacket[entity][component.type] === undefined) {
-        updatePacket[entity][component.type] = {};
+      if (
+        updatePacket[entity][component.type] === undefined ||
+        updatePacket[entity][component.type] === null
+      ) {
+        updatePacket[entity][component.type] = {} as Component;
       }
-      updatePacket[entity][component.type][property] = newValue;
+
+      (updatePacket[entity][component.type] as Component)[property] = newValue;
       component[property] = newValue;
       return true;
     },
@@ -119,7 +119,7 @@ export const createBossEntity = (entity: Entity) => {
   addComponent(entity, { ...SPRITE_COMPONENT_DEF, imageSrc: "/boss.png" });
 };
 
-const server = Bun.serve<WebSocketData, {}>({
+const server = Bun.serve<WebSocketData, undefined>({
   port: 3000,
   fetch(req, server) {
     if (

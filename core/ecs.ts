@@ -1,25 +1,29 @@
 export type Entity = number;
 export type ComponentTypeString = string;
-export type Component = { type: ComponentTypeString };
+export type Component = { type: ComponentTypeString } & Record<string, unknown>;
 export type ECSInstance = {
   entityIDCounter: number;
   componentPools: Record<ComponentTypeString, Record<Entity, Component>>;
   composedPools: Record<ComponentTypeString, Record<Entity, Component[]>>;
   associatedComposedPoolKeys: Record<ComponentTypeString, string[]>;
 
-  addComponentCallback:
-    | undefined
-    | ((entity: Entity, component: Component) => void);
-  removeComponentCallback:
-    | undefined
-    | ((entity: Entity, COMPONENT_TYPE_DEF: Component) => void);
+  addComponentCallback?: (entity: Entity, component: Component) => void;
+  removeComponentCallback?: (
+    entity: Entity,
+    COMPONENT_TYPE_DEF: Component,
+  ) => void;
   destroyEntityCallback?: (entity: Entity) => void;
 
-  componentProxyHandler: undefined | ComponentProxyHandler;
+  componentProxyHandler?: ComponentProxyHandler;
 };
 
 export type ComponentProxyHandler = {
-  set: (entity, component, property, newValue) => boolean;
+  set: (
+    entity: Entity,
+    component: Component,
+    property: string,
+    newValue: unknown,
+  ) => boolean;
 };
 
 export type ECSInstanceCreateInfo = {
@@ -34,7 +38,7 @@ export type ECSInstanceCreateInfo = {
 
 export const createECSInstance = (
   ecsInstanceCreateInfo: ECSInstanceCreateInfo,
-) => ({
+): ECSInstance => ({
   entityIDCounter: 0,
   componentPools: {},
   composedPools: {},
@@ -47,16 +51,16 @@ export const createEntity = (instance: ECSInstance): Entity => {
   return instance.entityIDCounter++;
 };
 export const destroyEntity = (instance: ECSInstance, entity: Entity) => {
-  Object.values(instance.componentPools).forEach((composedPool) => {
+  for (const composedPool of Object.values(instance.componentPools)) {
     if (composedPool[entity] !== undefined) {
       delete composedPool[entity];
     }
-  });
-  Object.values(instance.composedPools).forEach((composedPool) => {
+  }
+  for (const composedPool of Object.values(instance.composedPools)) {
     if (composedPool[entity] !== undefined) {
       delete composedPool[entity];
     }
-  });
+  }
 
   if (instance.destroyEntityCallback) {
     instance.destroyEntityCallback(entity);
@@ -110,13 +114,22 @@ export const createComponentProxy = <ComponentType extends Component>(
   COMPONENT_TYPE_DEF: ComponentType,
 ) => {
   return new Proxy(lookupComponent(instance, entity, COMPONENT_TYPE_DEF), {
-    set: (
-      target: any,
-      property: string | symbol,
-      newValue: any,
-      _receiver: any,
-    ) =>
-      instance.componentProxyHandler?.set(entity, target, property, newValue),
+    set: (target, property, newValue, _receiver) => {
+      if (typeof property !== "string") {
+        throw new Error("property is not a string");
+      }
+
+      if (instance.componentProxyHandler === undefined) {
+        throw new Error("componentProxyHandler is undefined");
+      }
+
+      return instance.componentProxyHandler.set(
+        entity,
+        target,
+        property,
+        newValue,
+      );
+    },
   });
 };
 
@@ -209,7 +222,7 @@ export const queryComponents = <const ComposedType extends Component[]>(
   for (const [entityID, component] of Object.entries(componentPool)) {
     const composedComponents = [component];
     for (let i = 1; i < componentTypes.length; i++) {
-      const component = lookupComponent(instance, entityID as any as number, {
+      const component = lookupComponent(instance, Number(entityID), {
         type: componentTypes[i],
       });
       if (component === undefined) break;
@@ -219,7 +232,7 @@ export const queryComponents = <const ComposedType extends Component[]>(
     if (composedComponents.length < componentTypes.length) {
       continue;
     }
-    poolComponents[entityID as any as number] = composedComponents;
+    poolComponents[Number(entityID)] = composedComponents;
   }
   instance.composedPools[combination] = poolComponents;
   return instance.composedPools[combination] as Record<number, ComposedType>;
@@ -241,7 +254,7 @@ export const runQuery = <const ComposedType extends Component[]>(
       continue;
     }
 
-    lambda(Number.parseInt(entity), components as any as ComposedType);
+    lambda(Number.parseInt(entity), components as unknown as ComposedType);
   }
 };
 
@@ -277,5 +290,7 @@ export const curryECSInstance = (instance: ECSInstance) => ({
 export const provideECSInstanceFunctions = (
   ecsInstanceCreateInfo: ECSInstanceCreateInfo,
 ) => {
-  return curryECSInstance(createECSInstance(ecsInstanceCreateInfo));
+  const ecsInstance = createECSInstance(ecsInstanceCreateInfo);
+
+  return curryECSInstance(ecsInstance);
 };

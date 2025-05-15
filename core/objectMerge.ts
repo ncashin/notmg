@@ -1,7 +1,8 @@
-export function isObject(item: any) {
-  return item && typeof item === "object" && !Array.isArray(item);
+export function isObject(item: unknown): item is Record<string, object> {
+  return item !== null && typeof item === "object" && !Array.isArray(item);
 }
-export function mergeDeep(target: any, ...sources: any[]) {
+
+export function mergeDeep(target: object, ...sources: object[]) {
   if (!sources.length) return target;
   const source = sources.shift();
 

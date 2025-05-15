@@ -5,6 +5,7 @@ import {
   VELOCITY_COMPONENT_DEF,
 } from "../../core/collision";
 import { provideECSInstanceFunctions } from "../../core/ecs";
+import type { Packet } from "../../core/network";
 import { mergeDeep } from "../../core/objectMerge";
 import { draw } from "./draw";
 import { inputMap } from "./input";
@@ -25,32 +26,32 @@ export const {
 } = provideECSInstanceFunctions({});
 
 let playerEntity: number | undefined = undefined;
-export const mergePacket = (packet) => {
+export const mergePacket = (packet: Packet) => {
   console.log(packet);
-  Object.entries(packet).forEach(([entity, components]) => {
+  for (const [entity, components] of Object.entries(packet)) {
     if (components === null) {
       destroyEntity(Number.parseInt(entity));
-      return;
+      continue;
     }
-    Object.entries(components).forEach(([type, component]) => {
+    for (const [type, component] of Object.entries(components)) {
       if (component === null) {
         removeComponent(Number.parseInt(entity), { type });
-        return;
+        continue;
       }
       component.type = type;
 
-      const existingComponent = getComponent(entity, component);
+      const existingComponent = getComponent(Number(entity), component);
       if (existingComponent === undefined) {
-        addComponent(entity, component);
-        return;
+        addComponent(Number(entity), component);
+        continue;
       }
 
       if (Number.parseInt(entity) === playerEntity && type === "position") {
-        return;
+        continue;
       }
       mergeDeep(existingComponent, component);
-    });
-  });
+    }
+  }
 };
 
 let timeUpdateReceived = Date.now();
@@ -124,16 +125,16 @@ const update = () => {
   const velocity = getComponent(playerEntity, VELOCITY_COMPONENT_DEF);
 
   if (position !== undefined) {
-    if (inputMap["d"]) {
+    if (inputMap.d) {
       velocity.x += PLAYER_SPEED;
     }
-    if (inputMap["a"]) {
+    if (inputMap.a) {
       velocity.x -= PLAYER_SPEED;
     }
-    if (inputMap["s"]) {
+    if (inputMap.s) {
       velocity.y += PLAYER_SPEED;
     }
-    if (inputMap["w"]) {
+    if (inputMap.w) {
       velocity.y -= PLAYER_SPEED;
     }
 
@@ -143,7 +144,7 @@ const update = () => {
     position.x += velocity.x;
     position.y += velocity.y;
 
-    websocket.send(position.x.toString() + " " + position.y.toString());
+    websocket.send(`${position.x.toString()} ${position.y.toString()}`);
   }
   draw();
   window.requestAnimationFrame(update);
