@@ -92,9 +92,14 @@ export const CLIENT_POSITION_COMPONENT_DEF: {
   y: 0,
 };
 
-const DAMPING_FORCE = 0.3;
-const PLAYER_SPEED = 1;
+const DAMPING_FORCE = 5;
+const PLAYER_SPEED = 1000;
+let lastFrameTime = Date.now();
 const update = () => {
+  const frameTime = Date.now();
+  const deltaTime = (frameTime - lastFrameTime) / 1000;
+  lastFrameTime = frameTime;
+
   if (playerEntity === undefined) {
     window.requestAnimationFrame(update);
     return;
@@ -126,23 +131,23 @@ const update = () => {
 
   if (position !== undefined) {
     if (inputMap.d) {
-      velocity.x += PLAYER_SPEED;
+      velocity.x += PLAYER_SPEED * deltaTime;
     }
     if (inputMap.a) {
-      velocity.x -= PLAYER_SPEED;
+      velocity.x -= PLAYER_SPEED * deltaTime;
     }
     if (inputMap.s) {
-      velocity.y += PLAYER_SPEED;
+      velocity.y += PLAYER_SPEED * deltaTime;
     }
     if (inputMap.w) {
-      velocity.y -= PLAYER_SPEED;
+      velocity.y -= PLAYER_SPEED * deltaTime;
     }
 
-    velocity.x -= velocity.x * DAMPING_FORCE;
-    velocity.y -= velocity.y * DAMPING_FORCE;
+    velocity.x -= velocity.x * DAMPING_FORCE * deltaTime;
+    velocity.y -= velocity.y * DAMPING_FORCE * deltaTime;
 
-    position.x += velocity.x;
-    position.y += velocity.y;
+    position.x += velocity.x * deltaTime;
+    position.y += velocity.y * deltaTime;
 
     websocket.send(`${position.x.toString()} ${position.y.toString()}`);
   }
