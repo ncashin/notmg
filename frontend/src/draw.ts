@@ -3,12 +3,14 @@ import {
   POSITION_COMPONENT_DEF,
   VELOCITY_COMPONENT_DEF,
 } from "../../core/collision";
-import { SPRITE_COMPONENT_DEF } from "../../core/game";
+import {
+  PROJECTILE_COMPONENT_DEF,
+  SPRITE_COMPONENT_DEF,
+} from "../../core/game";
 import { CLIENT_POSITION_COMPONENT_DEF, runQuery } from "./main";
 
 let canvas: HTMLCanvasElement;
 let context: CanvasRenderingContext2D;
-
 document.addEventListener("DOMContentLoaded", () => {
   canvas = document.getElementById("canvas") as HTMLCanvasElement;
   const updateCanvasSize = () => {
@@ -105,6 +107,24 @@ export const debugDraw = () => {
       context.closePath();
       context.stroke();
       context.moveTo(0, 0);
+    },
+  );
+
+  // Draw projectiles as wireframe circles with white background
+  runQuery(
+    [POSITION_COMPONENT_DEF, PROJECTILE_COMPONENT_DEF],
+    (_entity, [position, projectile]) => {
+      // Draw white background circle
+      context.fillStyle = "white";
+      context.beginPath();
+      context.arc(position.x, position.y, projectile.radius, 0, Math.PI * 2);
+      context.fill();
+
+      // Draw wireframe circle
+      context.strokeStyle = "red";
+      context.beginPath();
+      context.arc(position.x, position.y, projectile.radius, 0, Math.PI * 2);
+      context.stroke();
     },
   );
   inventoryDraw();
