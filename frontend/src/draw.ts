@@ -31,8 +31,19 @@ declare global {
 }
 
 window.DEBUG_DRAW = true;
-export const draw = () => {
+export const draw = (
+  centerPoint: { x: number; y: number } = { x: 0, y: 0 },
+) => {
   context.clearRect(0, 0, canvas.width, canvas.height);
+
+  context.save();
+
+  context.translate(
+    canvas.width / 2 - centerPoint.x,
+    canvas.height / 2 - centerPoint.y,
+  );
+
+  canvas.style.backgroundPosition = `${-centerPoint.x}px ${-centerPoint.y}px`;
 
   drawSprites();
   drawProjectiles();
@@ -41,6 +52,8 @@ export const draw = () => {
     drawAABB();
     drawVelocity();
   }
+
+  context.restore();
 
   drawInventory();
 };
