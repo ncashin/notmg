@@ -7,7 +7,7 @@ import {
   PROJECTILE_COMPONENT_DEF,
   SPRITE_COMPONENT_DEF,
 } from "../../core/game";
-import { CLIENT_POSITION_COMPONENT_DEF, runQuery } from "./main";
+import { CLIENT_POSITION_COMPONENT_DEF, getComponent, runQuery } from "./main";
 
 let canvas: HTMLCanvasElement;
 let context: CanvasRenderingContext2D;
@@ -142,11 +142,16 @@ const drawAABB = () => {
 const drawVelocity = () => {
   context.strokeStyle = "purple";
   runQuery(
-    [POSITION_COMPONENT_DEF, VELOCITY_COMPONENT_DEF],
-    (_entity, [position, velocity]) => {
+    [
+      CLIENT_POSITION_COMPONENT_DEF,
+      POSITION_COMPONENT_DEF,
+      VELOCITY_COMPONENT_DEF,
+    ],
+    (_entity, [clientPosition, position, velocity]) => {
+      const pos = clientPosition || position;
       context.beginPath();
-      context.moveTo(position.x, position.y);
-      context.lineTo(position.x + velocity.x, position.y + velocity.y);
+      context.moveTo(pos.x, pos.y);
+      context.lineTo(pos.x + velocity.x, pos.y + velocity.y);
       context.closePath();
       context.stroke();
       context.moveTo(0, 0);
