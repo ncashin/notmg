@@ -160,6 +160,9 @@ const server = Bun.serve<WebSocketData, undefined>({
         websocket.data.entity,
         POSITION_COMPONENT_DEF,
       );
+      if (position === undefined) {
+        throw new Error("Position not found");
+      }
       position.x = x;
       position.y = y;
     },

@@ -137,7 +137,7 @@ export const getComponent = <ComponentType extends Component>(
   instance: ECSInstance,
   entity: Entity,
   COMPONENT_TYPE_DEF: ComponentType,
-): ComponentType => {
+): ComponentType | undefined => {
   const component = lookupComponent(instance, entity, COMPONENT_TYPE_DEF);
   if (instance.componentProxyHandler !== undefined) {
     return createComponentProxy(instance, entity, component);
@@ -276,7 +276,8 @@ export const curryECSInstance = (instance: ECSInstance) => ({
   getComponent: <ComponentType extends Component>(
     entity: Entity,
     COMPONENT_TYPE_DEF: ComponentType,
-  ): ComponentType => getComponent(instance, entity, COMPONENT_TYPE_DEF),
+  ): ComponentType | undefined =>
+    getComponent(instance, entity, COMPONENT_TYPE_DEF),
   queryComponents: <const ComposedType extends Component[]>(
     COMPONENT_TYPE_DEFS: ComposedType,
   ) => queryComponents(instance, COMPONENT_TYPE_DEFS),

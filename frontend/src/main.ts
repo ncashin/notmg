@@ -27,7 +27,6 @@ export const {
 
 let playerEntity: number | undefined = undefined;
 export const mergePacket = (packet: Packet) => {
-  console.log(packet);
   for (const [entity, components] of Object.entries(packet)) {
     if (components === null) {
       destroyEntity(Number.parseInt(entity));
@@ -112,6 +111,10 @@ const update = () => {
     if (clientPosition === undefined) {
       addComponent(entity, CLIENT_POSITION_COMPONENT_DEF);
       clientPosition = getComponent(entity, CLIENT_POSITION_COMPONENT_DEF);
+      if (clientPosition === undefined) {
+        throw new Error("Client position not found");
+      }
+
       clientPosition.x = serverPosition.x;
       clientPosition.y = serverPosition.y;
     }
@@ -129,7 +132,7 @@ const update = () => {
   const position = getComponent(playerEntity, CLIENT_POSITION_COMPONENT_DEF);
   const velocity = getComponent(playerEntity, VELOCITY_COMPONENT_DEF);
 
-  if (position !== undefined) {
+  if (position !== undefined && velocity !== undefined) {
     if (inputMap.d) {
       velocity.x += PLAYER_SPEED * deltaTime;
     }
@@ -151,7 +154,7 @@ const update = () => {
 
     websocket.send(`${position.x.toString()} ${position.y.toString()}`);
   }
-  draw();
+  draw(position);
   window.requestAnimationFrame(update);
 };
 
