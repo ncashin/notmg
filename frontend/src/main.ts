@@ -7,8 +7,9 @@ import {
 import { provideECSInstanceFunctions } from "../../core/ecs";
 import type { Packet } from "../../core/network";
 import { mergeDeep } from "../../core/objectMerge";
+
 import { draw } from "./draw";
-import { inputMap } from "./input";
+import { inputMap, mouseClicked, mousePosition } from "./input";
 
 export const {
   ecsInstance,
@@ -24,6 +25,10 @@ export const {
 
   runQuery,
 } = provideECSInstanceFunctions({});
+
+// Added shooting cooldown
+let shootCooldown = 0;
+const SHOOT_COOLDOWN_TIME = 10; // frames between shots
 
 let playerEntity: number | undefined = undefined;
 export const mergePacket = (packet: Packet) => {
@@ -152,12 +157,41 @@ const update = () => {
     position.x += velocity.x * deltaTime;
     position.y += velocity.y * deltaTime;
 
-    websocket.send(`${position.x.toString()} ${position.y.toString()}`);
+    // Send player position update
+    const moveMessage = {
+      type: "move",
+      x: position.x,
+      y: position.y,
+    };
+    websocket.send(JSON.stringify(moveMessage));
+
+    // Calculate mouse position in world coordinates
+    mousePosition.worldX = mousePosition.x - canvas.width / 2 + position.x;
+    mousePosition.worldY = mousePosition.y - canvas.height / 2 + position.y;
+
+    // Handle shooting
+    if (shootCooldown > 0) {
+      shootCooldown--;
+    }
+
+    if (mouseClicked && shootCooldown <= 0) {
+      // Send shoot command to server
+      const shootMessage = {
+        type: "shoot",
+        targetX: mousePosition.worldX,
+        targetY: mousePosition.worldY,
+      };
+      websocket.send(JSON.stringify(shootMessage));
+      shootCooldown = SHOOT_COOLDOWN_TIME;
+    }
   }
   draw(position);
   window.requestAnimationFrame(update);
 };
 
+// Get canvas for coordinate calculations
+let canvas: HTMLCanvasElement;
 document.addEventListener("DOMContentLoaded", () => {
+  canvas = document.getElementById("canvas") as HTMLCanvasElement;
   window.requestAnimationFrame(update);
 });

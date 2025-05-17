@@ -29,12 +29,38 @@ export const AABB_COLLIDER_COMPONENT_DEF: {
   height: 64,
 };
 
+export const CIRCLE_COLLIDER_COMPONENT_DEF: {
+  type: "circleCollider";
+  radius: number;
+} = {
+  type: "circleCollider",
+  radius: 32,
+};
+
 export const createKinematicEntity = (ecsInstance: ECSInstance) => {
   const newEntity = createEntity(ecsInstance);
   addComponent(ecsInstance, newEntity, POSITION_COMPONENT_DEF);
   addComponent(ecsInstance, newEntity, VELOCITY_COMPONENT_DEF);
   addComponent(ecsInstance, newEntity, AABB_COLLIDER_COMPONENT_DEF);
   return newEntity;
+};
+
+// Helper function for circle collision detection using Pythagorean theorem
+export const circleCollision = (
+  x1: number,
+  y1: number,
+  r1: number,
+  x2: number,
+  y2: number,
+  r2: number,
+): boolean => {
+  // Calculate the distance between the two centers using the Pythagorean theorem
+  const dx = x1 - x2;
+  const dy = y1 - y2;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
+  // Return true if the distance is less than the sum of the radii
+  return distance < r1 + r2;
 };
 
 export const updateCollisionSystem = (ecsInstance: ECSInstance) => {
