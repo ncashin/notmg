@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="glowGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset="50%" stop-color="#ffaa00" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#ff5500" stop-opacity="0.6"/>
+    </radialGradient>
+  </defs>
+  
+  <!-- Main projectile circle -->
+  <circle cx="32" cy="32" r="16" fill="url(#glowGradient)">
+    <!-- Pulsing animation -->
+    <animate attributeName="r" 
+             values="14;16;14" 
+             dur="0.5s" 
+             repeatCount="indefinite" />
+  </circle>
+  
+  <!-- Core of the projectile -->
+  <circle cx="32" cy="32" r="8" fill="#ffffff">
+    <!-- Slight pulsing animation -->
+    <animate attributeName="r" 
+             values="7;8;7" 
+             dur="0.4s" 
+             repeatCount="indefinite" />
+  </circle>
+  
+  <!-- Sparkle effects -->
+  <circle cx="32" cy="32" r="2" fill="#ffffff" opacity="0.8">
+    <animate attributeName="r" 
+             values="0;2;0" 
+             dur="0.3s" 
+             repeatCount="indefinite" />
+  </circle>
+</svg> 
