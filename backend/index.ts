@@ -300,7 +300,7 @@ const update = () => {
           HEALTH_COMPONENT_DEF,
           BOSS_COMPONENT_DEF,
         ],
-        (bossEntity, [bossPosition, bossCollider, bossHealth, _boss]) => {
+        (_bossEntity, [bossPosition, bossCollider, bossHealth, _boss]) => {
           // Use Pythagorean theorem to check for collision between circles
           if (
             circleCollision(
