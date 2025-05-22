@@ -113,7 +113,9 @@ export const createComponentProxy = <ComponentType extends Component>(
   entity: Entity,
   COMPONENT_TYPE_DEF: ComponentType,
 ) => {
-  return new Proxy(lookupComponent(instance, entity, COMPONENT_TYPE_DEF), {
+  const component = lookupComponent(instance, entity, COMPONENT_TYPE_DEF)
+  if(!component) return undefined;
+  return new Proxy(component, {
     set: (target, property, newValue, _receiver) => {
       if (typeof property !== "string") {
         throw new Error("property is not a string");
@@ -138,11 +140,10 @@ export const getComponent = <ComponentType extends Component>(
   entity: Entity,
   COMPONENT_TYPE_DEF: ComponentType,
 ): ComponentType | undefined => {
-  const component = lookupComponent(instance, entity, COMPONENT_TYPE_DEF);
   if (instance.componentProxyHandler !== undefined) {
-    return createComponentProxy(instance, entity, component);
+    return createComponentProxy(instance, entity, COMPONENT_TYPE_DEF);
   }
-  return component;
+  return lookupComponent(instance, entity, COMPONENT_TYPE_DEF);
 };
 export const addComponent = <ComponentType extends Component>(
   instance: ECSInstance,
@@ -251,7 +252,6 @@ export const runQuery = <const ComposedType extends Component[]>(
         createComponentProxy(instance, Number.parseInt(entity), component),
       ) as ComposedType;
       lambda(Number.parseInt(entity), componentProxies);
-      continue;
     }
 
     lambda(Number.parseInt(entity), components as unknown as ComposedType);

@@ -1,0 +1,8 @@
+session_name: notmg-dev
+start_directory: .
+windows:
+  - window_name: dev
+    layout: even-horizontal
+    panes:
+      - shell_command: npm run frontend
+      - shell_command: npm run backend 
