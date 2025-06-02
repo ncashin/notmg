@@ -1,10 +1,4 @@
-import { ServerWebSocket } from "bun";
-import invariant from "tiny-invariant";
-import { playerShoot } from "../backend";
-import { POSITION_COMPONENT_DEF } from "./collision";
-import { getComponent } from "./ecs";
-
-export interface BaseClientMessage {
+export type BaseClientMessage = {
   type: string;
 }
 export type MoveMessage = BaseClientMessage & {
