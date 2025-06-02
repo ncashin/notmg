@@ -1,15 +1,8 @@
 import type { ServerWebSocket } from "bun";
 import invariant from "tiny-invariant";
-import {
-  AABB_COLLIDER_COMPONENT_DEF,
-  POSITION_COMPONENT_DEF,
-  VELOCITY_COMPONENT_DEF,
-} from "../core/collision";
-import type { Entity } from "../core/ecs";
-import { SPRITE_COMPONENT_DEF } from "../core/game";
+import { POSITION_COMPONENT_DEF } from "../core/collision";
 import type { ClientMessage } from "../core/socketMessage";
 import {
-  addComponent,
   createEntity,
   destroyEntity,
   getComponent,
@@ -17,7 +10,7 @@ import {
   getECSUpdatePacket,
 } from "./ecsProvider";
 import { createBossEntity } from "./entities/boss";
-import { createProjectile } from "./entities/projectile";
+import { createPlayerEntity, playerShoot } from "./entities/player";
 
 type WebSocketData = {
   entity: number;
@@ -34,6 +27,7 @@ export const sendUpdatePacket = () => {
     );
   }
 };
+
 const clientMessageHandlers = {
   move: (websocket: ServerWebSocket<WebSocketData>, message: ClientMessage) => {
     invariant(message.type === "move");
@@ -54,64 +48,6 @@ const clientMessageHandlers = {
   },
 };
 
-export const createPlayerEntity = (entity: Entity) => {
-  addComponent(entity, POSITION_COMPONENT_DEF);
-  addComponent(entity, VELOCITY_COMPONENT_DEF);
-  addComponent(entity, AABB_COLLIDER_COMPONENT_DEF);
-  addComponent(entity, {
-    ...SPRITE_COMPONENT_DEF,
-    imageSrc: "/female.svg",
-    size: 80,
-  });
-};
-
-// Add a function to handle player shooting
-export const playerShoot = (
-  playerEntity: Entity,
-  targetX: number,
-  targetY: number,
-) => {
-  const position = getComponent(playerEntity, POSITION_COMPONENT_DEF);
-  if (!position) return;
-
-  // Calculate direction vector from player to target
-  const dirX = targetX - position.x;
-  const dirY = targetY - position.y;
-
-  // Normalize the direction vector
-  const length = Math.sqrt(dirX * dirX + dirY * dirY);
-  const normalizedDirX = dirX / length;
-  const normalizedDirY = dirY / length;
-
-  // Set projectile speed
-  const projectileSpeed = 10;
-  const velocityX = normalizedDirX * projectileSpeed;
-  const velocityY = normalizedDirY * projectileSpeed;
-
-  // Create projectile entity
-  const projectileEntity = createEntity();
-
-  // Position the projectile slightly away from the player in the shooting direction
-  const spawnDistance = 40; // Distance from player center
-  const spawnX = position.x + normalizedDirX * spawnDistance;
-  const spawnY = position.y + normalizedDirY * spawnDistance;
-
-  createProjectile(
-    projectileEntity,
-    spawnX,
-    spawnY,
-    velocityX,
-    velocityY,
-    "player",
-  );
-
-  addComponent(projectileEntity, {
-    ...SPRITE_COMPONENT_DEF,
-    imageSrc: "/projectile.svg",
-    size: 20,
-  });
-};
-
 Bun.serve<WebSocketData, undefined>({
   port: 3000,
   fetch(req, server) {
@@ -128,6 +64,7 @@ Bun.serve<WebSocketData, undefined>({
   },
   websocket: {
     open(websocket) {
+      console.log(getECSCatchupPacket())
       websocket.send(
         JSON.stringify({
           type: "initialization",
@@ -155,6 +92,10 @@ Bun.serve<WebSocketData, undefined>({
       console.error("Unknown or invalid message:", parsedMessage);
     },
     close(websocket) {
+      const index = connectedSockets.indexOf(websocket);
+      if (index > -1) {
+        connectedSockets.splice(index, 1);
+      }
       destroyEntity(websocket.data.entity);
     },
   },
