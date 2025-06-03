@@ -11,6 +11,7 @@ import {
 } from "./ecsProvider";
 import { createBossEntity } from "./entities/boss";
 import { createPlayerEntity, playerShoot } from "./entities/player";
+import { createRandomShrines } from "./entities/shrine";
 
 type WebSocketData = {
   entity: number;
@@ -27,6 +28,8 @@ export const sendUpdatePacket = () => {
     );
   }
 };
+
+
 
 const clientMessageHandlers = {
   move: (websocket: ServerWebSocket<WebSocketData>, message: ClientMessage) => {
@@ -45,6 +48,13 @@ const clientMessageHandlers = {
   ) => {
     invariant(message.type === "shoot");
     playerShoot(websocket.data.entity, message.targetX, message.targetY);
+  },
+  interact: (
+    websocket: ServerWebSocket<WebSocketData>,
+    message: ClientMessage,
+  ) => {
+    invariant(message.type === "interact");
+    handleInteraction(websocket.data.entity, message.x, message.y);
   },
 };
 
@@ -101,4 +111,13 @@ Bun.serve<WebSocketData, undefined>({
   },
 });
 
+// Create initial world entities
 createBossEntity(createEntity());
+
+// Create random shrines in the world
+createRandomShrines(5, {
+  minX: -1000,
+  maxX: 1000,
+  minY: -1000,
+  maxY: 2000,
+});

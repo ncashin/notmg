@@ -22,12 +22,18 @@ export const {
     if (component.type === POSITION_COMPONENT_DEF.type) {
       collisionTree.add(component as typeof POSITION_COMPONENT_DEF);
     }
+    if (!component.networked) {
+      return;
+    }
     if (updatePacket[entity] === undefined || updatePacket[entity] === null) {
       updatePacket[entity] = {};
     }
     updatePacket[entity][component.type] = component;
   },
   removeComponentCallback: (entity, component) => {
+    if (!component.networked) {
+      return;
+    }
     if (updatePacket[entity] === undefined || updatePacket[entity] === null) {
       updatePacket[entity] = {};
     }
@@ -40,6 +46,11 @@ export const {
 
   componentProxyHandler: {
     set: (entity, component, property, newValue) => {
+      if (!component.networked) {
+        component[property] = newValue;
+        return true;
+      }
+      
       if (updatePacket[entity] === undefined || updatePacket[entity] === null) {
         updatePacket[entity] = {};
       }

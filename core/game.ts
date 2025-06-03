@@ -1,4 +1,5 @@
 export const PROJECTILE_COMPONENT_DEF: {
+  networked: true,
   type: "projectile";
   velocityX: number;
   velocityY: number;
@@ -7,6 +8,7 @@ export const PROJECTILE_COMPONENT_DEF: {
   currentLifetime: number; // Current lifetime counter
   source: "player" | "boss"; // Who created the projectile
 } = {
+  networked: true,
   type: "projectile",
   velocityX: 0,
   velocityY: 0,
@@ -17,20 +19,27 @@ export const PROJECTILE_COMPONENT_DEF: {
 };
 
 export const SPRITE_COMPONENT_DEF: {
+  networked: true,
+
   type: "sprite";
   imageSrc: string;
   size: number;
 } = {
+  networked: true,
   type: "sprite",
   imageSrc: "",
   size: 128,
 };
 
 export const HEALTH_COMPONENT_DEF: {
+  networked: true,
+
   type: "health";
   maxHealth: number;
   currentHealth: number;
 } = {
+  networked: true,
+
   type: "health",
   maxHealth: 100,
   currentHealth: 100,
