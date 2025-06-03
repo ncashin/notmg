@@ -1,4 +1,4 @@
-export type BaseClientMessage = {
+export interface BaseClientMessage {
   type: string;
 }
 export type MoveMessage = BaseClientMessage & {
@@ -11,4 +11,11 @@ export type ShootMessage = BaseClientMessage & {
   targetX: number;
   targetY: number;
 };
-export type ClientMessage = MoveMessage | ShootMessage;
+
+export type InteractMessage = BaseClientMessage & {
+  type: "interact";
+  x: number;
+  y: number;
+};
+
+export type ClientMessage = MoveMessage | ShootMessage | InteractMessage;
