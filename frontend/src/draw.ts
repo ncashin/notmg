@@ -4,6 +4,7 @@ import {
   VELOCITY_COMPONENT_DEF,
 } from "../../core/collision";
 import {
+  HEALTH_COMPONENT_DEF,
   PROJECTILE_COMPONENT_DEF,
   SPRITE_COMPONENT_DEF,
 } from "../../core/game";
@@ -47,6 +48,7 @@ export const draw = (
 
   drawSprites();
   drawProjectiles();
+  drawHealthBars();
 
   if (window.DEBUG_DRAW) {
     drawAABB();
@@ -155,6 +157,42 @@ const drawVelocity = () => {
       context.closePath();
       context.stroke();
       context.moveTo(0, 0);
+    },
+  );
+};
+
+const drawHealthBars = () => {
+  runQuery(
+    [CLIENT_POSITION_COMPONENT_DEF, HEALTH_COMPONENT_DEF],
+    (_entity, [position, health]) => {
+      const barWidth = 64;
+      const barHeight = 6;
+      const padding = 2;
+      const yOffset = -40; // Position above the entity
+
+      // Draw background (empty health bar)
+      context.fillStyle = "#333333";
+      context.fillRect(
+        position.x - barWidth / 2,
+        position.y + yOffset,
+        barWidth,
+        barHeight,
+      );
+
+      // Draw health fill
+      const healthPercent = health.currentHealth / health.maxHealth;
+      context.fillStyle =
+        healthPercent > 0.5
+          ? "#00ff00"
+          : healthPercent > 0.25
+            ? "#ffff00"
+            : "#ff0000";
+      context.fillRect(
+        position.x - barWidth / 2 + padding,
+        position.y + yOffset + padding,
+        (barWidth - padding * 2) * healthPercent,
+        barHeight - padding * 2,
+      );
     },
   );
 };
