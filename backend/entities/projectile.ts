@@ -18,6 +18,7 @@ export const createProjectile = (
   velocityX: number,
   velocityY: number,
   source: "player" | "boss" = "player", // Default to player for backward compatibility
+  damage = 10, // Default damage value
 ) => {
   addComponent(entity, { ...POSITION_COMPONENT_DEF, x, y });
   addComponent(entity, {
@@ -25,6 +26,7 @@ export const createProjectile = (
     velocityX,
     velocityY,
     source,
+    damage,
   });
   addComponent(entity, { ...CIRCLE_COLLIDER_COMPONENT_DEF, radius: 10 });
 };

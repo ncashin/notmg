@@ -28,7 +28,7 @@ export const {
 
 // Added shooting cooldown
 let shootCooldown = 0;
-const SHOOT_COOLDOWN_TIME = 10; // frames between shots
+const SHOOT_COOLDOWN_TIME = 100; // frames between shots
 
 let playerEntity: number | undefined = undefined;
 export const mergePacket = (packet: Packet) => {
@@ -99,6 +99,20 @@ export const CLIENT_POSITION_COMPONENT_DEF: {
 const DAMPING_FORCE = 5;
 const PLAYER_SPEED = 1000;
 let lastFrameTime = Date.now();
+
+const PLAYER_COMPONENT_DEF = {
+  type: "player",
+  shootCooldown: 30,
+  currentCooldown: 0,
+  isDead: false,
+  respawnTime: 0,
+  respawnDuration: 180,
+} as const;
+
+type PlayerComponent = typeof PLAYER_COMPONENT_DEF;
+
+let deathOverlay: HTMLElement;
+let respawnCountdown: HTMLElement;
 const update = () => {
   const frameTime = Date.now();
   const deltaTime = (frameTime - lastFrameTime) / 1000;
@@ -107,6 +121,24 @@ const update = () => {
   if (playerEntity === undefined) {
     window.requestAnimationFrame(update);
     return;
+  }
+
+  // Check player state for death overlay
+  const player = getComponent(playerEntity, PLAYER_COMPONENT_DEF) as
+    | PlayerComponent
+    | undefined;
+  if (player) {
+    if (player.isDead) {
+      deathOverlay.classList.remove("hidden");
+      const secondsLeft = Math.ceil(player.respawnTime / 60); // Convert frames to seconds
+      respawnCountdown.textContent = secondsLeft.toString();
+
+      // Don't process movement or shooting while dead
+      draw(getComponent(playerEntity, CLIENT_POSITION_COMPONENT_DEF));
+      window.requestAnimationFrame(update);
+      return;
+    }
+    deathOverlay.classList.add("hidden");
   }
 
   const rawInterpolationPercent = (Date.now() - timeUpdateReceived) / 1000;
@@ -137,52 +169,63 @@ const update = () => {
   const position = getComponent(playerEntity, CLIENT_POSITION_COMPONENT_DEF);
   const velocity = getComponent(playerEntity, VELOCITY_COMPONENT_DEF);
 
-  if (position !== undefined && velocity !== undefined) {
-    if (inputMap.d) {
-      velocity.x += PLAYER_SPEED * deltaTime;
-    }
-    if (inputMap.a) {
-      velocity.x -= PLAYER_SPEED * deltaTime;
-    }
-    if (inputMap.s) {
-      velocity.y += PLAYER_SPEED * deltaTime;
-    }
-    if (inputMap.w) {
-      velocity.y -= PLAYER_SPEED * deltaTime;
-    }
+  if (
+    position !== undefined &&
+    velocity !== undefined &&
+    player &&
+    !player.isDead
+  ) {
+    // Reset velocity when dead
+    if (player.isDead) {
+      velocity.x = 0;
+      velocity.y = 0;
+    } else {
+      if (inputMap.d) {
+        velocity.x += PLAYER_SPEED * deltaTime;
+      }
+      if (inputMap.a) {
+        velocity.x -= PLAYER_SPEED * deltaTime;
+      }
+      if (inputMap.s) {
+        velocity.y += PLAYER_SPEED * deltaTime;
+      }
+      if (inputMap.w) {
+        velocity.y -= PLAYER_SPEED * deltaTime;
+      }
 
-    velocity.x -= velocity.x * DAMPING_FORCE * deltaTime;
-    velocity.y -= velocity.y * DAMPING_FORCE * deltaTime;
+      velocity.x -= velocity.x * DAMPING_FORCE * deltaTime;
+      velocity.y -= velocity.y * DAMPING_FORCE * deltaTime;
 
-    position.x += velocity.x * deltaTime;
-    position.y += velocity.y * deltaTime;
+      position.x += velocity.x * deltaTime;
+      position.y += velocity.y * deltaTime;
 
-    // Send player position update
-    const moveMessage = {
-      type: "move",
-      x: position.x,
-      y: position.y,
-    };
-    websocket.send(JSON.stringify(moveMessage));
-
-    // Calculate mouse position in world coordinates
-    mousePosition.worldX = mousePosition.x - canvas.width / 2 + position.x;
-    mousePosition.worldY = mousePosition.y - canvas.height / 2 + position.y;
-
-    // Handle shooting
-    if (shootCooldown > 0) {
-      shootCooldown--;
-    }
-
-    if (mouseClicked && shootCooldown <= 0) {
-      // Send shoot command to server
-      const shootMessage = {
-        type: "shoot",
-        targetX: mousePosition.worldX,
-        targetY: mousePosition.worldY,
+      // Send player position update
+      const moveMessage = {
+        type: "move",
+        x: position.x,
+        y: position.y,
       };
-      websocket.send(JSON.stringify(shootMessage));
-      shootCooldown = SHOOT_COOLDOWN_TIME;
+      websocket.send(JSON.stringify(moveMessage));
+
+      // Calculate mouse position in world coordinates
+      mousePosition.worldX = mousePosition.x - canvas.width / 2 + position.x;
+      mousePosition.worldY = mousePosition.y - canvas.height / 2 + position.y;
+
+      // Handle shooting
+      if (shootCooldown > 0) {
+        shootCooldown--;
+      }
+
+      if (mouseClicked && shootCooldown <= 0) {
+        // Send shoot command to server
+        const shootMessage = {
+          type: "shoot",
+          targetX: mousePosition.worldX,
+          targetY: mousePosition.worldY,
+        };
+        websocket.send(JSON.stringify(shootMessage));
+        shootCooldown = SHOOT_COOLDOWN_TIME;
+      }
     }
   }
   draw(position);
@@ -193,5 +236,9 @@ const update = () => {
 let canvas: HTMLCanvasElement;
 document.addEventListener("DOMContentLoaded", () => {
   canvas = document.getElementById("canvas") as HTMLCanvasElement;
+  deathOverlay = document.getElementById("death-overlay") as HTMLElement;
+  respawnCountdown = document.getElementById(
+    "respawn-countdown",
+  ) as HTMLElement;
   window.requestAnimationFrame(update);
 });
