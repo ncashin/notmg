@@ -1,19 +1,23 @@
 import type { ServerWebSocket } from "bun";
 import invariant from "tiny-invariant";
 import { POSITION_COMPONENT_DEF } from "../core/collision";
+import { PLAYER_COMPONENT_DEF } from "../core/player";
 import type { ClientMessage } from "../core/socketMessage";
+import { users } from "./schema";
+import { database } from "./src/database";
 import {
   createEntity,
   destroyEntity,
   getComponent,
   getECSCatchupPacket,
   getECSUpdatePacket,
-} from "./ecsProvider";
-import { createBossEntity } from "./entities/boss";
-import { createPlayerEntity, playerShoot } from "./entities/player";
+} from "./src/ecsProvider";
+import { createBossEntity } from "./src/entities/boss";
+import { createPlayerEntity, playerShoot } from "./src/entities/player";
 
 type WebSocketData = {
   entity: number;
+  sessionID: string;
 };
 const connectedSockets: Array<ServerWebSocket<WebSocketData>> = [];
 
@@ -54,24 +58,78 @@ const clientMessageHandlers = {
     handleInteraction(websocket.data.entity, message.x, message.y);
   }, */
 };
-
 Bun.serve<WebSocketData, undefined>({
   port: 3000,
   fetch(req, server) {
-    if (
-      server.upgrade(req, {
-        data: {
-          entity: createEntity(),
-        },
-      })
-    ) {
-      return;
+    const url = new URL(req.url);
+    console.log(url.pathname);
+    // Handle registration endpoint
+    if (url.pathname === "/register" && req.method === "POST") {
+      console.log("WHAT THE HELL");
+      return req.json().then(async (body) => {
+        const { username, password } = body;
+        console.log(username, password);
+
+        if (!username || !password) {
+          return new Response("Name and password are required", {
+            status: 400,
+          });
+        }
+
+        try {
+          // TODO: Add proper password hashing
+          const result = await database
+            .insert(users)
+            .values({
+              username,
+              password, // Note: In production, this should be hashed
+            })
+            .returning();
+
+          // Find existing websocket connection for this session
+          const sessionID = req.headers
+            .get("cookie")
+            ?.split("sessionID=")[1]
+            ?.split(";")[0];
+          const existingSocket = connectedSockets.find(
+            (socket) => socket.data.sessionID === sessionID,
+          );
+          if (existingSocket) {
+            const playerComponent = getComponent(
+              existingSocket.data.entity,
+              PLAYER_COMPONENT_DEF,
+            );
+            if (playerComponent) {
+              playerComponent.username = username;
+            }
+          }
+
+          return new Response("Registration successful", {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        } catch (error) {
+          console.error("Registration error:", error);
+          return new Response("Registration failed", { status: 500 });
+        }
+      });
     }
-    return new Response("Upgrade failed", { status: 500 });
+
+    // Handle WebSocket upgrade
+    const sessionID = crypto.randomUUID();
+    const upgradeResult = server.upgrade(req, {
+      data: { entity: createEntity(), sessionID },
+      headers: {
+        "Set-Cookie": `sessionID=${sessionID}; Path=/; HttpOnly; SameSite=Strict`,
+      },
+    });
+    if (!upgradeResult) {
+      return new Response("WebSocket upgrade failed", { status: 500 });
+    }
+    return;
   },
   websocket: {
     open(websocket) {
-      console.log(getECSCatchupPacket());
       websocket.send(
         JSON.stringify({
           type: "initialization",
@@ -80,7 +138,10 @@ Bun.serve<WebSocketData, undefined>({
         }),
       );
       connectedSockets.push(websocket);
-      createPlayerEntity(websocket.data.entity);
+      createPlayerEntity(
+        websocket.data.entity,
+        `Guest ${websocket.data.entity}`,
+      );
     },
     message(websocket, message) {
       if (typeof message !== "string") return;

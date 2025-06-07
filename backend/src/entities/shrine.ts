@@ -1,6 +1,6 @@
-import { POSITION_COMPONENT_DEF } from "../../core/collision";
-import type { Entity } from "../../core/ecs";
-import { SPRITE_COMPONENT_DEF } from "../../core/game";
+import { POSITION_COMPONENT_DEF } from "../../../core/collision";
+import type { Entity } from "../../../core/ecs";
+import { SPRITE_COMPONENT_DEF } from "../../../core/game";
 import { addComponent, createEntity } from "../ecsProvider";
 
 export const INTERACTABLE_COMPONENT_DEF = {
@@ -13,7 +13,7 @@ export const SHRINE_INTERACTABLE_ID = "shrine";
 
 export const createShrine = (x: number, y: number): Entity => {
   const shrine = createEntity();
-  
+
   addComponent(shrine, {
     ...POSITION_COMPONENT_DEF,
     x,
@@ -35,10 +35,15 @@ export const createShrine = (x: number, y: number): Entity => {
 };
 
 // Function to randomly place shrines in the world
-export const createRandomShrines = (count: number, worldBounds: { minX: number; maxX: number; minY: number; maxY: number }) => {
+export const createRandomShrines = (
+  count: number,
+  worldBounds: { minX: number; maxX: number; minY: number; maxY: number },
+) => {
   for (let i = 0; i < count; i++) {
-    const x = Math.random() * (worldBounds.maxX - worldBounds.minX) + worldBounds.minX;
-    const y = Math.random() * (worldBounds.maxY - worldBounds.minY) + worldBounds.minY;
+    const x =
+      Math.random() * (worldBounds.maxX - worldBounds.minX) + worldBounds.minX;
+    const y =
+      Math.random() * (worldBounds.maxY - worldBounds.minY) + worldBounds.minY;
     createShrine(x, y);
   }
-}; 
+};

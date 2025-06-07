@@ -8,6 +8,7 @@ import {
   PROJECTILE_COMPONENT_DEF,
   SPRITE_COMPONENT_DEF,
 } from "../../core/game";
+import { PLAYER_COMPONENT_DEF } from "../../core/player";
 import { CLIENT_POSITION_COMPONENT_DEF, getComponent, runQuery } from "./main";
 
 let canvas: HTMLCanvasElement;
@@ -63,7 +64,7 @@ export const draw = (
 const drawSprites = () => {
   runQuery(
     [CLIENT_POSITION_COMPONENT_DEF, SPRITE_COMPONENT_DEF],
-    (_entity, [position, sprite]) => {
+    (entity, [position, sprite]) => {
       const image = new Image();
       image.src = sprite.imageSrc;
       context.drawImage(
@@ -73,6 +74,25 @@ const drawSprites = () => {
         sprite.size,
         sprite.size,
       );
+
+      // Draw player name if this is a player
+      const player = getComponent(entity, PLAYER_COMPONENT_DEF);
+      if (player) {
+        context.font = "16px Arial";
+        context.fillStyle = "white";
+        context.textAlign = "center";
+        context.textBaseline = "bottom";
+        // Draw text shadow for better visibility
+        context.shadowColor = "black";
+        context.shadowBlur = 2;
+        context.fillText(
+          player.username,
+          position.x,
+          position.y - sprite.size / 2 - 5,
+        );
+        // Reset shadow
+        context.shadowBlur = 0;
+      }
     },
   );
 };

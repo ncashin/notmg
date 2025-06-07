@@ -17,7 +17,7 @@ import {
   destroyEntity,
   getComponent,
   runQuery,
-} from "../../ecsProvider";
+} from "../ecsProvider";
 import { createProjectile } from "./projectile";
 
 export const createPlayerEntity = (entity: Entity, name = "") => {

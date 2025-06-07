@@ -7,6 +7,7 @@ import {
 import { provideECSInstanceFunctions } from "../../core/ecs";
 import type { Packet } from "../../core/network";
 import { mergeDeep } from "../../core/objectMerge";
+import { PLAYER_COMPONENT_DEF, type PlayerComponent } from "../../core/player";
 
 import { draw } from "./draw";
 import { inputMap, mouseClicked, mousePosition } from "./input";
@@ -59,7 +60,7 @@ export const mergePacket = (packet: Packet) => {
 };
 
 let timeUpdateReceived = Date.now();
-const websocket = new WebSocket(`ws://${window.location.hostname}:3000`);
+const websocket = new WebSocket("/websocket");
 websocket.onopen = () => {
   console.log("Connected to WebSocket server");
 };
@@ -100,19 +101,12 @@ const DAMPING_FORCE = 5;
 const PLAYER_SPEED = 1000;
 let lastFrameTime = Date.now();
 
-const PLAYER_COMPONENT_DEF = {
-  type: "player",
-  shootCooldown: 30,
-  currentCooldown: 0,
-  isDead: false,
-  respawnTime: 0,
-  respawnDuration: 180,
-} as const;
-
-type PlayerComponent = typeof PLAYER_COMPONENT_DEF;
-
 let deathOverlay: HTMLElement;
 let respawnCountdown: HTMLElement;
+let registrationOverlay: HTMLElement;
+let registrationForm: HTMLFormElement;
+let registrationMessage: HTMLElement;
+
 const update = () => {
   const frameTime = Date.now();
   const deltaTime = (frameTime - lastFrameTime) / 1000;
@@ -232,6 +226,52 @@ const update = () => {
   window.requestAnimationFrame(update);
 };
 
+const handleRegistration = async (event: Event) => {
+  event.preventDefault();
+  const form = event.target as HTMLFormElement;
+  const formData = new FormData(form);
+  const username = formData.get("username") as string;
+  const password = formData.get("password") as string;
+
+  try {
+    const response = await fetch("/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ username, password }),
+    });
+
+    if (response.ok) {
+      registrationMessage.textContent = "Success!";
+      registrationMessage.classList.add("success");
+      // Clear the form
+      form.reset();
+      // Reset message after a delay
+      setTimeout(() => {
+        registrationMessage.textContent = "";
+        registrationMessage.classList.remove("success");
+      }, 2000);
+    } else {
+      const errorText = await response.text();
+      registrationMessage.textContent = errorText || "Failed";
+      registrationMessage.classList.remove("success");
+      // Clear error after a delay
+      setTimeout(() => {
+        registrationMessage.textContent = "";
+      }, 3000);
+    }
+  } catch (error) {
+    console.error("Registration error:", error);
+    registrationMessage.textContent = "Server error";
+    registrationMessage.classList.remove("success");
+    // Clear error after a delay
+    setTimeout(() => {
+      registrationMessage.textContent = "";
+    }, 3000);
+  }
+};
+
 // Get canvas for coordinate calculations
 let canvas: HTMLCanvasElement;
 document.addEventListener("DOMContentLoaded", () => {
@@ -240,5 +280,15 @@ document.addEventListener("DOMContentLoaded", () => {
   respawnCountdown = document.getElementById(
     "respawn-countdown",
   ) as HTMLElement;
+
+  // Setup registration form
+  registrationForm = document.getElementById(
+    "registration-form",
+  ) as HTMLFormElement;
+  registrationMessage = document.getElementById(
+    "registration-message",
+  ) as HTMLElement;
+  registrationForm.addEventListener("submit", handleRegistration);
+
   window.requestAnimationFrame(update);
 });

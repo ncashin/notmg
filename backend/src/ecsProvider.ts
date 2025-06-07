@@ -1,8 +1,8 @@
-import { sendUpdatePacket } from ".";
-import { POSITION_COMPONENT_DEF, collisionTree } from "../core/collision";
-import { type Component, provideECSInstanceFunctions } from "../core/ecs";
-import type { Packet } from "../core/network";
-import { mergeDeep } from "../core/objectMerge";
+import { POSITION_COMPONENT_DEF, collisionTree } from "../../core/collision";
+import { type Component, provideECSInstanceFunctions } from "../../core/ecs";
+import type { Packet } from "../../core/network";
+import { mergeDeep } from "../../core/objectMerge";
+import { sendUpdatePacket } from "../index";
 
 export const {
   ecsInstance,
@@ -50,7 +50,7 @@ export const {
         component[property] = newValue;
         return true;
       }
-      
+
       if (updatePacket[entity] === undefined || updatePacket[entity] === null) {
         updatePacket[entity] = {};
       }
