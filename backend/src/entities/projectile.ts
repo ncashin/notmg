@@ -1,9 +1,9 @@
 import {
   CIRCLE_COLLIDER_COMPONENT_DEF,
   POSITION_COMPONENT_DEF,
-} from "../../core/collision";
-import type { Entity } from "../../core/ecs";
-import { PROJECTILE_COMPONENT_DEF } from "../../core/game";
+} from "../../../core/collision";
+import type { Entity } from "../../../core/ecs";
+import { PROJECTILE_COMPONENT_DEF } from "../../../core/game";
 import {
   addComponent,
   addUpdateCallback,

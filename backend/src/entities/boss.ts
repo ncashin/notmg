@@ -2,13 +2,13 @@ import {
   CIRCLE_COLLIDER_COMPONENT_DEF,
   POSITION_COMPONENT_DEF,
   VELOCITY_COMPONENT_DEF,
-} from "../../core/collision";
-import type { Entity } from "../../core/ecs";
+} from "../../../core/collision";
+import type { Entity } from "../../../core/ecs";
 import {
   HEALTH_COMPONENT_DEF,
   PROJECTILE_COMPONENT_DEF,
   SPRITE_COMPONENT_DEF,
-} from "../../core/game";
+} from "../../../core/game";
 import {
   addComponent,
   addUpdateCallback,
@@ -180,7 +180,7 @@ addUpdateCallback(() => {
       HEALTH_COMPONENT_DEF,
       BOSS_COMPONENT_DEF,
     ],
-    (bossEntity, [bossPos, bossCollider, bossHealth, boss]) => {
+    (bossEntity, [bossPos, bossCollider, bossHealth, _boss]) => {
       // Get all projectiles that could be colliding with the boss
       runQuery(
         [POSITION_COMPONENT_DEF, PROJECTILE_COMPONENT_DEF],

@@ -142,6 +142,8 @@ out
 
 # Nuxt.js build / generate output
 
+migrations/
+
 .nuxt
 dist
 

@@ -14,6 +14,74 @@ body {
   background-image: url("/grass.jpg");
 }
 
+#registration-form-container {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #4a90e2;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  width: 200px;
+}
+
+#registration-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+#registration-form input {
+  padding: 4px 8px;
+  border: 1px solid #444;
+  border-radius: 3px;
+  background-color: #222;
+  color: white;
+  font-size: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#registration-form input:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 1px rgba(74, 144, 226, 0.2);
+}
+
+#registration-form input::placeholder {
+  color: #888;
+}
+
+#registration-form button {
+  padding: 4px 8px;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+#registration-form button:hover {
+  background-color: #357abd;
+}
+
+.message {
+  margin: 4px 0 0 0;
+  text-align: center;
+  color: #ff4444;
+  font-size: 11px;
+  min-height: 14px;
+}
+
+.message.success {
+  color: #44ff44;
+}
+
 #death-overlay {
   position: fixed;
   top: 0;
