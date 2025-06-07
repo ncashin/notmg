@@ -21,6 +21,7 @@ export default defineConfig({
   schemaFilter: ["notmg"],
   verbose: true,
   strict: true,
+  // @ts-ignore evil but required this seems to be an allowed option
   custom: {
     createSchema: true,
   },
