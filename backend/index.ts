@@ -155,7 +155,7 @@ Bun.serve<WebSocketData, undefined>({
 });
 
 // Create initial world entities and periodically check for boss
-const checkBossInterval = setInterval(() => {
+setInterval(() => {
   const bossEntities = queryComponents([BOSS_COMPONENT_DEF]);
   if (Object.keys(bossEntities).length === 0) {
     createBossEntity(createEntity());
