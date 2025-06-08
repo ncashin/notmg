@@ -1,22 +1,13 @@
-import { config } from "dotenv";
 import { defineConfig } from "drizzle-kit";
 import invariant from "tiny-invariant";
 
-// Load environment variables from .env file
-config();
-
-const env = process.env;
-
-invariant(env.DATABASE_URL, "DATABASE_URL is required");
-
-console.log(env);
-
+invariant(process.env.DATABASE_URL, "DATABASE_URL is required");
 export default defineConfig({
   dialect: "postgresql",
   schema: "./schema.ts",
   out: "./migrations",
   dbCredentials: {
-    url: env.DATABASE_URL,
+    url: process.env.DATABASE_URL,
   },
   schemaFilter: ["notmg"],
   verbose: true,

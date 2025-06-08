@@ -10,44 +10,9 @@ import { mergeDeep } from "../../core/objectMerge";
 import { PLAYER_COMPONENT_DEF, type PlayerComponent } from "../../core/player";
 
 import { AuthMessage } from "../../core/socketMessage";
+import { attemptAuthRefresh } from "./auth";
 import { draw } from "./draw";
 import { inputMap, mouseClicked, mousePosition } from "./input";
-
-const attemptAuthRefresh = async () => {
-  console.log("before refetch");
-  const refreshResponse = await fetch("/refresh", {
-    method: "POST",
-    credentials: "include",
-  });
-  if (!refreshResponse.ok) return;
-
-  const { token: newToken } = await refreshResponse.json();
-  sessionStorage.setItem("authToken", newToken);
-  console.log("Token refresh successful");
-
-  return newToken;
-};
-const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-  const token = sessionStorage.getItem("authToken");
-  const headers = {
-    ...options.headers,
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-
-  const response = await fetch(url, { ...options, headers });
-  if (response.status !== 401) return response;
-
-  const newToken = await attemptAuthRefresh();
-  if (!newToken) return response;
-
-  return fetch(url, {
-    ...options,
-    headers: {
-      ...options.headers,
-      Authorization: `Bearer ${newToken}`,
-    },
-  });
-};
 
 export const {
   ecsInstance,
@@ -107,7 +72,7 @@ const sendSocketAuthMessage = (websocket: WebSocket, token: string) => {
 let timeUpdateReceived = Date.now();
 const websocket = new WebSocket("/websocket");
 websocket.onopen = () => {
-  console.log("Connected to WebSocket server");
+  console.log("Connected to server");
   const storedToken = sessionStorage.getItem("authToken");
   if (storedToken) {
     sendSocketAuthMessage(websocket, storedToken);
@@ -141,14 +106,17 @@ websocket.onmessage = (event) => {
       mergePacket(messageObject.packet);
       break;
     default:
-      console.log(messageObject);
+      console.warn(
+        `Received unknown message type: ${messageObject.type}`,
+        messageObject,
+      );
   }
 };
 websocket.onerror = (error) => {
   console.error("WebSocket error:", error);
 };
 websocket.onclose = () => {
-  console.log("Disconnected from WebSocket server");
+  console.log("Disconnected from server");
 };
 
 export const CLIENT_POSITION_COMPONENT_DEF: {
@@ -171,10 +139,24 @@ let respawnCountdown: HTMLElement;
 let authForm: HTMLFormElement;
 let authMessage: HTMLElement;
 
+let canvas: HTMLCanvasElement;
+let fpsCounter: HTMLElement;
+let frameCount = 0;
+let lastFPSUpdate = Date.now();
+let currentFPS = 0;
+
 const update = () => {
   const frameTime = Date.now();
   const deltaTime = (frameTime - lastFrameTime) / 1000;
   lastFrameTime = frameTime;
+
+  frameCount++;
+  if (frameTime - lastFPSUpdate >= 1000) {
+    currentFPS = Math.round((frameCount * 1000) / (frameTime - lastFPSUpdate));
+    fpsCounter.textContent = `${currentFPS} FPS`;
+    frameCount = 0;
+    lastFPSUpdate = frameTime;
+  }
 
   if (playerEntity === undefined) {
     window.requestAnimationFrame(update);
@@ -188,11 +170,9 @@ const update = () => {
   if (player) {
     if (player.isDead) {
       deathOverlay.classList.remove("hidden");
-      const secondsLeft = Math.ceil(player.respawnTime / 60); // Convert frames to seconds
+      const secondsLeft = Math.ceil(player.respawnTime / 60);
       respawnCountdown.textContent = secondsLeft.toString();
 
-      // Don't process movement or shooting while dead
-      draw(getComponent(playerEntity, CLIENT_POSITION_COMPONENT_DEF));
       window.requestAnimationFrame(update);
       return;
     }
@@ -333,13 +313,24 @@ const handleAuth = async (event: SubmitEvent) => {
 };
 
 // Get canvas for coordinate calculations
-let canvas: HTMLCanvasElement;
 document.addEventListener("DOMContentLoaded", () => {
   canvas = document.getElementById("canvas") as HTMLCanvasElement;
   deathOverlay = document.getElementById("death-overlay") as HTMLElement;
   respawnCountdown = document.getElementById(
     "respawn-countdown",
   ) as HTMLElement;
+
+  // Create FPS counter element
+  fpsCounter = document.createElement("div");
+  fpsCounter.style.position = "fixed";
+  fpsCounter.style.bottom = "10px";
+  fpsCounter.style.right = "10px";
+  fpsCounter.style.color = "white";
+  fpsCounter.style.fontFamily = "monospace";
+  fpsCounter.style.fontSize = "14px";
+  fpsCounter.style.textShadow = "1px 1px 1px black";
+  fpsCounter.style.zIndex = "1000";
+  document.body.appendChild(fpsCounter);
 
   // Setup auth form
   authForm = document.getElementById("auth-form") as HTMLFormElement;
