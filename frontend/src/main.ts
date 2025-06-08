@@ -319,5 +319,10 @@ document.addEventListener("DOMContentLoaded", () => {
   authMessage = document.getElementById("auth-message") as HTMLElement;
   authForm.addEventListener("submit", handleAuth);
 
+  const authToken = sessionStorage.getItem("authToken");
+  if (authToken) {
+    authForm.style.display = "none";
+  }
+
   window.requestAnimationFrame(update);
 });
