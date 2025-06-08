@@ -1,5 +1,6 @@
 import {
   AABB_COLLIDER_COMPONENT_DEF,
+  CIRCLE_COLLIDER_COMPONENT_DEF,
   POSITION_COMPONENT_DEF,
   VELOCITY_COMPONENT_DEF,
 } from "../../core/collision";
@@ -48,11 +49,10 @@ export const draw = (
   canvas.style.backgroundPosition = `${-centerPoint.x}px ${-centerPoint.y}px`;
 
   drawSprites();
-  drawProjectiles();
   drawHealthBars();
 
   if (window.DEBUG_DRAW) {
-    drawAABB();
+    drawCircleColliders();
     drawVelocity();
   }
 
@@ -97,25 +97,6 @@ const drawSprites = () => {
   );
 };
 
-const drawProjectiles = () => {
-  runQuery(
-    [POSITION_COMPONENT_DEF, PROJECTILE_COMPONENT_DEF],
-    (_entity, [position, projectile]) => {
-      // Draw white background circle
-      context.fillStyle = "white";
-      context.beginPath();
-      context.arc(position.x, position.y, projectile.radius, 0, Math.PI * 2);
-      context.fill();
-
-      // Draw wireframe circle
-      context.strokeStyle = "red";
-      context.beginPath();
-      context.arc(position.x, position.y, projectile.radius, 0, Math.PI * 2);
-      context.stroke();
-    },
-  );
-};
-
 export const drawInventory = () => {
   const inventoryCell = new Image();
   inventoryCell.src = "/inventorycell.png";
@@ -146,17 +127,15 @@ export const drawInventory = () => {
   );
 };
 
-const drawAABB = () => {
+const drawCircleColliders = () => {
   context.strokeStyle = "blue";
   runQuery(
-    [CLIENT_POSITION_COMPONENT_DEF, AABB_COLLIDER_COMPONENT_DEF],
+    [CLIENT_POSITION_COMPONENT_DEF, CIRCLE_COLLIDER_COMPONENT_DEF],
     (_entity, [position, collider]) => {
-      context.strokeRect(
-        position.x - collider.width / 2,
-        position.y - collider.height / 2,
-        collider.width,
-        collider.height,
-      );
+      // Calculate radius as half of the larger dimension
+      context.beginPath();
+      context.arc(position.x, position.y, collider.radius, 0, Math.PI * 2);
+      context.stroke();
     },
   );
 };
