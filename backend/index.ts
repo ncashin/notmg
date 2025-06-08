@@ -56,7 +56,6 @@ const websocketMessageHandlers = {
     const user = await authenticate(message.token);
 
     if (!user) {
-      websocket.send("Authentication failed");
       return;
     }
 
