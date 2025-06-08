@@ -10,7 +10,7 @@ import { mergeDeep } from "../../core/objectMerge";
 import { PLAYER_COMPONENT_DEF, type PlayerComponent } from "../../core/player";
 
 import { AuthMessage } from "../../core/socketMessage";
-import { attemptAuthRefresh } from "./auth";
+import { attemptAuthRefresh, sendSocketAuthMessage } from "./auth";
 import { draw } from "./draw";
 import { inputMap, mouseClicked, mousePosition } from "./input";
 
@@ -31,7 +31,7 @@ export const {
 
 // Added shooting cooldown
 let shootCooldown = 0;
-const SHOOT_COOLDOWN_TIME = 100; // frames between shots
+const SHOOT_COOLDOWN_TIME = 0.2; // seconds between shots (was 10 frames)
 
 let playerEntity: number | undefined = undefined;
 export const mergePacket = (packet: Packet) => {
@@ -61,14 +61,6 @@ export const mergePacket = (packet: Packet) => {
   }
 };
 
-const sendSocketAuthMessage = (websocket: WebSocket, token: string) => {
-  websocket.send(
-    JSON.stringify({
-      type: "auth",
-      token: token,
-    } as AuthMessage),
-  );
-};
 let timeUpdateReceived = Date.now();
 const websocket = new WebSocket("/websocket");
 websocket.onopen = () => {
@@ -251,7 +243,7 @@ const update = () => {
 
       // Handle shooting
       if (shootCooldown > 0) {
-        shootCooldown--;
+        shootCooldown -= deltaTime;
       }
 
       if (mouseClicked && shootCooldown <= 0) {
