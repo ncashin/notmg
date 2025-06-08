@@ -113,8 +113,8 @@ export const createComponentProxy = <ComponentType extends Component>(
   entity: Entity,
   COMPONENT_TYPE_DEF: ComponentType,
 ) => {
-  const component = lookupComponent(instance, entity, COMPONENT_TYPE_DEF)
-  if(!component) return undefined;
+  const component = lookupComponent(instance, entity, COMPONENT_TYPE_DEF);
+  if (!component) return undefined;
   return new Proxy(component, {
     set: (target, property, newValue, _receiver) => {
       if (typeof property !== "string") {
@@ -289,9 +289,9 @@ export const curryECSInstance = (instance: ECSInstance) => ({
 });
 
 export const provideECSInstanceFunctions = (
-  ecsInstanceCreateInfo: ECSInstanceCreateInfo,
+  ecsInstanceCreateInfo?: ECSInstanceCreateInfo,
 ) => {
-  const ecsInstance = createECSInstance(ecsInstanceCreateInfo);
+  const ecsInstance = createECSInstance(ecsInstanceCreateInfo ?? {});
 
   return curryECSInstance(ecsInstance);
 };

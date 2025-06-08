@@ -10,7 +10,8 @@ import {
   SPRITE_COMPONENT_DEF,
 } from "../../core/game";
 import { PLAYER_COMPONENT_DEF } from "../../core/player";
-import { CLIENT_POSITION_COMPONENT_DEF, getComponent, runQuery } from "./main";
+import { getComponent, runQuery } from "./ecsProvider";
+import { CLIENT_POSITION_COMPONENT_DEF } from "./main";
 
 let canvas: HTMLCanvasElement;
 let context: CanvasRenderingContext2D;
