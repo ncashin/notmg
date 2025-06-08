@@ -103,9 +103,9 @@ let lastFrameTime = Date.now();
 
 let deathOverlay: HTMLElement;
 let respawnCountdown: HTMLElement;
-let registrationOverlay: HTMLElement;
-let registrationForm: HTMLFormElement;
-let registrationMessage: HTMLElement;
+
+let authForm: HTMLFormElement;
+let authMessage: HTMLElement;
 
 const update = () => {
   const frameTime = Date.now();
@@ -226,15 +226,18 @@ const update = () => {
   window.requestAnimationFrame(update);
 };
 
-const handleRegistration = async (event: Event) => {
+const handleAuth = async (event: SubmitEvent) => {
   event.preventDefault();
   const form = event.target as HTMLFormElement;
   const formData = new FormData(form);
   const username = formData.get("username") as string;
   const password = formData.get("password") as string;
+  const action = (event.submitter as HTMLButtonElement).value;
+
+  const endpoint = action === "login" ? "/login" : "/register";
 
   try {
-    const response = await fetch("/register", {
+    const response = await fetch(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -243,31 +246,32 @@ const handleRegistration = async (event: Event) => {
     });
 
     if (response.ok) {
-      registrationMessage.textContent = "Success!";
-      registrationMessage.classList.add("success");
+      authMessage.textContent =
+        action === "login" ? "Login successful!" : "Registration successful!";
+      authMessage.classList.add("success");
       // Clear the form
       form.reset();
       // Reset message after a delay
       setTimeout(() => {
-        registrationMessage.textContent = "";
-        registrationMessage.classList.remove("success");
+        authMessage.textContent = "";
+        authMessage.classList.remove("success");
       }, 2000);
     } else {
       const errorText = await response.text();
-      registrationMessage.textContent = errorText || "Failed";
-      registrationMessage.classList.remove("success");
+      authMessage.textContent = errorText || "Failed";
+      authMessage.classList.remove("success");
       // Clear error after a delay
       setTimeout(() => {
-        registrationMessage.textContent = "";
+        authMessage.textContent = "";
       }, 3000);
     }
   } catch (error) {
-    console.error("Registration error:", error);
-    registrationMessage.textContent = "Server error";
-    registrationMessage.classList.remove("success");
+    console.error(`${action} error:`, error);
+    authMessage.textContent = "Server error";
+    authMessage.classList.remove("success");
     // Clear error after a delay
     setTimeout(() => {
-      registrationMessage.textContent = "";
+      authMessage.textContent = "";
     }, 3000);
   }
 };
@@ -281,14 +285,10 @@ document.addEventListener("DOMContentLoaded", () => {
     "respawn-countdown",
   ) as HTMLElement;
 
-  // Setup registration form
-  registrationForm = document.getElementById(
-    "registration-form",
-  ) as HTMLFormElement;
-  registrationMessage = document.getElementById(
-    "registration-message",
-  ) as HTMLElement;
-  registrationForm.addEventListener("submit", handleRegistration);
+  // Setup auth form
+  authForm = document.getElementById("auth-form") as HTMLFormElement;
+  authMessage = document.getElementById("auth-message") as HTMLElement;
+  authForm.addEventListener("submit", handleAuth);
 
   window.requestAnimationFrame(update);
 });
