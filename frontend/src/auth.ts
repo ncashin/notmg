@@ -1,3 +1,5 @@
+import { AuthMessage } from "../../core/socketMessage";
+
 export const attemptAuthRefresh = async () => {
   const refreshResponse = await fetch("/refresh", {
     method: "POST",
@@ -31,4 +33,13 @@ export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
       Authorization: `Bearer ${newToken}`,
     },
   });
+};
+
+export const sendSocketAuthMessage = (websocket: WebSocket, token: string) => {
+  websocket.send(
+    JSON.stringify({
+      type: "auth",
+      token: token,
+    } as AuthMessage),
+  );
 };
