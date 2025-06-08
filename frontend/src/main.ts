@@ -9,6 +9,7 @@ import type { Packet } from "../../core/network";
 import { mergeDeep } from "../../core/objectMerge";
 import { PLAYER_COMPONENT_DEF, type PlayerComponent } from "../../core/player";
 
+import { AuthMessage } from "../../core/socketMessage";
 import { draw } from "./draw";
 import { inputMap, mouseClicked, mousePosition } from "./input";
 
@@ -59,10 +60,22 @@ export const mergePacket = (packet: Packet) => {
   }
 };
 
+const sendSocketAuthMessage = (websocket: WebSocket, token: string) => {
+  websocket.send(
+    JSON.stringify({
+      type: "auth",
+      token,
+    } as AuthMessage),
+  );
+};
 let timeUpdateReceived = Date.now();
 const websocket = new WebSocket("/websocket");
 websocket.onopen = () => {
   console.log("Connected to WebSocket server");
+  const token = localStorage.getItem("authToken");
+  if (token) {
+    sendSocketAuthMessage(websocket, token);
+  }
 };
 websocket.onmessage = (event) => {
   timeUpdateReceived = Date.now();
@@ -226,6 +239,18 @@ const update = () => {
   window.requestAnimationFrame(update);
 };
 
+const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
+  const token = sessionStorage.getItem("authToken");
+  const headers = {
+    ...options.headers,
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+
+  return fetch(url, {
+    ...options,
+    headers,
+  });
+};
 const handleAuth = async (event: SubmitEvent) => {
   event.preventDefault();
   const form = event.target as HTMLFormElement;
@@ -236,44 +261,36 @@ const handleAuth = async (event: SubmitEvent) => {
 
   const endpoint = action === "login" ? "/login" : "/register";
 
-  try {
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ username, password }),
-    });
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ username, password }),
+  });
 
-    if (response.ok) {
-      authMessage.textContent =
-        action === "login" ? "Login successful!" : "Registration successful!";
-      authMessage.classList.add("success");
-      // Clear the form
-      form.reset();
-      // Reset message after a delay
-      setTimeout(() => {
-        authMessage.textContent = "";
-        authMessage.classList.remove("success");
-      }, 2000);
-    } else {
-      const errorText = await response.text();
-      authMessage.textContent = errorText || "Failed";
-      authMessage.classList.remove("success");
-      // Clear error after a delay
-      setTimeout(() => {
-        authMessage.textContent = "";
-      }, 3000);
-    }
-  } catch (error) {
-    console.error(`${action} error:`, error);
-    authMessage.textContent = "Server error";
+  if (!response.ok) {
+    const errorText = await response.text();
+    authMessage.textContent = errorText || "Failed";
     authMessage.classList.remove("success");
-    // Clear error after a delay
     setTimeout(() => {
       authMessage.textContent = "";
     }, 3000);
+    return;
   }
+
+  const data = await response.json();
+  sessionStorage.setItem("authToken", data.token);
+  sendSocketAuthMessage(websocket, data.token);
+
+  authMessage.textContent =
+    action === "login" ? "Login successful!" : "Registration successful!";
+  authMessage.classList.add("success");
+  form.reset();
+  setTimeout(() => {
+    authMessage.textContent = "";
+    authMessage.classList.remove("success");
+  }, 2000);
 };
 
 // Get canvas for coordinate calculations

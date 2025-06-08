@@ -17,5 +17,13 @@ export type InteractMessage = BaseClientMessage & {
   x: number;
   y: number;
 };
+export type AuthMessage = BaseClientMessage & {
+  type: "auth";
+  token: string;
+};
 
-export type ClientMessage = MoveMessage | ShootMessage | InteractMessage;
+export type ClientMessage =
+  | MoveMessage
+  | ShootMessage
+  | InteractMessage
+  | AuthMessage;
