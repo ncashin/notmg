@@ -13,6 +13,42 @@ import { AuthMessage } from "../../core/socketMessage";
 import { draw } from "./draw";
 import { inputMap, mouseClicked, mousePosition } from "./input";
 
+const attemptAuthRefresh = async () => {
+  console.log("before refetch");
+  const refreshResponse = await fetch("/refresh", {
+    method: "POST",
+    credentials: "include",
+  });
+  if (!refreshResponse.ok) return;
+
+  const { token: newToken } = await refreshResponse.json();
+  sessionStorage.setItem("authToken", newToken);
+  console.log("Token refresh successful");
+
+  return newToken;
+};
+const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
+  const token = sessionStorage.getItem("authToken");
+  const headers = {
+    ...options.headers,
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+
+  const response = await fetch(url, { ...options, headers });
+  if (response.status !== 401) return response;
+
+  const newToken = await attemptAuthRefresh();
+  if (!newToken) return response;
+
+  return fetch(url, {
+    ...options,
+    headers: {
+      ...options.headers,
+      Authorization: `Bearer ${newToken}`,
+    },
+  });
+};
+
 export const {
   ecsInstance,
 
@@ -64,7 +100,7 @@ const sendSocketAuthMessage = (websocket: WebSocket, token: string) => {
   websocket.send(
     JSON.stringify({
       type: "auth",
-      token,
+      token: token,
     } as AuthMessage),
   );
 };
@@ -72,10 +108,15 @@ let timeUpdateReceived = Date.now();
 const websocket = new WebSocket("/websocket");
 websocket.onopen = () => {
   console.log("Connected to WebSocket server");
-  const token = localStorage.getItem("authToken");
-  if (token) {
-    sendSocketAuthMessage(websocket, token);
+  const storedToken = sessionStorage.getItem("authToken");
+  if (storedToken) {
+    sendSocketAuthMessage(websocket, storedToken);
+    return;
   }
+  attemptAuthRefresh().then((newToken) => {
+    if (!newToken) return;
+    sendSocketAuthMessage(websocket, newToken);
+  });
 };
 websocket.onmessage = (event) => {
   timeUpdateReceived = Date.now();
@@ -88,7 +129,6 @@ websocket.onmessage = (event) => {
     case "update":
       mergePacket(messageObject.packet);
       break;
-
     default:
       console.log(messageObject);
   }
@@ -239,18 +279,6 @@ const update = () => {
   window.requestAnimationFrame(update);
 };
 
-const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-  const token = sessionStorage.getItem("authToken");
-  const headers = {
-    ...options.headers,
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-
-  return fetch(url, {
-    ...options,
-    headers,
-  });
-};
 const handleAuth = async (event: SubmitEvent) => {
   event.preventDefault();
   const form = event.target as HTMLFormElement;

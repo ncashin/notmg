@@ -5,12 +5,43 @@ import { users } from "../schema";
 import { database } from "./database";
 
 const JWT_SECRET = process.env.JWT_SECRET;
+const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || JWT_SECRET;
+const REFRESH_TOKEN_EXPIRY = "7d"; // 7 days
+const SEVEN_DAYS_IN_SECONDS = 7 * 24 * 60 * 60;
+
+const ACCESS_TOKEN_EXPIRY = "1h"; // 1 hour
+
 export const generateAuthToken = (id: string) => {
   return sign({ userId: id }, JWT_SECRET, {
-    expiresIn: "24h",
+    expiresIn: ACCESS_TOKEN_EXPIRY,
   });
 };
 
+export const generateRefreshToken = (id: string) => {
+  return sign({ userId: id }, REFRESH_TOKEN_SECRET, {
+    expiresIn: REFRESH_TOKEN_EXPIRY,
+  });
+};
+
+export const generateAuthResponse = (user: any, message: string) => {
+  const accessToken = generateAuthToken(user.id);
+  const refreshToken = generateRefreshToken(user.id);
+
+  const response = new Response(
+    JSON.stringify({
+      message,
+      token: accessToken,
+    }),
+    {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Set-Cookie": `refreshToken=${refreshToken}; HttpOnly; Secure; SameSite=Strict; Max-Age=${SEVEN_DAYS_IN_SECONDS}`,
+      },
+    },
+  );
+  return response;
+};
 export const handleRegister: RouteHandler = async (req) => {
   return req.json().then(async (body) => {
     const { username, password } = body;
@@ -54,53 +85,72 @@ export const handleRegister: RouteHandler = async (req) => {
 };
 
 export const handleLogin: RouteHandler = async (req) => {
-  return req.json().then(async (body) => {
-    const { username, password } = body;
+  const body = await req.json();
+  const { username, password } = body;
 
-    if (!username || !password) {
-      return new Response("Username and password are required", {
-        status: 400,
-      });
-    }
+  if (!username || !password) {
+    return new Response("Username and password are required", {
+      status: 400,
+    });
+  }
 
-    try {
-      const user = await database
-        .select()
-        .from(users)
-        .where(eq(users.username, username))
-        .limit(1)
-        .then((rows) => rows[0]);
+  const user = await database
+    .select()
+    .from(users)
+    .where(eq(users.username, username))
+    .limit(1)
+    .then((rows) => rows[0]);
 
-      if (!user) {
-        return new Response("Invalid username or password", {
-          status: 401,
-        });
-      }
+  if (!user) {
+    return new Response("Invalid username or password", {
+      status: 401,
+    });
+  }
 
-      const isValid = await Bun.password.verify(password, user.password);
-      if (!isValid) {
-        return new Response("Invalid username or password", {
-          status: 401,
-        });
-      }
+  const isValid = await Bun.password.verify(password, user.password);
+  if (!isValid) {
+    return new Response("Invalid username or password", {
+      status: 401,
+    });
+  }
 
-      return new Response(
-        JSON.stringify({
-          message: "Login successful",
-          token: generateAuthToken(user.id),
-        }),
-        {
-          status: 200,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
-    } catch (error) {
-      console.error("Login error:", error);
-      return new Response("Login failed", { status: 500 });
-    }
-  });
+  return generateAuthResponse(user, "Login successful");
+};
+
+export const handleRefresh: RouteHandler = async (req) => {
+  const refreshToken = req.cookies.get("refreshToken");
+
+  if (!refreshToken) {
+    return new Response("No refresh token provided", { status: 401 });
+  }
+
+  const decoded = verify(refreshToken, REFRESH_TOKEN_SECRET);
+  if (!decoded || typeof decoded !== "object" || !("userId" in decoded)) {
+    return new Response("Invalid refresh token", { status: 401 });
+  }
+
+  const user = await database
+    .select()
+    .from(users)
+    .where(eq(users.id, decoded.userId as string))
+    .limit(1)
+    .then((rows) => rows[0]);
+
+  if (!user) {
+    return new Response("User not found", { status: 404 });
+  }
+
+  const accessToken = generateAuthToken(user.id);
+  return new Response(
+    JSON.stringify({
+      message: "Refresh successful",
+      token: accessToken,
+    }),
+    {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    },
+  );
 };
 
 export const authenticate = async (requestOrToken: Request | string) => {
@@ -151,6 +201,9 @@ export const authRoutes = {
   },
   "/login": {
     POST: handleLogin,
+  },
+  "/refresh": {
+    POST: handleRefresh,
   },
   "/test": {
     GET: handleTestAuth,
