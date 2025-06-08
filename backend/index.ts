@@ -10,8 +10,9 @@ import {
   getComponent,
   getECSCatchupPacket,
   getECSUpdatePacket,
+  queryComponents,
 } from "./src/ecsProvider";
-import { createBossEntity } from "./src/entities/boss";
+import { BOSS_COMPONENT_DEF, createBossEntity } from "./src/entities/boss";
 import { createPlayerEntity, playerShoot } from "./src/entities/player";
 
 type WebSocketData = {
@@ -153,5 +154,16 @@ Bun.serve<WebSocketData, undefined>({
   },
 });
 
-// Create initial world entities
-createBossEntity(createEntity());
+// Create initial world entities and periodically check for boss
+const checkBossInterval = setInterval(() => {
+  const bossEntities = queryComponents([BOSS_COMPONENT_DEF]);
+  if (Object.keys(bossEntities).length === 0) {
+    createBossEntity(createEntity());
+  }
+}, 30000); // Check every 30 seconds
+
+// Initial check
+const initialBossEntities = queryComponents([BOSS_COMPONENT_DEF]);
+if (Object.keys(initialBossEntities).length === 0) {
+  createBossEntity(createEntity());
+}
