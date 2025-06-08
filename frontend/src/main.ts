@@ -12,26 +12,14 @@ import { PLAYER_COMPONENT_DEF, type PlayerComponent } from "../../core/player";
 import { AuthMessage } from "../../core/socketMessage";
 import { attemptAuthRefresh, sendSocketAuthMessage } from "./auth";
 import { draw } from "./draw";
-import { inputMap, mouseClicked, mousePosition } from "./input";
-
-export const {
-  ecsInstance,
-
-  createEntity,
-  destroyEntity,
-
+import {
   addComponent,
-  removeComponent,
-
+  destroyEntity,
   getComponent,
-  queryComponents,
-
+  removeComponent,
   runQuery,
-} = provideECSInstanceFunctions({});
-
-// Added shooting cooldown
-let shootCooldown = 0;
-const SHOOT_COOLDOWN_TIME = 0.2; // seconds between shots (was 10 frames)
+} from "./ecsProvider";
+import { inputMap, mouseClicked, mousePosition } from "./input";
 
 let playerEntity: number | undefined = undefined;
 export const mergePacket = (packet: Packet) => {
@@ -120,6 +108,9 @@ export const CLIENT_POSITION_COMPONENT_DEF: {
   x: 0,
   y: 0,
 };
+
+let shootCooldown = 0;
+const SHOOT_COOLDOWN_TIME = 0.2;
 
 const DAMPING_FORCE = 5;
 const PLAYER_SPEED = 1000;
@@ -304,7 +295,6 @@ const handleAuth = async (event: SubmitEvent) => {
   }, 2000);
 };
 
-// Get canvas for coordinate calculations
 document.addEventListener("DOMContentLoaded", () => {
   canvas = document.getElementById("canvas") as HTMLCanvasElement;
   deathOverlay = document.getElementById("death-overlay") as HTMLElement;
