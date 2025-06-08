@@ -118,9 +118,20 @@ websocket.onopen = () => {
     sendSocketAuthMessage(websocket, newToken);
   });
 };
+const parseSocketMessage = (messageString: string) => {
+  try {
+    return JSON.parse(messageString);
+  } catch {
+    return messageString;
+  }
+};
 websocket.onmessage = (event) => {
   timeUpdateReceived = Date.now();
-  const messageObject = JSON.parse(event.data);
+  const messageObject = parseSocketMessage(event.data);
+  if (typeof messageObject !== "object") {
+    console.log(messageObject);
+    return;
+  }
   switch (messageObject.type) {
     case "initialization":
       playerEntity = messageObject.playerEntity;
