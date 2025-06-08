@@ -1,4 +1,5 @@
-import type { ServerWebSocket } from "bun";
+import type { Server, ServerWebSocket } from "bun";
+import { eq } from "drizzle-orm";
 import invariant from "tiny-invariant";
 import { POSITION_COMPONENT_DEF } from "../core/collision";
 import { PLAYER_COMPONENT_DEF } from "../core/player";
@@ -19,7 +20,8 @@ type WebSocketData = {
   entity: number;
   sessionID: string;
 };
-const connectedSockets: Array<ServerWebSocket<WebSocketData>> = [];
+
+let connectedSockets: Array<ServerWebSocket<WebSocketData>> = [];
 
 export const sendUpdatePacket = () => {
   for (const socket of connectedSockets) {
@@ -50,83 +52,168 @@ const clientMessageHandlers = {
     invariant(message.type === "shoot");
     playerShoot(websocket.data.entity, message.targetX, message.targetY);
   },
-  /* interact: (
-    websocket: ServerWebSocket<WebSocketData>,
-    message: ClientMessage,
-  ) => {
-    invariant(message.type === "interact");
-    handleInteraction(websocket.data.entity, message.x, message.y);
-  }, */
 };
+
+// Router type definition
+type RouteHandler = (
+  req: Request,
+  server: Server,
+) => Promise<Response> | Response;
+type Router = {
+  [key: string]: {
+    [method: string]: RouteHandler;
+  };
+};
+
+const beginSession = () => {
+  const sessionID = crypto.randomUUID();
+
+  return sessionID;
+};
+const authenticateSession = () => {};
+
+// Route handlers
+const handleRegister: RouteHandler = async (req) => {
+  return req.json().then(async (body) => {
+    const { username, password } = body;
+
+    if (!username || !password) {
+      return new Response("Name and password are required", {
+        status: 400,
+      });
+    }
+
+    try {
+      // Hash the password using Bun's built-in password hashing
+      const hashedPassword = await Bun.password.hash(password);
+
+      const result = await database
+        .insert(users)
+        .values({
+          username,
+          password: hashedPassword,
+        })
+        .returning();
+
+      // Find existing websocket connection for this session
+      const sessionID = req.headers
+        .get("cookie")
+        ?.split("sessionID=")[1]
+        ?.split(";")[0];
+      const existingSocket = connectedSockets.find(
+        (socket) => socket.data.sessionID === sessionID,
+      );
+      if (existingSocket) {
+        const playerComponent = getComponent(
+          existingSocket.data.entity,
+          PLAYER_COMPONENT_DEF,
+        );
+        if (playerComponent) {
+          playerComponent.username = username;
+        }
+      }
+
+      return new Response("Registration successful", {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (error) {
+      console.error("Registration error:", error);
+      return new Response("Registration failed", { status: 500 });
+    }
+  });
+};
+
+const handleLogin: RouteHandler = async (req) => {
+  return req.json().then(async (body) => {
+    const { username, password } = body;
+
+    if (!username || !password) {
+      return new Response("Username and password are required", {
+        status: 400,
+      });
+    }
+
+    try {
+      // Find user in database
+      const user = await database
+        .select()
+        .from(users)
+        .where(eq(users.username, username))
+        .limit(1)
+        .then((rows) => rows[0]);
+
+      if (!user) {
+        return new Response("Invalid username or password", {
+          status: 401,
+        });
+      }
+
+      // Verify password
+      const isValid = await Bun.password.verify(password, user.password);
+
+      if (!isValid) {
+        return new Response("Invalid username or password", {
+          status: 401,
+        });
+      }
+
+      return new Response(JSON.stringify({ message: "Login successful" }), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      return new Response("Login failed", { status: 500 });
+    }
+  });
+};
+
+const handleWebSocket: RouteHandler = (req, server) => {
+  const sessionID = beginSession();
+  const upgradeResult = server.upgrade(req, {
+    data: { entity: createEntity(), sessionID },
+    headers: {
+      "Set-Cookie": `sessionID=${sessionID}; Path=/; HttpOnly; SameSite=Strict`,
+    },
+  });
+  if (!upgradeResult) {
+    return new Response("WebSocket upgrade failed", { status: 500 });
+  }
+  return new Response();
+};
+
+// Router configuration
+const router: Router = {
+  "/register": {
+    POST: handleRegister,
+  },
+  "/login": {
+    POST: handleLogin,
+  },
+  "/websocket": {
+    GET: handleWebSocket,
+  },
+};
+
 Bun.serve<WebSocketData, undefined>({
   port: 3000,
   fetch(req, server) {
     const url = new URL(req.url);
-    console.log(url.pathname);
-    // Handle registration endpoint
-    if (url.pathname === "/register" && req.method === "POST") {
-      console.log("WHAT THE HELL");
-      return req.json().then(async (body) => {
-        const { username, password } = body;
-        console.log(username, password);
+    const route = router[url.pathname];
 
-        if (!username || !password) {
-          return new Response("Name and password are required", {
-            status: 400,
-          });
-        }
-
-        try {
-          // TODO: Add proper password hashing
-          const result = await database
-            .insert(users)
-            .values({
-              username,
-              password, // Note: In production, this should be hashed
-            })
-            .returning();
-
-          // Find existing websocket connection for this session
-          const sessionID = req.headers
-            .get("cookie")
-            ?.split("sessionID=")[1]
-            ?.split(";")[0];
-          const existingSocket = connectedSockets.find(
-            (socket) => socket.data.sessionID === sessionID,
-          );
-          if (existingSocket) {
-            const playerComponent = getComponent(
-              existingSocket.data.entity,
-              PLAYER_COMPONENT_DEF,
-            );
-            if (playerComponent) {
-              playerComponent.username = username;
-            }
-          }
-
-          return new Response("Registration successful", {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
-        } catch (error) {
-          console.error("Registration error:", error);
-          return new Response("Registration failed", { status: 500 });
-        }
-      });
+    if (!route) {
+      return new Response("Not found", { status: 404 });
     }
 
-    // Handle WebSocket upgrade
-    const sessionID = crypto.randomUUID();
-    const upgradeResult = server.upgrade(req, {
-      data: { entity: createEntity(), sessionID },
-      headers: {
-        "Set-Cookie": `sessionID=${sessionID}; Path=/; HttpOnly; SameSite=Strict`,
-      },
-    });
-    if (!upgradeResult) {
-      return new Response("WebSocket upgrade failed", { status: 500 });
+    const handler = route[req.method];
+    if (!handler) {
+      return new Response("Method not allowed", { status: 405 });
     }
-    return;
+
+    return handler(req, server);
   },
   websocket: {
     open(websocket) {
@@ -160,10 +247,9 @@ Bun.serve<WebSocketData, undefined>({
       console.error("Unknown or invalid message:", parsedMessage);
     },
     close(websocket) {
-      const index = connectedSockets.indexOf(websocket);
-      if (index > -1) {
-        connectedSockets.splice(index, 1);
-      }
+      connectedSockets = connectedSockets.filter(
+        (socket) => socket !== websocket,
+      );
       destroyEntity(websocket.data.entity);
     },
   },

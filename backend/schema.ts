@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { integer, pgSchema, serial, text, varchar } from "drizzle-orm/pg-core";
+import { pgSchema, serial, text, varchar } from "drizzle-orm/pg-core";
 
 export const notmgSchema = pgSchema("notmg");
 export const users = notmgSchema.table("users", {
