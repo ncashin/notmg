@@ -7,7 +7,7 @@ document.addEventListener("keyup", (event) => {
 });
 
 // Add mouse position tracking
-export const mousePosition = { x: 0, y: 0, worldX: 0, worldY: 0 };
+export const mousePosition = { x: 0, y: 0 };
 export let mouseClicked = false;
 
 document.addEventListener("mousemove", (event) => {

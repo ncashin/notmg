@@ -23,7 +23,10 @@ export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
   if (response.status !== 401) return response;
 
   const newToken = await attemptAuthRefresh();
-  if (!newToken) return response;
+  if (!newToken) {
+    sessionStorage.removeItem("authToken");
+    return response;
+  }
 
   sessionStorage.setItem("authToken", newToken);
   return fetch(url, {

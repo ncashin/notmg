@@ -9,7 +9,7 @@ import type { Packet } from "../../core/network";
 import { mergeDeep } from "../../core/objectMerge";
 import { PLAYER_COMPONENT_DEF, type PlayerComponent } from "../../core/player";
 
-import { AuthMessage } from "../../core/socketMessage";
+import { CreateItemMessage } from "../../core/socketMessage";
 import { attemptAuthRefresh, sendSocketAuthMessage } from "./auth";
 import { draw } from "./draw";
 import {
@@ -249,7 +249,9 @@ const update = () => {
       }
     }
   }
-  draw(position);
+  if (position) {
+    draw(position, playerEntity);
+  }
   window.requestAnimationFrame(update);
 };
 
@@ -321,8 +323,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const authToken = sessionStorage.getItem("authToken");
   if (authToken) {
-    authForm.style.display = "none";
+    // authForm.style.display = "none";
   }
 
   window.requestAnimationFrame(update);
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    const message: CreateItemMessage = {
+      type: "createItem",
+      offsetX: 0,
+      offsetY: 0,
+    };
+    websocket.send(JSON.stringify(message));
+  }
 });

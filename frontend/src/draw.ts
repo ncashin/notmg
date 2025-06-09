@@ -9,8 +9,12 @@ import {
   PROJECTILE_COMPONENT_DEF,
   SPRITE_COMPONENT_DEF,
 } from "../../core/game";
-import { PLAYER_COMPONENT_DEF } from "../../core/player";
+import {
+  INVENTORY_COMPONENT_DEF,
+  PLAYER_COMPONENT_DEF,
+} from "../../core/player";
 import { getComponent, runQuery } from "./ecsProvider";
+import { mousePosition } from "./input";
 import { CLIENT_POSITION_COMPONENT_DEF } from "./main";
 
 let canvas: HTMLCanvasElement;
@@ -31,12 +35,15 @@ document.addEventListener("DOMContentLoaded", () => {
 declare global {
   interface Window {
     DEBUG_DRAW: boolean;
+    mouseX: number;
+    mouseY: number;
   }
 }
 
 window.DEBUG_DRAW = true;
 export const draw = (
-  centerPoint: { x: number; y: number } = { x: 0, y: 0 },
+  centerPoint: { x: number; y: number },
+  playerEntity: number,
 ) => {
   context.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -59,7 +66,10 @@ export const draw = (
 
   context.restore();
 
-  drawInventory();
+  const playerInventory = getComponent(playerEntity, INVENTORY_COMPONENT_DEF);
+  if (playerInventory) {
+    drawInventory(playerInventory, centerPoint);
+  }
 };
 
 const drawSprites = () => {
@@ -98,34 +108,145 @@ const drawSprites = () => {
   );
 };
 
-export const drawInventory = () => {
+// Helper function to convert screen coordinates to inventory cell coordinates
+const getCellFromScreenPosition = (
+  screenX: number,
+  screenY: number,
+  cellSize: number,
+  padding: number,
+) => {
+  const row = Math.floor((screenY - padding) / cellSize);
+  const column = Math.floor((screenX - padding) / cellSize);
+  return { row, column };
+};
+
+export const drawInventory = (
+  inventory: typeof INVENTORY_COMPONENT_DEF,
+  centerPoint: { x: number; y: number } = { x: 0, y: 0 },
+) => {
   const inventoryCell = new Image();
   inventoryCell.src = "/inventorycell.png";
 
-  const padding = 4;
+  const padding = 6;
+  const cellSize = 48;
+  const inventoryWidth = cellSize * 10 + padding * 2;
+  const inventoryHeight = cellSize * 6 + padding * 2;
+
+  // Draw inventory background
   context.fillStyle = "#222222";
-  context.fillRect(0, 0, 32 * 10 + padding * 2, 32 * 6 + padding * 2);
+  context.fillRect(0, 0, inventoryWidth, inventoryHeight);
+
+  // Draw inventory grid
   for (let column = 0; column < 10; column++) {
     for (let row = 0; row < 6; row++) {
       context.drawImage(
         inventoryCell,
-        column * 32 + padding,
-        row * 32 + padding,
+        column * cellSize + padding,
+        row * cellSize + padding,
+        cellSize,
+        cellSize,
       );
     }
   }
 
-  const healthSize = 64;
-  const healthPadding = 10;
-  const health = new Image();
-  health.src = "/heart.svg";
-  context.drawImage(
-    health,
-    0 + healthPadding,
-    canvas.height - healthSize - healthPadding,
-    healthSize,
-    healthSize,
-  );
+  // Draw inventory items
+  for (const item of inventory.items) {
+    const itemPadding = 6;
+    const itemX = item.offsetX * cellSize + padding + itemPadding;
+    const itemY = item.offsetY * cellSize + padding + itemPadding;
+    const itemSize = cellSize - itemPadding * 2;
+
+    // Draw placeholder rectangle for item
+    if (item.equipped) {
+      context.fillStyle = "#FFFF00"; // Yellow color
+      context.fillRect(itemX, itemY, itemSize, itemSize);
+    }
+    const swordImage = new Image();
+    swordImage.src = "/sword.svg";
+
+    context.save();
+    context.translate(itemX + itemSize / 2, itemY + itemSize / 2);
+    context.scale(itemSize / 48, itemSize / 48);
+    // Draw the sword SVG centered at origin
+    context.drawImage(swordImage, -24, -24, 48, 48);
+
+    context.restore();
+
+    if (mousePosition) {
+      const { column: mouseColumn, row: mouseRow } = getCellFromScreenPosition(
+        mousePosition.x,
+        mousePosition.y,
+        cellSize,
+        padding,
+      );
+
+      // Check if mouse is over this item's cell
+      if (mouseColumn === item.offsetX && mouseRow === item.offsetY) {
+        // Draw hover overlay
+        context.save();
+        context.fillStyle = "rgba(255, 255, 255, 0.1)"; // Very transparent white
+        context.fillRect(itemX, itemY, itemSize, itemSize);
+        context.restore();
+
+        // Draw tooltip
+        context.save();
+        // Set up text styling for item tooltip
+        context.font = "bold 18px Arial";
+        context.fillStyle = "white";
+        context.textAlign = "left";
+        context.textBaseline = "top";
+
+        // Item stats
+        const itemName = "Epic Sword of Power";
+        const itemStats = [
+          "Damage: +25",
+          "Attack Speed: 1.2",
+          "Rarity: Epic",
+          "Level Required: 10",
+        ];
+
+        const tooltipX = itemX + itemSize + 12;
+        const tooltipY = itemY;
+
+        // Calculate total height needed for tooltip
+        const lineHeight = 24;
+        const totalHeight = (itemStats.length + 1) * lineHeight;
+
+        // Draw tooltip background
+        context.fillStyle = "rgba(0, 0, 0, 0.8)";
+        const nameMetrics = context.measureText(itemName);
+        const padding = 12;
+        const maxWidth = Math.max(
+          nameMetrics.width,
+          ...itemStats.map((stat) => context.measureText(stat).width),
+        );
+
+        context.fillRect(
+          tooltipX - padding,
+          tooltipY - padding,
+          maxWidth + padding * 2,
+          totalHeight + padding * 2,
+        );
+
+        // Draw text shadow for better visibility
+        context.shadowColor = "black";
+        context.shadowBlur = 3;
+
+        // Draw item name in gold color
+        context.fillStyle = "#FFD700";
+        context.fillText(itemName, tooltipX, tooltipY);
+
+        // Draw stats
+        context.font = "16px Arial";
+        context.fillStyle = "white";
+        itemStats.forEach((stat, index) => {
+          context.fillText(stat, tooltipX, tooltipY + lineHeight * (index + 1));
+        });
+
+        context.restore();
+      }
+    }
+  }
 };
 
 const drawCircleColliders = () => {
