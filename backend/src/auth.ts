@@ -118,7 +118,11 @@ export const handleLogin: RouteHandler = async (req) => {
 };
 
 export const handleRefresh: RouteHandler = async (req) => {
-  const refreshToken = req.cookies.get("refreshToken");
+  const refreshToken = req.headers
+    .get("cookie")
+    ?.split("; ")
+    .find((cookie) => cookie.startsWith("refreshToken="))
+    ?.split("=")[1];
 
   if (!refreshToken) {
     return new Response("No refresh token provided", { status: 401 });
@@ -152,7 +156,6 @@ export const handleRefresh: RouteHandler = async (req) => {
     },
   );
 };
-
 export const authenticate = async (requestOrToken: Request | string) => {
   const token =
     typeof requestOrToken === "string"
@@ -161,17 +164,23 @@ export const authenticate = async (requestOrToken: Request | string) => {
 
   if (!token) return;
 
-  const decoded = verify(token, JWT_SECRET);
-  if (!decoded || typeof decoded !== "object" || !("userId" in decoded)) return;
+  try {
+    const decoded = verify(token, JWT_SECRET);
+    if (!decoded || typeof decoded !== "object" || !("userId" in decoded)) {
+      return undefined;
+    }
 
-  const user = await database
-    .select()
-    .from(users)
-    .where(eq(users.id, decoded.userId as string))
-    .limit(1)
-    .then((rows) => rows[0]);
+    const user = await database
+      .select()
+      .from(users)
+      .where(eq(users.id, decoded.userId as string))
+      .limit(1)
+      .then((rows) => rows[0]);
 
-  return user;
+    return user;
+  } catch (error) {
+    return undefined;
+  }
 };
 
 const handleTestAuth: RouteHandler = async (req) => {

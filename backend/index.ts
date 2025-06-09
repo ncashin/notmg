@@ -1,9 +1,12 @@
 import type { Server, ServerWebSocket } from "bun";
+import { eq } from "drizzle-orm";
 import invariant from "tiny-invariant";
 import { POSITION_COMPONENT_DEF } from "../core/collision";
-import { PLAYER_COMPONENT_DEF } from "../core/player";
+import { INVENTORY_COMPONENT_DEF, PLAYER_COMPONENT_DEF } from "../core/player";
 import type { ClientMessage } from "../core/socketMessage";
+import { items } from "./schema";
 import { authRoutes, authenticate } from "./src/auth";
+import { database } from "./src/database";
 import {
   createEntity,
   destroyEntity,
@@ -14,6 +17,7 @@ import {
 } from "./src/ecsProvider";
 import { BOSS_COMPONENT_DEF, createBossEntity } from "./src/entities/boss";
 import { createPlayerEntity, playerShoot } from "./src/entities/player";
+import { createItem } from "./src/item";
 
 type WebSocketData = {
   entity: number;
@@ -49,6 +53,17 @@ const websocketMessageHandlers = {
     invariant(message.type === "shoot");
     playerShoot(websocket.data.entity, message.targetX, message.targetY);
   },
+  createItem: async (
+    websocket: ServerWebSocket<WebSocketData>,
+    message: ClientMessage,
+  ) => {
+    invariant(message.type === "createItem");
+    if (!websocket.data.userID) {
+      websocket.send("Must be authenticated to create items");
+      return;
+    }
+    await createItem(websocket.data.userID, message.offsetX, message.offsetY);
+  },
   auth: async (
     websocket: ServerWebSocket<WebSocketData>,
     message: ClientMessage,
@@ -56,15 +71,32 @@ const websocketMessageHandlers = {
     invariant(message.type === "auth");
     const user = await authenticate(message.token);
 
-    if (!user) {
-      return;
-    }
+    if (!user) return;
 
     const player = getComponent(websocket.data.entity, PLAYER_COMPONENT_DEF);
     if (player) {
       player.username = user.username;
     }
     websocket.data.userID = user.id;
+
+    // Get player's inventory from database
+    const inventory = getComponent(
+      websocket.data.entity,
+      INVENTORY_COMPONENT_DEF,
+    );
+    if (inventory) {
+      const playerItems = await database
+        .select()
+        .from(items)
+        .where(eq(items.userID, user.id));
+
+      // Populate inventory with equipped items
+      inventory.items = playerItems.map((item) => ({
+        id: item.id,
+        offsetX: item.offsetX,
+        offsetY: item.offsetY,
+      }));
+    }
 
     websocket.send("Authentication succeeded");
   },

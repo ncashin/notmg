@@ -1,29 +1,35 @@
-export interface BaseClientMessage {
-  type: string;
-}
-export type MoveMessage = BaseClientMessage & {
+export type MoveMessage = {
   type: "move";
   x: number;
   y: number;
 };
-export type ShootMessage = BaseClientMessage & {
+
+export type ShootMessage = {
   type: "shoot";
   targetX: number;
   targetY: number;
 };
 
-export type InteractMessage = BaseClientMessage & {
+export type InteractMessage = {
   type: "interact";
   x: number;
   y: number;
 };
-export type AuthMessage = BaseClientMessage & {
+
+export type AuthMessage = {
   type: "auth";
   token: string;
+};
+
+export type CreateItemMessage = {
+  type: "createItem";
+  offsetX: number;
+  offsetY: number;
 };
 
 export type ClientMessage =
   | MoveMessage
   | ShootMessage
   | InteractMessage
-  | AuthMessage;
+  | AuthMessage
+  | CreateItemMessage;

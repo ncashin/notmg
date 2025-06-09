@@ -8,5 +8,10 @@ export const PLAYER_COMPONENT_DEF = {
   respawnTime: 0, // Current respawn timer
   respawnDuration: 180, // How long respawn takes
 };
+export const INVENTORY_COMPONENT_DEF = {
+  networked: true,
+  type: "inventory",
+  items: [],
+};
 
 export type PlayerComponent = typeof PLAYER_COMPONENT_DEF;

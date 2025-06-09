@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="32" height="32" viewBox="-16 -16 32 32" xmlns="http://www.w3.org/2000/svg">
+  <!-- Sword blade -->
+  <path d="M-2,-12 L2,-12 L1,8 L-1,8 Z" fill="#C0C0C0"/>
+  
+  <!-- Sword guard -->
+  <rect x="-4" y="8" width="8" height="2" fill="#FFD700"/>
+  
+  <!-- Sword handle -->
+  <rect x="-1" y="10" width="2" height="6" fill="#8B4513"/>
+  
+  <!-- Sword pommel -->
+  <circle cx="0" cy="16" r="2" fill="#FFD700"/>
+</svg>

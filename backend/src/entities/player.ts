@@ -9,7 +9,10 @@ import {
   PROJECTILE_COMPONENT_DEF,
   SPRITE_COMPONENT_DEF,
 } from "../../../core/game";
-import { PLAYER_COMPONENT_DEF } from "../../../core/player";
+import {
+  INVENTORY_COMPONENT_DEF,
+  PLAYER_COMPONENT_DEF,
+} from "../../../core/player";
 import {
   addComponent,
   addUpdateCallback,
@@ -35,6 +38,7 @@ export const createPlayerEntity = (entity: Entity, name = "") => {
     maxHealth: 100,
     currentHealth: 100,
   });
+  addComponent(entity, INVENTORY_COMPONENT_DEF);
 };
 
 export const playerShoot = (

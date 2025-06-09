@@ -11,17 +11,39 @@
     <canvas id="canvas"></canvas>
     
     <!-- Registration Form -->
-    <div id="auth-form-container">
-      <form id="auth-form">
-        <input type="text" id="username" name="username" placeholder="Username" required minlength="3" maxlength="20">
-        <input type="password" id="password" name="password" placeholder="Password" required minlength="6">
-        <div class="button-group">
-          <button type="submit" name="action" value="register">Register</button>
-          <button type="submit" name="action" value="login">Login</button>
+     <div id="bottom-left">
+      
+      <div id="chat-container">    
+        <div id="chat-message-container">
+          <p class="chat-message">Player1: GG everyone!</p>
+          <p class="chat-message">Player2: Nice shot!</p>
+          <p class="chat-message">Player3: Anyone want to team up?</p>
+          <p class="chat-message">Player1: Sure, let's go!</p>
+          <p class="chat-message">Player2: Watch out, enemy at spawn!</p>
+          <p class="chat-message">Player3: Got it, covering you</p>
+          <p class="chat-message">Player1: Thanks for the save!</p>
+          <p class="chat-message">Player2: No problem, that's what teammates are for</p>
+          <p class="chat-message">Player3: Great teamwork everyone!</p>
+          <p class="chat-message">Player1: Another round?</p>
         </div>
-        <p id="auth-message" class="message"></p>
-      </form>
+        <div id="chat-input-container">
+          <input type="text" id="chat-input" placeholder="Type your message..." maxlength="100">
+          <button id="chat-send">Send</button>
+        </div>
+      </div>
+      <div id="auth-form-container">
+        <form id="auth-form">
+          <p id="auth-message" class="message"></p>
+          <input type="text" id="username" name="username" placeholder="Username" required minlength="3" maxlength="20">
+          <input type="password" id="password" name="password" placeholder="Password" required minlength="6">
+          <div class="button-group">
+            <button type="submit" name="action" value="register">Register</button>
+            <button type="submit" name="action" value="login">Login</button>
+          </div>
+        </form>
+      </div> 
     </div>
+    
 
     <div id="death-overlay" class="hidden">
       <div class="death-content">
