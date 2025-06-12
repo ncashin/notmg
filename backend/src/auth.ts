@@ -1,15 +1,18 @@
 import { eq } from "drizzle-orm";
 import { sign, verify } from "jsonwebtoken";
-import type { RouteHandler } from "..";
+import invariant from "tiny-invariant";
 import { users } from "../schema";
 import { database } from "./database";
+import type { RouteHandler } from "./router";
 
 const JWT_SECRET = process.env.JWT_SECRET;
-const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || JWT_SECRET;
-const REFRESH_TOKEN_EXPIRY = "7d"; // 7 days
-const SEVEN_DAYS_IN_SECONDS = 7 * 24 * 60 * 60;
+const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
+invariant(JWT_SECRET);
+invariant(REFRESH_TOKEN_SECRET);
 
-const ACCESS_TOKEN_EXPIRY = "1h"; // 1 hour
+const ACCESS_TOKEN_EXPIRY = "1h";
+const REFRESH_TOKEN_EXPIRY = "7d";
+const SEVEN_DAYS_IN_SECONDS = 7 * 24 * 60 * 60;
 
 export const generateAuthToken = (id: string) => {
   return sign({ userId: id }, JWT_SECRET, {
@@ -23,7 +26,10 @@ export const generateRefreshToken = (id: string) => {
   });
 };
 
-export const generateAuthResponse = (user: any, message: string) => {
+export const generateAuthResponse = (
+  user: typeof users.$inferSelect,
+  message: string,
+) => {
   const accessToken = generateAuthToken(user.id);
   const refreshToken = generateRefreshToken(user.id);
 
@@ -43,45 +49,35 @@ export const generateAuthResponse = (user: any, message: string) => {
   return response;
 };
 export const handleRegister: RouteHandler = async (req) => {
-  return req.json().then(async (body) => {
-    const { username, password } = body;
+  const body = await req.json();
+  const { username, password } = body;
 
-    if (!username || !password) {
-      return new Response("Name and password are required", {
-        status: 400,
-      });
+  if (!username || !password) {
+    return new Response("Username and password are required", {
+      status: 400,
+    });
+  }
+
+  try {
+    const hashedPassword = await Bun.password.hash(password);
+    const newUser = await database
+      .insert(users)
+      .values({
+        username,
+        password: hashedPassword,
+      })
+      .returning()
+      .then((rows) => rows[0]);
+
+    if (!newUser) {
+      return new Response("Failed to create user", { status: 500 });
     }
 
-    try {
-      const hashedPassword = await Bun.password.hash(password);
-      const newUser = await database
-        .insert(users)
-        .values({
-          username,
-          password: hashedPassword,
-        })
-        .returning()
-        .then((rows) => rows[0]);
-
-      if (!newUser) {
-        return new Response("Failed to create user", { status: 500 });
-      }
-
-      return new Response(
-        JSON.stringify({
-          message: "Registration successful",
-          token: generateAuthToken(newUser.id),
-        }),
-        {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        },
-      );
-    } catch (error) {
-      console.error("Registration error:", error);
-      return new Response("Registration failed", { status: 500 });
-    }
-  });
+    return generateAuthResponse(newUser, "Registration successful");
+  } catch (error) {
+    console.error("Registration error:", error);
+    return new Response("Registration failed", { status: 500 });
+  }
 };
 
 export const handleLogin: RouteHandler = async (req) => {

@@ -4,12 +4,8 @@ import {
 } from "../../../core/collision";
 import type { Entity } from "../../../core/ecs";
 import { PROJECTILE_COMPONENT_DEF } from "../../../core/game";
-import {
-  addComponent,
-  addUpdateCallback,
-  destroyEntity,
-  runQuery,
-} from "../ecsProvider";
+import { addComponent, destroyEntity, runQuery } from "../ecsProvider";
+import { addUpdateCallback } from "../update";
 
 export const createProjectile = (
   entity: Entity,
