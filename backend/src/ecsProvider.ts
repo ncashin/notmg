@@ -2,7 +2,7 @@ import { POSITION_COMPONENT_DEF, collisionTree } from "../../core/collision";
 import { type Component, provideECSInstanceFunctions } from "../../core/ecs";
 import type { Packet } from "../../core/network";
 import { mergeDeep } from "../../core/objectMerge";
-import { sendUpdatePacket } from "../index";
+import { sendUpdatePacket } from "./websocket";
 
 export const {
   ecsInstance,
@@ -82,17 +82,3 @@ export const getECSUpdatePacket = () => {
 export const getECSCatchupPacket = () => {
   return catchupPacket;
 };
-
-const updateCallbacks: (() => void)[] = [];
-export const addUpdateCallback = (lambda: () => void) => {
-  updateCallbacks.push(lambda);
-};
-const update = () => {
-  for (const callback of updateCallbacks) {
-    callback();
-  }
-
-  sendUpdatePacket();
-};
-
-setInterval(update, 1000 / 60);

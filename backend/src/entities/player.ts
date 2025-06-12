@@ -1,3 +1,5 @@
+import type { ServerWebSocket } from "bun";
+import { eq } from "drizzle-orm";
 import {
   CIRCLE_COLLIDER_COMPONENT_DEF,
   POSITION_COMPONENT_DEF,
@@ -13,14 +15,18 @@ import {
   INVENTORY_COMPONENT_DEF,
   PLAYER_COMPONENT_DEF,
 } from "../../../core/player";
+import type { ClientMessage } from "../../../core/socketMessage";
+import { items, type users } from "../../schema";
+import { database } from "../database";
 import {
   addComponent,
-  addUpdateCallback,
   createEntity,
   destroyEntity,
   getComponent,
   runQuery,
 } from "../ecsProvider";
+import { addUpdateCallback } from "../update";
+import type { WebSocketData } from "../websocket";
 import { createProjectile } from "./projectile";
 
 export const createPlayerEntity = (entity: Entity, name = "") => {
@@ -87,7 +93,6 @@ export const playerShoot = (
   });
 };
 
-// Add collision handling for projectiles
 addUpdateCallback(() => {
   runQuery(
     [
@@ -101,16 +106,12 @@ addUpdateCallback(() => {
       _playerEntity,
       [playerPos, playerCollider, playerHealth, player, velocity],
     ) => {
-      // Skip collision checks if player is dead
       if (player.isDead) {
-        // Handle respawn timer
         if (player.respawnTime > 0) {
           player.respawnTime--;
           if (player.respawnTime <= 0) {
-            // Respawn the player
             player.isDead = false;
             playerHealth.currentHealth = playerHealth.maxHealth;
-            // Reset position and velocity
             playerPos.x = 0;
             playerPos.y = 0;
             velocity.x = 0;
@@ -120,34 +121,27 @@ addUpdateCallback(() => {
         return;
       }
 
-      // Get all projectiles that could be colliding with the player
       runQuery(
         [POSITION_COMPONENT_DEF, PROJECTILE_COMPONENT_DEF],
         (projectileEntity, [projectilePos, projectile]) => {
-          // Skip projectiles created by the player
           if (projectile.source === "player") return;
 
-          // Check for collision using circle collision
           const dx = playerPos.x - projectilePos.x;
           const dy = playerPos.y - projectilePos.y;
           const distanceSquared = dx * dx + dy * dy;
           const combinedRadius = playerCollider.radius + projectile.radius;
 
           if (distanceSquared <= combinedRadius * combinedRadius) {
-            // Player takes damage
             playerHealth.currentHealth = Math.max(
               0,
               playerHealth.currentHealth - projectile.damage,
             );
 
-            // Destroy the projectile
             destroyEntity(projectileEntity);
 
-            // If player health reaches 0, start respawn process
             if (playerHealth.currentHealth <= 0) {
               player.isDead = true;
               player.respawnTime = player.respawnDuration;
-              // Reset velocity immediately when dying
               velocity.x = 0;
               velocity.y = 0;
             }
@@ -157,3 +151,37 @@ addUpdateCallback(() => {
     },
   );
 });
+
+export const handleSocketOpenPlayerSetup = async (
+  websocket: ServerWebSocket<WebSocketData>,
+) => {
+  createPlayerEntity(websocket.data.entity);
+};
+export const handleAuthenticatedPlayerSetup = async (
+  websocket: ServerWebSocket<WebSocketData>,
+  _message: ClientMessage,
+  user: typeof users.$inferSelect,
+) => {
+  const player = getComponent(websocket.data.entity, PLAYER_COMPONENT_DEF);
+  if (player) {
+    player.username = user.username;
+  }
+  websocket.data.userID = user.id;
+
+  const inventory = getComponent(
+    websocket.data.entity,
+    INVENTORY_COMPONENT_DEF,
+  );
+  if (inventory) {
+    inventory.items = await database
+      .select()
+      .from(items)
+      .where(eq(items.userID, user.id));
+  }
+};
+
+export const handleSocketClosePlayerCleanup = async (
+  websocket: ServerWebSocket<WebSocketData>,
+) => {
+  destroyEntity(websocket.data.entity);
+};
