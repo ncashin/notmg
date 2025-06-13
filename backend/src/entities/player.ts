@@ -17,6 +17,7 @@ import {
 } from "../../../core/player";
 import type { ClientMessage } from "../../../core/socketMessage";
 import { items, type users } from "../../schema";
+import { collisionTree } from "../collision";
 import { database } from "../database";
 import {
   addComponent,
@@ -29,11 +30,11 @@ import { addUpdateCallback } from "../update";
 import type { WebSocketData } from "../websocket";
 import { createProjectile } from "./projectile";
 
-export const createPlayerEntity = (entity: Entity, name = "") => {
+export const createPlayerEntity = (entity: Entity, username = "") => {
   addComponent(entity, POSITION_COMPONENT_DEF);
   addComponent(entity, VELOCITY_COMPONENT_DEF);
-  addComponent(entity, { ...CIRCLE_COLLIDER_COMPONENT_DEF, radius: 40 }); // Circle collider with radius matching sprite size
-  addComponent(entity, { ...PLAYER_COMPONENT_DEF, name });
+  addComponent(entity, { ...CIRCLE_COLLIDER_COMPONENT_DEF, radius: 20 });
+  addComponent(entity, { ...PLAYER_COMPONENT_DEF, username });
   addComponent(entity, {
     ...SPRITE_COMPONENT_DEF,
     imageSrc: "/female.svg",
@@ -55,28 +56,22 @@ export const playerShoot = (
   const position = getComponent(playerEntity, POSITION_COMPONENT_DEF);
   if (!position) return;
 
-  // Calculate direction vector from player to target
   const dirX = targetX - position.x;
   const dirY = targetY - position.y;
 
-  // Normalize the direction vector
   const length = Math.sqrt(dirX * dirX + dirY * dirY);
   const normalizedDirX = dirX / length;
   const normalizedDirY = dirY / length;
 
-  // Set projectile speed
   const projectileSpeed = 10;
   const velocityX = normalizedDirX * projectileSpeed;
   const velocityY = normalizedDirY * projectileSpeed;
 
-  // Position the projectile slightly away from the player in the shooting direction
-  const spawnDistance = 40; // Distance from player center
+  const spawnDistance = 40;
   const spawnX = position.x + normalizedDirX * spawnDistance;
   const spawnY = position.y + normalizedDirY * spawnDistance;
 
-  // Create projectile entity
   const projectileEntity = createEntity();
-
   createProjectile(
     projectileEntity,
     spawnX,
@@ -85,12 +80,6 @@ export const playerShoot = (
     velocityY,
     "player",
   );
-
-  addComponent(projectileEntity, {
-    ...SPRITE_COMPONENT_DEF,
-    imageSrc: "/projectile.svg",
-    size: 20,
-  });
 };
 
 addUpdateCallback(() => {
@@ -103,51 +92,63 @@ addUpdateCallback(() => {
       VELOCITY_COMPONENT_DEF,
     ],
     (
-      _playerEntity,
+      playerEntity,
       [playerPos, playerCollider, playerHealth, player, velocity],
     ) => {
-      if (player.isDead) {
-        if (player.respawnTime > 0) {
-          player.respawnTime--;
-          if (player.respawnTime <= 0) {
-            player.isDead = false;
-            playerHealth.currentHealth = playerHealth.maxHealth;
-            playerPos.x = 0;
-            playerPos.y = 0;
-            velocity.x = 0;
-            velocity.y = 0;
-          }
+      const searchRadius = playerCollider.radius + 50;
+
+      collisionTree.visit((node, x1, y1, x2, y2) => {
+        const searchX1 = playerPos.x - searchRadius;
+        const searchY1 = playerPos.y - searchRadius;
+        const searchX2 = playerPos.x + searchRadius;
+        const searchY2 = playerPos.y + searchRadius;
+
+        if (x1 > searchX2 || x2 < searchX1 || y1 > searchY2 || y2 < searchY1) {
+          return false;
         }
-        return;
-      }
 
-      runQuery(
-        [POSITION_COMPONENT_DEF, PROJECTILE_COMPONENT_DEF],
-        (projectileEntity, [projectilePos, projectile]) => {
-          if (projectile.source === "player") return;
-
-          const dx = playerPos.x - projectilePos.x;
-          const dy = playerPos.y - projectilePos.y;
-          const distanceSquared = dx * dx + dy * dy;
-          const combinedRadius = playerCollider.radius + projectile.radius;
-
-          if (distanceSquared <= combinedRadius * combinedRadius) {
-            playerHealth.currentHealth = Math.max(
-              0,
-              playerHealth.currentHealth - projectile.damage,
+        if (
+          node.length === undefined &&
+          node.data.entity &&
+          node.data.entity !== playerEntity
+        ) {
+          const entityComponents = getComponent(
+            node.data.entity,
+            PROJECTILE_COMPONENT_DEF,
+          );
+          if (entityComponents && entityComponents.source !== "player") {
+            const entityPosition = getComponent(
+              node.data.entity,
+              POSITION_COMPONENT_DEF,
             );
+            if (entityPosition) {
+              const dx = playerPos.x - entityPosition.x;
+              const dy = playerPos.y - entityPosition.y;
+              const distanceSquared = dx * dx + dy * dy;
+              const combinedRadius =
+                playerCollider.radius + entityComponents.radius;
 
-            destroyEntity(projectileEntity);
+              if (distanceSquared <= combinedRadius * combinedRadius) {
+                playerHealth.currentHealth = Math.max(
+                  0,
+                  playerHealth.currentHealth - entityComponents.damage,
+                );
 
-            if (playerHealth.currentHealth <= 0) {
-              player.isDead = true;
-              player.respawnTime = player.respawnDuration;
-              velocity.x = 0;
-              velocity.y = 0;
+                destroyEntity(node.data.entity);
+
+                if (playerHealth.currentHealth <= 0) {
+                  player.isDead = true;
+                  player.respawnTime = player.respawnDuration;
+                  velocity.x = 0;
+                  velocity.y = 0;
+                }
+              }
             }
           }
-        },
-      );
+        }
+
+        return true;
+      });
     },
   );
 });

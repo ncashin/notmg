@@ -1,7 +1,11 @@
-import { POSITION_COMPONENT_DEF, collisionTree } from "../../core/collision";
+import {
+  CIRCLE_COLLIDER_COMPONENT_DEF,
+  POSITION_COMPONENT_DEF,
+} from "../../core/collision";
 import { type Component, provideECSInstanceFunctions } from "../../core/ecs";
 import type { Packet } from "../../core/network";
 import { mergeDeep } from "../../core/objectMerge";
+import { collisionTree } from "./collision";
 import { sendUpdatePacket } from "./websocket";
 
 export const {
@@ -20,8 +24,19 @@ export const {
 } = provideECSInstanceFunctions({
   addComponentCallback: (entity, component) => {
     if (component.type === POSITION_COMPONENT_DEF.type) {
-      collisionTree.add(component as typeof POSITION_COMPONENT_DEF);
+      const circleCollider = getComponent(
+        entity,
+        CIRCLE_COLLIDER_COMPONENT_DEF,
+      );
+      if (circleCollider) {
+        const positionComponent = component as typeof POSITION_COMPONENT_DEF & {
+          radius?: number;
+        };
+        positionComponent.radius = circleCollider.radius;
+        collisionTree.add(positionComponent);
+      }
     }
+
     if (!component.networked) {
       return;
     }
