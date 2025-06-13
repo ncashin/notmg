@@ -15,6 +15,7 @@ export const createProjectile = (
   velocityY: number,
   source: "player" | "boss" = "player", // Default to player for backward compatibility
   damage = 10, // Default damage value
+  lifetime = 120, // Default lifetime value (2 seconds at 60fps)
 ) => {
   addComponent(entity, { ...POSITION_COMPONENT_DEF, x, y });
   addComponent(entity, {
@@ -23,6 +24,7 @@ export const createProjectile = (
     velocityY,
     source,
     damage,
+    lifetime,
   });
   addComponent(entity, { ...CIRCLE_COLLIDER_COMPONENT_DEF, radius: 10 });
 };

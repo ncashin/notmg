@@ -52,12 +52,47 @@ export const createBossEntity = (entity: Entity) => {
   });
 };
 
+const createBossProjectile = (
+  entity: Entity,
+  x: number,
+  y: number,
+  velocityX: number,
+  velocityY: number,
+  source: "player" | "boss" = "boss",
+  damage = 10,
+  lifetime = 120,
+) => {
+  createProjectile(
+    entity,
+    x,
+    y,
+    velocityX,
+    velocityY,
+    source,
+    damage,
+    lifetime,
+  );
+  addComponent(entity, {
+    ...SPRITE_COMPONENT_DEF,
+    imageSrc: "/skull.png",
+    size: 32,
+  });
+};
+
 const circleAttack = (x: number, y: number, bulletCount: number) => {
   for (let i = 0; i < bulletCount; i++) {
     const angle = (i / bulletCount) * Math.PI * 2;
     const velocityX = Math.cos(angle) * 5;
     const velocityY = Math.sin(angle) * 5;
-    createProjectile(createEntity(), x, y, velocityX, velocityY, "boss", 15);
+    createBossProjectile(
+      createEntity(),
+      x,
+      y,
+      velocityX,
+      velocityY,
+      "boss",
+      15,
+    );
   }
 };
 
@@ -65,7 +100,7 @@ const spiralAttack = (x: number, y: number, step: number) => {
   const angle = (step / 20) * Math.PI * 2;
   const velocityX = Math.cos(angle) * 5;
   const velocityY = Math.sin(angle) * 5;
-  createProjectile(createEntity(), x, y, velocityX, velocityY, "boss", 20);
+  createBossProjectile(createEntity(), x, y, velocityX, velocityY, "boss", 20);
 };
 
 const randomBurst = (x: number, y: number, bulletCount: number) => {
@@ -73,7 +108,15 @@ const randomBurst = (x: number, y: number, bulletCount: number) => {
     const angle = Math.random() * Math.PI * 2;
     const velocityX = Math.cos(angle) * 5;
     const velocityY = Math.sin(angle) * 5;
-    createProjectile(createEntity(), x, y, velocityX, velocityY, "boss", 10);
+    createBossProjectile(
+      createEntity(),
+      x,
+      y,
+      velocityX,
+      velocityY,
+      "boss",
+      10,
+    );
   }
 };
 
