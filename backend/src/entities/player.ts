@@ -17,7 +17,7 @@ import {
 } from "../../../core/player";
 import type { ClientMessage } from "../../../core/socketMessage";
 import { items, type users } from "../../schema";
-import { collisionTree } from "../collision";
+import { type CollisionTreeType, collisionTree } from "../collision";
 import { database } from "../database";
 import {
   addComponent,
@@ -86,77 +86,53 @@ export const playerShoot = (
     size: 20,
   });
 };
-
 addUpdateCallback(() => {
   runQuery(
     [
       POSITION_COMPONENT_DEF,
-      CIRCLE_COLLIDER_COMPONENT_DEF,
-      HEALTH_COMPONENT_DEF,
-      PLAYER_COMPONENT_DEF,
       VELOCITY_COMPONENT_DEF,
+      CIRCLE_COLLIDER_COMPONENT_DEF,
+      PLAYER_COMPONENT_DEF,
+      HEALTH_COMPONENT_DEF,
     ],
     (
-      playerEntity,
-      [playerPos, playerCollider, playerHealth, player, velocity],
+      _playerEntity,
+      [playerPosition, _velocity, playerCollider, player, playerHealth],
     ) => {
-      const searchRadius = playerCollider.radius + 50;
-
-      collisionTree.visit(
-        ([entity, positionComponent, circleCollider], x1, y1, x2, y2) => {
-          const searchX1 = playerPos.x - searchRadius;
-          const searchY1 = playerPos.y - searchRadius;
-          const searchX2 = playerPos.x + searchRadius;
-          const searchY2 = playerPos.y + searchRadius;
-
-          if (
-            x1 > searchX2 ||
-            x2 < searchX1 ||
-            y1 > searchY2 ||
-            y2 < searchY1
-          ) {
-            return false;
+      const potentialCollisions: CollisionTreeType[] = [];
+      collisionTree.visit((node, x1, y1, x2, y2) => {
+        if (!node.length) {
+          if (node.data) {
+            potentialCollisions.push(node.data);
           }
+        }
 
-          if (entity && entity !== playerEntity) {
-            const entityComponents = getComponent(
-              entity,
-              PROJECTILE_COMPONENT_DEF,
-            );
-            if (entityComponents && entityComponents.source !== "player") {
-              const entityPosition = getComponent(
-                entity,
-                POSITION_COMPONENT_DEF,
-              );
-              if (entityPosition) {
-                const dx = playerPos.x - entityPosition.x;
-                const dy = playerPos.y - entityPosition.y;
-                const distanceSquared = dx * dx + dy * dy;
-                const combinedRadius =
-                  playerCollider.radius + circleCollider.radius;
+        return x1 > x2 || y1 > y2 || x2 < x1 || y2 < y1;
+      });
 
-                if (distanceSquared <= combinedRadius * combinedRadius) {
-                  playerHealth.currentHealth = Math.max(
-                    0,
-                    playerHealth.currentHealth - entityComponents.damage,
-                  );
+      for (const [
+        entity,
+        foundPosition,
+        foundCollider,
+      ] of potentialCollisions) {
+        const distance = Math.sqrt(
+          (playerPosition.x - foundPosition.x) ** 2 +
+            (playerPosition.y - foundPosition.y) ** 2,
+        );
+        const combinedRadius = playerCollider.radius + foundCollider.radius;
 
-                  destroyEntity(entity);
-
-                  if (playerHealth.currentHealth <= 0) {
-                    player.isDead = true;
-                    player.respawnTime = player.respawnDuration;
-                    velocity.x = 0;
-                    velocity.y = 0;
-                  }
-                }
-              }
+        if (distance < combinedRadius) {
+          const projectile = getComponent(entity, PROJECTILE_COMPONENT_DEF);
+          if (projectile && projectile.source !== "player") {
+            playerHealth.currentHealth -= projectile.damage;
+            if (playerHealth.currentHealth <= 0) {
+              playerHealth.currentHealth = 0;
+              player.isDead = true;
             }
+            destroyEntity(entity);
           }
-
-          return true;
-        },
-      );
+        }
+      }
     },
   );
 });
