@@ -82,6 +82,7 @@ websocket.onmessage = (event) => {
       mergePacket(messageObject.catchupPacket);
       break;
     case "update":
+      console.log(messageObject.packet);
       mergePacket(messageObject.packet);
       break;
     case "authfail":
