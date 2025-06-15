@@ -102,58 +102,61 @@ addUpdateCallback(() => {
     ) => {
       const searchRadius = playerCollider.radius + 50;
 
-      collisionTree.visit((node, x1, y1, x2, y2) => {
-        const searchX1 = playerPos.x - searchRadius;
-        const searchY1 = playerPos.y - searchRadius;
-        const searchX2 = playerPos.x + searchRadius;
-        const searchY2 = playerPos.y + searchRadius;
+      collisionTree.visit(
+        ([entity, positionComponent, circleCollider], x1, y1, x2, y2) => {
+          const searchX1 = playerPos.x - searchRadius;
+          const searchY1 = playerPos.y - searchRadius;
+          const searchX2 = playerPos.x + searchRadius;
+          const searchY2 = playerPos.y + searchRadius;
 
-        if (x1 > searchX2 || x2 < searchX1 || y1 > searchY2 || y2 < searchY1) {
-          return false;
-        }
+          if (
+            x1 > searchX2 ||
+            x2 < searchX1 ||
+            y1 > searchY2 ||
+            y2 < searchY1
+          ) {
+            return false;
+          }
 
-        if (
-          node.length === undefined &&
-          node.data.entity &&
-          node.data.entity !== playerEntity
-        ) {
-          const entityComponents = getComponent(
-            node.data.entity,
-            PROJECTILE_COMPONENT_DEF,
-          );
-          if (entityComponents && entityComponents.source !== "player") {
-            const entityPosition = getComponent(
-              node.data.entity,
-              POSITION_COMPONENT_DEF,
+          if (entity && entity !== playerEntity) {
+            const entityComponents = getComponent(
+              entity,
+              PROJECTILE_COMPONENT_DEF,
             );
-            if (entityPosition) {
-              const dx = playerPos.x - entityPosition.x;
-              const dy = playerPos.y - entityPosition.y;
-              const distanceSquared = dx * dx + dy * dy;
-              const combinedRadius =
-                playerCollider.radius + entityComponents.radius;
+            if (entityComponents && entityComponents.source !== "player") {
+              const entityPosition = getComponent(
+                entity,
+                POSITION_COMPONENT_DEF,
+              );
+              if (entityPosition) {
+                const dx = playerPos.x - entityPosition.x;
+                const dy = playerPos.y - entityPosition.y;
+                const distanceSquared = dx * dx + dy * dy;
+                const combinedRadius =
+                  playerCollider.radius + circleCollider.radius;
 
-              if (distanceSquared <= combinedRadius * combinedRadius) {
-                playerHealth.currentHealth = Math.max(
-                  0,
-                  playerHealth.currentHealth - entityComponents.damage,
-                );
+                if (distanceSquared <= combinedRadius * combinedRadius) {
+                  playerHealth.currentHealth = Math.max(
+                    0,
+                    playerHealth.currentHealth - entityComponents.damage,
+                  );
 
-                destroyEntity(node.data.entity);
+                  destroyEntity(entity);
 
-                if (playerHealth.currentHealth <= 0) {
-                  player.isDead = true;
-                  player.respawnTime = player.respawnDuration;
-                  velocity.x = 0;
-                  velocity.y = 0;
+                  if (playerHealth.currentHealth <= 0) {
+                    player.isDead = true;
+                    player.respawnTime = player.respawnDuration;
+                    velocity.x = 0;
+                    velocity.y = 0;
+                  }
                 }
               }
             }
           }
-        }
 
-        return true;
-      });
+          return true;
+        },
+      );
     },
   );
 });
