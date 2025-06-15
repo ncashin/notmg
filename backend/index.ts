@@ -1,4 +1,5 @@
-import { createEntity } from "./src/ecsProvider";
+import { POSITION_COMPONENT_DEF } from "../core/collision";
+import { createEntity, getComponent } from "./src/ecsProvider";
 import { createBossEntity } from "./src/entities/boss";
 import { fetchHandler } from "./src/router";
 import { type WebSocketData, websocketHandler } from "./src/websocket";
