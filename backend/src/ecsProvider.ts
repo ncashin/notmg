@@ -29,20 +29,21 @@ export const {
         CIRCLE_COLLIDER_COMPONENT_DEF,
       );
       if (circleCollider) {
-        const positionComponent = component as typeof POSITION_COMPONENT_DEF & {
-          radius?: number;
-        };
-        positionComponent.entity = entity;
-        positionComponent.radius = circleCollider.radius;
-        collisionTree.add(positionComponent);
+        collisionTree.add([
+          entity,
+          component as typeof POSITION_COMPONENT_DEF,
+          circleCollider,
+        ]);
       }
     }
     if (component.type === CIRCLE_COLLIDER_COMPONENT_DEF.type) {
       const positionComponent = getComponent(entity, POSITION_COMPONENT_DEF);
       if (positionComponent) {
-        positionComponent.entity = entity;
-        positionComponent.radius = component.radius;
-        collisionTree.add(positionComponent);
+        collisionTree.add([
+          entity,
+          positionComponent,
+          component as typeof CIRCLE_COLLIDER_COMPONENT_DEF,
+        ]);
       }
     }
 

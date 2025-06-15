@@ -3,13 +3,19 @@ import {
   CIRCLE_COLLIDER_COMPONENT_DEF,
   POSITION_COMPONENT_DEF,
 } from "../../core/collision";
+import type { Entity } from "../../core/ecs";
 import { runQuery } from "./ecsProvider";
 import { addUpdateCallback } from "./update";
 
+export type CollisionTreeType = [
+  Entity,
+  typeof POSITION_COMPONENT_DEF,
+  typeof CIRCLE_COLLIDER_COMPONENT_DEF,
+];
 export const createQuadtree = () => {
-  return quadtree<typeof POSITION_COMPONENT_DEF>()
-    .x((d) => d.x)
-    .y((d) => d.y);
+  return quadtree<CollisionTreeType>()
+    .x((d) => d[1].x)
+    .y((d) => d[1].y);
 };
 
 export let collisionTree = createQuadtree();
@@ -18,9 +24,7 @@ export const updateCollisionTree = () => {
   runQuery(
     [POSITION_COMPONENT_DEF, CIRCLE_COLLIDER_COMPONENT_DEF],
     (entity, [position, circleCollider]) => {
-      position.entity = entity;
-      position.radius = circleCollider.radius;
-      collisionTree.add(position);
+      collisionTree.add([entity, position, circleCollider]);
     },
   );
 };
