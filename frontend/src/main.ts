@@ -222,8 +222,8 @@ const update = () => {
       websocket.send(JSON.stringify(moveMessage));
 
       // Calculate mouse position in world coordinates
-      mousePosition.worldX = mousePosition.x - canvas.width / 2 + position.x;
-      mousePosition.worldY = mousePosition.y - canvas.height / 2 + position.y;
+      const worldX = mousePosition.x - canvas.offsetWidth / 2 + position.x;
+      const worldY = mousePosition.y - canvas.offsetHeight / 2 + position.y;
 
       // Handle shooting
       if (shootCooldown > 0) {
@@ -231,11 +231,10 @@ const update = () => {
       }
 
       if (mouseClicked && shootCooldown <= 0) {
-        // Send shoot command to server
         const shootMessage = {
           type: "shoot",
-          targetX: mousePosition.worldX,
-          targetY: mousePosition.worldY,
+          targetX: worldX,
+          targetY: worldY,
         };
         websocket.send(JSON.stringify(shootMessage));
         shootCooldown = SHOOT_COOLDOWN_TIME;
