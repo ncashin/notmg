@@ -9,10 +9,12 @@ import {
   PROJECTILE_COMPONENT_DEF,
   SPRITE_COMPONENT_DEF,
 } from "../../../core/game";
+import { type CollisionTreeType, collisionTree } from "../collision";
 import {
   addComponent,
   createEntity,
   destroyEntity,
+  getComponent,
   runQuery,
 } from "../ecsProvider";
 import { addUpdateCallback } from "../update";
@@ -205,31 +207,44 @@ addUpdateCallback(() => {
       HEALTH_COMPONENT_DEF,
       BOSS_COMPONENT_DEF,
     ],
-    (bossEntity, [bossPos, bossCollider, bossHealth, _boss]) => {
-      runQuery(
-        [POSITION_COMPONENT_DEF, PROJECTILE_COMPONENT_DEF],
-        (projectileEntity, [projectilePos, projectile]) => {
-          if (projectile.source === "boss") return;
+    (bossEntity, [bossPosition, bossCollider, bossHealth, _boss]) => {
+      const potentialCollisions: CollisionTreeType[] = [];
+      collisionTree.visit((node, x1, y1, x2, y2) => {
+        if (!node.length) {
+          if (node.data) {
+            potentialCollisions.push(node.data);
+          }
+        }
 
-          const dx = bossPos.x - projectilePos.x;
-          const dy = bossPos.y - projectilePos.y;
-          const distanceSquared = dx * dx + dy * dy;
-          const combinedRadius = bossCollider.radius + projectile.radius;
+        return x1 > x2 || y1 > y2 || x2 < x1 || y2 < y1;
+      });
 
-          if (distanceSquared <= combinedRadius * combinedRadius) {
+      for (const [
+        entity,
+        foundPosition,
+        foundCollider,
+      ] of potentialCollisions) {
+        const distance = Math.sqrt(
+          (bossPosition.x - foundPosition.x) ** 2 +
+            (bossPosition.y - foundPosition.y) ** 2,
+        );
+        const combinedRadius = bossCollider.radius + foundCollider.radius;
+
+        if (distance < combinedRadius) {
+          const projectile = getComponent(entity, PROJECTILE_COMPONENT_DEF);
+          if (projectile && projectile.source !== "boss") {
             bossHealth.currentHealth = Math.max(
               0,
               bossHealth.currentHealth - projectile.damage,
             );
-
-            destroyEntity(projectileEntity);
+            destroyEntity(entity);
 
             if (bossHealth.currentHealth <= 0) {
               destroyEntity(bossEntity);
             }
           }
-        },
-      );
+        }
+      }
     },
   );
 });
