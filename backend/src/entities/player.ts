@@ -80,6 +80,11 @@ export const playerShoot = (
     velocityY,
     "player",
   );
+  addComponent(projectileEntity, {
+    ...SPRITE_COMPONENT_DEF,
+    imageSrc: "/projectile.svg",
+    size: 20,
+  });
 };
 
 addUpdateCallback(() => {

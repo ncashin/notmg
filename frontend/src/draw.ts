@@ -1,20 +1,14 @@
 import {
-  AABB_COLLIDER_COMPONENT_DEF,
   CIRCLE_COLLIDER_COMPONENT_DEF,
   POSITION_COMPONENT_DEF,
   VELOCITY_COMPONENT_DEF,
 } from "../../core/collision";
-import {
-  HEALTH_COMPONENT_DEF,
-  PROJECTILE_COMPONENT_DEF,
-  SPRITE_COMPONENT_DEF,
-} from "../../core/game";
+import { HEALTH_COMPONENT_DEF, SPRITE_COMPONENT_DEF } from "../../core/game";
 import {
   INVENTORY_COMPONENT_DEF,
   PLAYER_COMPONENT_DEF,
 } from "../../core/player";
 import { getComponent, runQuery } from "./ecsProvider";
-import { mousePosition } from "./input";
 import { CLIENT_POSITION_COMPONENT_DEF } from "./main";
 
 let canvas: HTMLCanvasElement;
@@ -108,143 +102,93 @@ const drawSprites = () => {
   );
 };
 
-// Helper function to convert screen coordinates to inventory cell coordinates
-const getCellFromScreenPosition = (
-  screenX: number,
-  screenY: number,
-  cellSize: number,
-  padding: number,
-) => {
-  const row = Math.floor((screenY - padding) / cellSize);
-  const column = Math.floor((screenX - padding) / cellSize);
-  return { row, column };
-};
+let lastInventoryState: string | null = null;
+export const drawInventory = (inventory: typeof INVENTORY_COMPONENT_DEF) => {
+  // Serialize inventory for change detection
+  const items = inventory.items as Array<{
+    offsetX: number;
+    offsetY: number;
+    equipped?: boolean;
+    id?: string | number;
+  }>;
+  // Sort and stringify for stable comparison
+  const serialized = JSON.stringify(
+    items
+      .map((item) => ({
+        offsetX: item.offsetX,
+        offsetY: item.offsetY,
+        equipped: !!item.equipped,
+        id: item.id ?? null,
+      }))
+      .sort((a, b) =>
+        a.offsetY !== b.offsetY ? a.offsetY - b.offsetY : a.offsetX - b.offsetX,
+      ),
+  );
+  if (serialized === lastInventoryState) return; // No change
+  lastInventoryState = serialized;
 
-export const drawInventory = (
-  inventory: typeof INVENTORY_COMPONENT_DEF,
-  centerPoint: { x: number; y: number } = { x: 0, y: 0 },
-) => {
-  const inventoryCell = new Image();
-  inventoryCell.src = "/inventorycell.png";
+  // Get the inventory grid (4 rows x 6 columns = 24 slots)
+  const inventoryGrid = document.getElementById("inventory");
+  if (!inventoryGrid) return;
+  const slots = Array.from(
+    inventoryGrid.getElementsByClassName("inventory-slot"),
+  ) as HTMLElement[];
 
-  const padding = 6;
-  const cellSize = 48;
-  const inventoryWidth = cellSize * 10 + padding * 2;
-  const inventoryHeight = cellSize * 6 + padding * 2;
-
-  // Draw inventory background
-  context.fillStyle = "#222222";
-  context.fillRect(0, 0, inventoryWidth, inventoryHeight);
-
-  // Draw inventory grid
-  for (let column = 0; column < 10; column++) {
-    for (let row = 0; row < 6; row++) {
-      context.drawImage(
-        inventoryCell,
-        column * cellSize + padding,
-        row * cellSize + padding,
-        cellSize,
-        cellSize,
-      );
-    }
+  // Clear all slots
+  for (const slot of slots) {
+    slot.innerHTML = "";
+    slot.classList.remove("equipped");
+    slot.removeAttribute("data-tooltip");
   }
 
-  // Draw inventory items
-  for (const item of inventory.items) {
-    const itemPadding = 6;
-    const itemX = item.offsetX * cellSize + padding + itemPadding;
-    const itemY = item.offsetY * cellSize + padding + itemPadding;
-    const itemSize = cellSize - itemPadding * 2;
-
-    // Draw placeholder rectangle for item
-    if (item.equipped) {
-      context.fillStyle = "#FFFF00"; // Yellow color
-      context.fillRect(itemX, itemY, itemSize, itemSize);
+  // Group items by slot
+  const columns = 6;
+  const rows = 4;
+  const slotMap: Record<string, typeof items> = {};
+  for (const item of items) {
+    if (
+      typeof item.offsetX !== "number" ||
+      typeof item.offsetY !== "number" ||
+      item.offsetX < 0 ||
+      item.offsetX >= columns ||
+      item.offsetY < 0 ||
+      item.offsetY >= rows
+    ) {
+      continue; // skip invalid
     }
-    const swordImage = new Image();
-    swordImage.src = "/sword.svg";
+    const slotKey = `${item.offsetX},${item.offsetY}`;
+    if (!slotMap[slotKey]) slotMap[slotKey] = [];
+    slotMap[slotKey].push(item);
+  }
 
-    context.save();
-    context.translate(itemX + itemSize / 2, itemY + itemSize / 2);
-    context.scale(itemSize / 48, itemSize / 48);
-    // Draw the sword SVG centered at origin
-    context.drawImage(swordImage, -24, -24, 48, 48);
-
-    context.restore();
-
-    if (mousePosition) {
-      const { column: mouseColumn, row: mouseRow } = getCellFromScreenPosition(
-        mousePosition.x,
-        mousePosition.y,
-        cellSize,
-        padding,
-      );
-
-      // Check if mouse is over this item's cell
-      if (mouseColumn === item.offsetX && mouseRow === item.offsetY) {
-        // Draw hover overlay
-        context.save();
-        context.fillStyle = "rgba(255, 255, 255, 0.1)"; // Very transparent white
-        context.fillRect(itemX, itemY, itemSize, itemSize);
-        context.restore();
-
-        // Draw tooltip
-        context.save();
-        // Set up text styling for item tooltip
-        context.font = "bold 18px Arial";
-        context.fillStyle = "white";
-        context.textAlign = "left";
-        context.textBaseline = "top";
-
-        // Item stats
-        const itemName = "Epic Sword of Power";
-        const itemStats = [
-          "Damage: +25",
-          "Attack Speed: 1.2",
-          "Rarity: Epic",
-          "Level Required: 10",
-        ];
-
-        const tooltipX = itemX + itemSize + 12;
-        const tooltipY = itemY;
-
-        // Calculate total height needed for tooltip
-        const lineHeight = 24;
-        const totalHeight = (itemStats.length + 1) * lineHeight;
-
-        // Draw tooltip background
-        context.fillStyle = "rgba(0, 0, 0, 0.8)";
-        const nameMetrics = context.measureText(itemName);
-        const padding = 12;
-        const maxWidth = Math.max(
-          nameMetrics.width,
-          ...itemStats.map((stat) => context.measureText(stat).width),
-        );
-
-        context.fillRect(
-          tooltipX - padding,
-          tooltipY - padding,
-          maxWidth + padding * 2,
-          totalHeight + padding * 2,
-        );
-
-        // Draw text shadow for better visibility
-        context.shadowColor = "black";
-        context.shadowBlur = 3;
-
-        // Draw item name in gold color
-        context.fillStyle = "#FFD700";
-        context.fillText(itemName, tooltipX, tooltipY);
-
-        // Draw stats
-        context.font = "16px Arial";
-        context.fillStyle = "white";
-        itemStats.forEach((stat, index) => {
-          context.fillText(stat, tooltipX, tooltipY + lineHeight * (index + 1));
-        });
-
-        context.restore();
-      }
+  // Render items in each slot (stacked if multiple)
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < columns; col++) {
+      const slotIndex = row * columns + col;
+      const slot = slots[slotIndex];
+      if (!slot) continue;
+      const slotKey = `${col},${row}`;
+      const itemsInSlot = slotMap[slotKey] || [];
+      itemsInSlot.forEach((item, i) => {
+        const img = document.createElement("img");
+        img.src = "/sword.svg";
+        img.alt = "Item";
+        img.className = "item";
+        img.style.left = "0";
+        img.style.top = "0";
+        img.style.zIndex = String(i + 1);
+        slot.appendChild(img);
+        if (item.equipped) {
+          slot.classList.add("equipped");
+          slot.style.outline = "2px solid yellow";
+        } else {
+          slot.classList.remove("equipped");
+          slot.style.outline = "";
+        }
+        // Tooltip (static for now)
+        img.title =
+          "Epic Sword of Power\nDamage: +25\nAttack Speed: 1.2\nRarity: Epic\nLevel Required: 10";
+      });
     }
   }
 };
