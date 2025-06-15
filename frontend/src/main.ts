@@ -4,12 +4,11 @@ import {
   POSITION_COMPONENT_DEF,
   VELOCITY_COMPONENT_DEF,
 } from "../../core/collision";
-import { provideECSInstanceFunctions } from "../../core/ecs";
 import type { Packet } from "../../core/network";
 import { mergeDeep } from "../../core/objectMerge";
-import { PLAYER_COMPONENT_DEF, type PlayerComponent } from "../../core/player";
 
-import { CreateItemMessage } from "../../core/socketMessage";
+import { PLAYER_COMPONENT_DEF } from "../../core/player";
+import type { CreateItemMessage } from "../../core/socketMessage";
 import { attemptAuthRefresh, sendSocketAuthMessage } from "./auth";
 import { draw } from "./draw";
 import {
@@ -85,6 +84,17 @@ websocket.onmessage = (event) => {
     case "update":
       mergePacket(messageObject.packet);
       break;
+    case "authfail":
+      sessionStorage.removeItem("authToken");
+      attemptAuthRefresh().then((newToken) => {
+        if (newToken) {
+          sendSocketAuthMessage(websocket, newToken);
+          return;
+        }
+
+        authForm.style.display = "flex";
+      });
+      break;
     default:
       console.warn(
         `Received unknown message type: ${messageObject.type}`,
@@ -116,9 +126,6 @@ const DAMPING_FORCE = 5;
 const PLAYER_SPEED = 1000;
 let lastFrameTime = Date.now();
 
-let deathOverlay: HTMLElement;
-let respawnCountdown: HTMLElement;
-
 let authForm: HTMLFormElement;
 let authMessage: HTMLElement;
 
@@ -144,22 +151,6 @@ const update = () => {
   if (playerEntity === undefined) {
     window.requestAnimationFrame(update);
     return;
-  }
-
-  // Check player state for death overlay
-  const player = getComponent(playerEntity, PLAYER_COMPONENT_DEF) as
-    | PlayerComponent
-    | undefined;
-  if (player) {
-    if (player.isDead) {
-      deathOverlay.classList.remove("hidden");
-      const secondsLeft = Math.ceil(player.respawnTime / 60);
-      respawnCountdown.textContent = secondsLeft.toString();
-
-      window.requestAnimationFrame(update);
-      return;
-    }
-    deathOverlay.classList.add("hidden");
   }
 
   const rawInterpolationPercent = (Date.now() - timeUpdateReceived) / 1000;
@@ -190,6 +181,7 @@ const update = () => {
   const position = getComponent(playerEntity, CLIENT_POSITION_COMPONENT_DEF);
   const velocity = getComponent(playerEntity, VELOCITY_COMPONENT_DEF);
 
+  const player = getComponent(playerEntity, PLAYER_COMPONENT_DEF);
   if (
     position !== undefined &&
     velocity !== undefined &&
@@ -299,31 +291,15 @@ const handleAuth = async (event: SubmitEvent) => {
 
 document.addEventListener("DOMContentLoaded", () => {
   canvas = document.getElementById("canvas") as HTMLCanvasElement;
-  deathOverlay = document.getElementById("death-overlay") as HTMLElement;
-  respawnCountdown = document.getElementById(
-    "respawn-countdown",
-  ) as HTMLElement;
+  fpsCounter = document.getElementById("fps-counter") as HTMLParagraphElement;
 
-  // Create FPS counter element
-  fpsCounter = document.createElement("div");
-  fpsCounter.style.position = "fixed";
-  fpsCounter.style.bottom = "10px";
-  fpsCounter.style.right = "10px";
-  fpsCounter.style.color = "white";
-  fpsCounter.style.fontFamily = "monospace";
-  fpsCounter.style.fontSize = "14px";
-  fpsCounter.style.textShadow = "1px 1px 1px black";
-  fpsCounter.style.zIndex = "1000";
-  document.body.appendChild(fpsCounter);
-
-  // Setup auth form
   authForm = document.getElementById("auth-form") as HTMLFormElement;
   authMessage = document.getElementById("auth-message") as HTMLElement;
   authForm.addEventListener("submit", handleAuth);
 
   const authToken = sessionStorage.getItem("authToken");
   if (authToken) {
-    // authForm.style.display = "none";
+    authForm.style.display = "none";
   }
 
   window.requestAnimationFrame(update);

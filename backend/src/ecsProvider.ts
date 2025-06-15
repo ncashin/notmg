@@ -32,7 +32,16 @@ export const {
         const positionComponent = component as typeof POSITION_COMPONENT_DEF & {
           radius?: number;
         };
+        positionComponent.entity = entity;
         positionComponent.radius = circleCollider.radius;
+        collisionTree.add(positionComponent);
+      }
+    }
+    if (component.type === CIRCLE_COLLIDER_COMPONENT_DEF.type) {
+      const positionComponent = getComponent(entity, POSITION_COMPONENT_DEF);
+      if (positionComponent) {
+        positionComponent.entity = entity;
+        positionComponent.radius = component.radius;
         collisionTree.add(positionComponent);
       }
     }

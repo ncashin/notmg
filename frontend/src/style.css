@@ -22,6 +22,7 @@ body {
   flex-direction: row;
   padding: 1rem;
   align-items: end;
+  gap: 1rem;
 }
 
 #chat-container {
@@ -68,4 +69,61 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+#fps-counter {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 1rem;
+  margin: 0rem;
+  color: white;
+  font-family: monospace;
+  font-size: 1rem;
+  text-shadow: 1px 1px 1px black;
+  z-index: 1000;
+}
+
+#inventory {
+  display: grid;
+  grid-template-columns: repeat(6, 3rem);
+  grid-template-rows: repeat(4, 3rem);
+  gap: 0.5rem;
+  background: #222a;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  width: max-content;
+  box-shadow: 0 0.125rem 0.5rem #0003;
+}
+
+.item {
+  position: absolute;
+  padding: 0.5rem;
+  pointer-events: auto;
+  z-index: 1;
+  filter: drop-shadow(0 1px 2px #0008);
+}
+
+.inventory-slot {
+  position: relative; /* Needed for stacking .item absolutely */
+  width: 3rem;
+  height: 3rem;
+  background: #fff2;
+  border: 0.0625rem solid #8884;
+  border-radius: 0.25rem;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border 0.15s;
+  cursor: pointer;
+}
+
+.inventory-slot:hover {
+  background: #fff4;
+  border-color: #aaa8;
+}
+
+.inventory-slot:active {
+  background: #fff6;
+  border-color: #ccc;
 }

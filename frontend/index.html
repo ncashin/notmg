@@ -13,23 +13,34 @@
     <!-- Registration Form -->
      <div id="bottom-left">
       
-      <div id="chat-container">    
-        <div id="chat-message-container">
-          <p class="chat-message">Player1: GG everyone!</p>
-          <p class="chat-message">Player2: Nice shot!</p>
-          <p class="chat-message">Player3: Anyone want to team up?</p>
-          <p class="chat-message">Player1: Sure, let's go!</p>
-          <p class="chat-message">Player2: Watch out, enemy at spawn!</p>
-          <p class="chat-message">Player3: Got it, covering you</p>
-          <p class="chat-message">Player1: Thanks for the save!</p>
-          <p class="chat-message">Player2: No problem, that's what teammates are for</p>
-          <p class="chat-message">Player3: Great teamwork everyone!</p>
-          <p class="chat-message">Player1: Another round?</p>
-        </div>
-        <div id="chat-input-container">
-          <input type="text" id="chat-input" placeholder="Type your message..." maxlength="100">
-          <button id="chat-send">Send</button>
-        </div>
+     
+      <div id="inventory" class="inventory">
+        <!-- 4 rows x 6 columns = 24 slots -->
+        <!-- Generate 24 inventory slots -->
+        <div class="inventory-slot"></div>
+        <div class="inventory-slot"></div>
+        <div class="inventory-slot"></div>
+        <div class="inventory-slot"></div>
+        <div class="inventory-slot"></div>
+        <div class="inventory-slot"></div>
+        <div class="inventory-slot"></div>
+        <div class="inventory-slot"></div>
+        <div class="inventory-slot"></div>
+        <div class="inventory-slot"></div>
+        <div class="inventory-slot"></div>
+        <div class="inventory-slot"></div>
+        <div class="inventory-slot"></div>
+        <div class="inventory-slot"></div>
+        <div class="inventory-slot"></div>
+        <div class="inventory-slot"></div>
+        <div class="inventory-slot"></div>
+        <div class="inventory-slot"></div>
+        <div class="inventory-slot"></div>
+        <div class="inventory-slot"></div>
+        <div class="inventory-slot"></div>
+        <div class="inventory-slot"></div>
+        <div class="inventory-slot"></div>
+        <div class="inventory-slot"></div>
       </div>
       <div id="auth-form-container">
         <form id="auth-form">
@@ -43,13 +54,6 @@
         </form>
       </div> 
     </div>
-    
-
-    <div id="death-overlay" class="hidden">
-      <div class="death-content">
-        <h1>You Died!</h1>
-        <p>Respawning in <span id="respawn-countdown">3</span> seconds...</p>
-      </div>
-    </div>
+    <p id="fps-counter">Loading...</p>
   </body>
 </html>
