@@ -34,8 +34,12 @@ export type WebSocketData = {
 };
 let connectedSockets: Array<ServerWebSocket<WebSocketData>> = [];
 
-const websocketMessageHandlers = {
-  move: (websocket: ServerWebSocket<WebSocketData>, message: ClientMessage) => {
+type MessageHandler = (
+  websocket: ServerWebSocket<WebSocketData>,
+  message: ClientMessage,
+) => void | Promise<void>;
+const websocketMessageHandlers: Record<string, MessageHandler> = {
+  move: (websocket, message) => {
     invariant(message.type === "move");
     const position = getComponent(
       websocket.data.entity,
@@ -45,17 +49,11 @@ const websocketMessageHandlers = {
     position.x = message.x;
     position.y = message.y;
   },
-  shoot: (
-    websocket: ServerWebSocket<WebSocketData>,
-    message: ClientMessage,
-  ) => {
+  shoot: (websocket, message) => {
     invariant(message.type === "shoot");
     playerShoot(websocket.data.entity, message.targetX, message.targetY);
   },
-  createItem: async (
-    websocket: ServerWebSocket<WebSocketData>,
-    message: ClientMessage,
-  ) => {
+  createItem: async (websocket, message) => {
     invariant(message.type === "createItem");
     if (!websocket.data.userID) {
       websocket.send("Must be authenticated to create items");
@@ -63,10 +61,7 @@ const websocketMessageHandlers = {
     }
     await createItem(websocket.data.userID, message.offsetX, message.offsetY);
   },
-  auth: async (
-    websocket: ServerWebSocket<WebSocketData>,
-    message: ClientMessage,
-  ) => {
+  auth: async (websocket, message) => {
     invariant(message.type === "auth");
     const user = await authenticate(message.token);
 
