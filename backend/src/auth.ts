@@ -7,8 +7,11 @@ import type { RouteHandler } from "./router";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
-invariant(JWT_SECRET);
-invariant(REFRESH_TOKEN_SECRET);
+invariant(JWT_SECRET, "JWT_SECRET environment variable is required");
+invariant(
+  REFRESH_TOKEN_SECRET,
+  "REFRESH_TOKEN_SECRET environment variable is required",
+);
 
 const ACCESS_TOKEN_EXPIRY = "1h";
 const REFRESH_TOKEN_EXPIRY = "7d";
