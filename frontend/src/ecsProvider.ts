@@ -1,4 +1,4 @@
-import { provideECSInstanceFunctions } from "../../core/ecs";
+import { provideECSInstanceFunctions } from "core";
 
 export const {
   ecsInstance,

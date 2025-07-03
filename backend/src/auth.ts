@@ -60,9 +60,11 @@ export const handleRegister: RouteHandler = async (req) => {
 
   try {
     const hashedPassword = await Bun.password.hash(password);
+    const userId = crypto.randomUUID();
     const newUser = await database
       .insert(users)
       .values({
+        id: userId,
         username,
         password: hashedPassword,
       })
@@ -93,7 +95,7 @@ export const handleLogin: RouteHandler = async (req) => {
   const user = await database
     .select()
     .from(users)
-    .where(eq(users.username, username))
+    .where(eq(users.username as any, username))
     .limit(1)
     .then((rows) => rows[0]);
 
@@ -169,7 +171,7 @@ export const authenticate = async (requestOrToken: Request | string) => {
     const user = await database
       .select()
       .from(users)
-      .where(eq(users.id, decoded.userId as string))
+      .where(eq(users.id as any, decoded.userId as string))
       .limit(1)
       .then((rows) => rows[0]);
 

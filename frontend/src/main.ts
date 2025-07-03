@@ -1,14 +1,10 @@
 import "./style.css";
 import "./draw";
-import {
-  POSITION_COMPONENT_DEF,
-  VELOCITY_COMPONENT_DEF,
-} from "../../core/collision";
-import type { Packet } from "../../core/network";
-import { mergeDeep } from "../../core/objectMerge";
+import { POSITION_COMPONENT_DEF, VELOCITY_COMPONENT_DEF } from "core";
 
-import { PLAYER_COMPONENT_DEF } from "../../core/player";
-import type { CreateItemMessage } from "../../core/socketMessage";
+import { type Packet, mergeDeep } from "core";
+import { PLAYER_COMPONENT_DEF } from "core";
+import type { CreateItemMessage } from "core";
 import { attemptAuthRefresh, sendSocketAuthMessage } from "./auth";
 import { draw } from "./draw";
 import {

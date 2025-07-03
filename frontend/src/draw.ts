@@ -2,12 +2,9 @@ import {
   CIRCLE_COLLIDER_COMPONENT_DEF,
   POSITION_COMPONENT_DEF,
   VELOCITY_COMPONENT_DEF,
-} from "../../core/collision";
-import { HEALTH_COMPONENT_DEF, SPRITE_COMPONENT_DEF } from "../../core/game";
-import {
-  INVENTORY_COMPONENT_DEF,
-  PLAYER_COMPONENT_DEF,
-} from "../../core/player";
+} from "core";
+import { INVENTORY_COMPONENT_DEF, PLAYER_COMPONENT_DEF } from "core";
+import { HEALTH_COMPONENT_DEF, SPRITE_COMPONENT_DEF } from "core";
 import { getComponent, runQuery } from "./ecsProvider";
 import { CLIENT_POSITION_COMPONENT_DEF } from "./main";
 

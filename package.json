@@ -1,25 +1,17 @@
 {
-  "name": "frontend",
+  "name": "notmg",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "frontend": "cd frontend; vite",
-    "backend": "bun run --watch backend/index.ts",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "format": "biome check --write ./backend ./core ./frontend"
+    "dev": "pnpm --parallel run dev",
+    "build": "pnpm --recursive run build",
+    "format": "biome check --write ./backend ./core ./frontend",
+    "frontend": "pnpm --filter frontend run dev",
+    "backend": "pnpm --filter backend run dev"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
-
-    "typescript": "~5.7.2",
-    "vite": "^6.2.0"
-  },
-  "dependencies": {
-    "@types/d3-quadtree": "^3.0.6",
-    "d3-quadtree": "^3.0.1",
-    "tiny-invariant": "^1.3.3",
-    "zod": "^3.24.4"
+    "typescript": "~5.7.2"
   }
 }

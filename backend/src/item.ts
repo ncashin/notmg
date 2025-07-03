@@ -9,6 +9,7 @@ export const createItem = async (
   const [item] = await database
     .insert(items)
     .values({
+      id: crypto.randomUUID(),
       userID,
       offsetX,
       offsetY,

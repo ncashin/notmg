@@ -1,9 +1,10 @@
 import { quadtree } from "d3-quadtree";
+
 import {
   CIRCLE_COLLIDER_COMPONENT_DEF,
+  type Entity,
   POSITION_COMPONENT_DEF,
-} from "../../core/collision";
-import type { Entity } from "../../core/ecs";
+} from "core";
 import { runQuery } from "./ecsProvider";
 import { addUpdateCallback } from "./update";
 

@@ -1,12 +1,13 @@
 import {
   CIRCLE_COLLIDER_COMPONENT_DEF,
+  type Component,
   POSITION_COMPONENT_DEF,
-} from "../../core/collision";
-import { type Component, provideECSInstanceFunctions } from "../../core/ecs";
-import type { Packet } from "../../core/network";
-import { mergeDeep } from "../../core/objectMerge";
+  type Packet,
+  mergeDeep,
+  provideECSInstanceFunctions,
+} from "core";
+
 import { collisionTree } from "./collision";
-import { sendUpdatePacket } from "./websocket";
 
 export const {
   ecsInstance,

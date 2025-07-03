@@ -1,5 +1,5 @@
-import { drizzle } from "drizzle-orm/node-postgres";
-import invariant from "tiny-invariant";
+import { Database } from "bun:sqlite";
+import { drizzle } from "drizzle-orm/bun-sqlite";
 
-invariant(process.env.DATABASE_URL, "DATABASE_URL must be set");
-export const database = drizzle(process.env.DATABASE_URL);
+const sqlite = new Database("sqlite.db");
+export const database = drizzle({ client: sqlite });
