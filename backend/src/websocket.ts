@@ -1,7 +1,7 @@
 import type { ServerWebSocket, WebSocketHandler } from "bun";
+import { POSITION_COMPONENT_DEF } from "core";
+import type { ClientMessage } from "core";
 import invariant from "tiny-invariant";
-import { POSITION_COMPONENT_DEF } from "../../core/collision";
-import type { ClientMessage } from "../../core/socketMessage";
 import { authenticate } from "./auth";
 import {
   getComponent,
