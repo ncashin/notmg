@@ -98,7 +98,7 @@ export const handleLogin: RouteHandler = async (req) => {
   const user = await database
     .select()
     .from(users)
-    .where(eq(users.username as any, username))
+    .where(eq(users.username, username))
     .limit(1)
     .then((rows) => rows[0]);
 
