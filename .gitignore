@@ -201,4 +201,4 @@ dist
 # Finder (MacOS) folder config
 .DS_Store
 
->>>>>>> 78a1fa6 (oops)
+sqlite.db
