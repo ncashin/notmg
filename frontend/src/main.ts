@@ -53,10 +53,6 @@ websocket.onopen = () => {
     sendSocketAuthMessage(websocket, storedToken);
     return;
   }
-  attemptAuthRefresh().then((newToken) => {
-    if (!newToken) return;
-    sendSocketAuthMessage(websocket, newToken);
-  });
 };
 const parseSocketMessage = (messageString: string) => {
   try {
@@ -78,7 +74,7 @@ websocket.onmessage = (event) => {
       mergePacket(messageObject.catchupPacket);
       break;
     case "update":
-      console.log(messageObject.packet);
+      console.log(messageObject);
       mergePacket(messageObject.packet);
       break;
     case "authfail":

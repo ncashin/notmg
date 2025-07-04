@@ -1,4 +1,4 @@
-import { AuthMessage } from "../../core/socketMessage";
+import type { AuthMessage } from "core";
 
 export const attemptAuthRefresh = async () => {
   const refreshResponse = await fetch("/refresh", {

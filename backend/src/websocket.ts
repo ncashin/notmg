@@ -17,22 +17,22 @@ import {
 import { createItem } from "./item";
 import { addUpdateCallback } from "./update";
 
+export type WebSocketData = {
+  entity: number;
+  userID?: string;
+};
+let connectedSockets: Array<ServerWebSocket<WebSocketData>> = [];
 export const sendUpdatePacket = () => {
+  const updatePacket = getECSUpdatePacket();
   for (const socket of connectedSockets) {
     socket.send(
       JSON.stringify({
         type: "update",
-        packet: getECSUpdatePacket(),
+        packet: updatePacket,
       }),
     );
   }
 };
-
-export type WebSocketData = {
-  entity: number;
-  userID?: string; // Change to string since we use UUID
-};
-let connectedSockets: Array<ServerWebSocket<WebSocketData>> = [];
 
 type MessageHandler = (
   websocket: ServerWebSocket<WebSocketData>,
