@@ -33,7 +33,7 @@ import { createProjectile } from "./projectile";
 export const createPlayerEntity = (entity: Entity, username = "") => {
   addComponent(entity, POSITION_COMPONENT_DEF);
   addComponent(entity, VELOCITY_COMPONENT_DEF);
-  addComponent(entity, { ...CIRCLE_COLLIDER_COMPONENT_DEF, radius: 45 });
+  addComponent(entity, { ...CIRCLE_COLLIDER_COMPONENT_DEF, radius: 25 });
   addComponent(entity, { ...PLAYER_COMPONENT_DEF, username });
   addComponent(entity, {
     ...SPRITE_COMPONENT_DEF,
