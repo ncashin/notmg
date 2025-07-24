@@ -1,9 +1,5 @@
-import { quadtree } from "d3-quadtree";
 import {
-  type ECSInstance,
   type Entity,
-  addComponent,
-  createEntity,
 } from "./ecs";
 
 export const POSITION_COMPONENT_DEF: {

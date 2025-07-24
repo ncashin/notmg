@@ -4,6 +4,7 @@ import { fetchHandler } from "./src/router";
 import { type WebSocketData, websocketHandler } from "./src/websocket";
 
 Bun.serve<WebSocketData, undefined>({
+  hostname: "0.0.0.0",
   port: 3000,
   fetch: fetchHandler,
   websocket: websocketHandler,

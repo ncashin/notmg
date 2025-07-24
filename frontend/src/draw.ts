@@ -60,7 +60,7 @@ export const draw = (
 
   const playerInventory = getComponent(playerEntity, INVENTORY_COMPONENT_DEF);
   if (playerInventory) {
-    drawInventory(playerInventory, centerPoint);
+    drawInventory(playerInventory);
   }
 };
 

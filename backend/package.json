@@ -15,7 +15,7 @@
     "typescript": "~5.7.2"
   },
   "dependencies": {
-    "core": "workspace:*",
+    "core": "*",
     "dotenv": "^16.5.0",
     "drizzle-orm": "^0.44.2",
     "jsonwebtoken": "^9.0.2",

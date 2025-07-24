@@ -12,4 +12,4 @@ try {
 const sqlite = new Database("database/sqlite.db");
 export const database = drizzle({ client: sqlite });
 
-await migrate(database, { migrationsFolder: "./migrations" });
+await migrate(database, { migrationsFolder: "./backend/migrations" });

@@ -33,18 +33,46 @@ const router: Router = {
   },
 };
 
-export function fetchHandler(req: Request, server: Server) {
-  const url = new URL(req.url);
-  const route = router[url.pathname];
+// Serve static files from frontend build
+const serveStaticFile = async (path: string): Promise<Response | null> => {
+  try {
+    const filePath = `./public${path}`;
+    const file = Bun.file(filePath);
+    const exists = await file.exists();
 
-  if (!route) {
-    return new Response("Not found", { status: 404 });
+    if (!exists) {
+      return null;
+    }
+
+    return new Response(file);
+  } catch (error) {
+    return null;
+  }
+};
+
+export async function fetchHandler(req: Request, server: Server) {
+  const url = new URL(req.url);
+  const path = url.pathname;
+
+
+  if (path === "/") {
+    const file = Bun.file("./public/index.html");
+    return new Response(file);
   }
 
-  const handler = route[req.method];
-  if (!handler) {
+  const route = router[path];
+  if (route) {
+    const handler = route[req.method];
+    if (handler) {
+      return handler(req, server);
+    }
     return new Response("Method not allowed", { status: 405 });
   }
 
-  return handler(req, server);
+  const staticResponse = await serveStaticFile(path);
+  if (staticResponse) {
+    return staticResponse;
+  }
+
+  return new Response("Not found", { status: 404 });
 }

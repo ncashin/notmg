@@ -1,4 +1,4 @@
-import type { items } from "../backend/schema";
+import type { items } from "backend/schema";
 
 export const PLAYER_COMPONENT_DEF = {
   networked: true,

@@ -1,0 +1,40 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      # Add your environment variables here
+      - JWT_SECRET=your_jwt_secret
+      - REFRESH_TOKEN_SECRET=your_refresh_token_secret
+      # - DATABASE_URL=file:./database/sqlite.db
+    volumes:
+      # Mount database directory for persistence
+      - ./database:/app/backend/database
+    restart: unless-stopped
+
+  # Optional: Add a development service
+  app-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: base
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - JWT_SECRET=your_jwt_secret
+      - REFRESH_TOKEN_SECRET=your_refresh_token_secret
+    volumes:
+      - ./backend:/app/backend
+      - ./frontend:/app/frontend
+      - ./core:/app/core
+      - ./database:/app/backend/database
+    command: ["bun", "run", "dev"]
+    profiles:
+      - dev
