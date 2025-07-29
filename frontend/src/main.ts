@@ -5,7 +5,6 @@ import { POSITION_COMPONENT_DEF, VELOCITY_COMPONENT_DEF } from "core";
 import { type Packet, mergeDeep } from "core";
 import { PLAYER_COMPONENT_DEF } from "core";
 import type { CreateItemMessage } from "core";
-import { attemptAuthRefresh, sendSocketAuthMessage } from "./auth";
 import { draw } from "./draw";
 import {
   addComponent,
@@ -47,12 +46,7 @@ export const mergePacket = (packet: Packet) => {
 let timeUpdateReceived = Date.now();
 const websocket = new WebSocket("/websocket");
 websocket.onopen = () => {
-  console.log("Connected to server");
-  const storedToken = sessionStorage.getItem("authToken");
-  if (storedToken) {
-    sendSocketAuthMessage(websocket, storedToken);
-    return;
-  }
+
 };
 const parseSocketMessage = (messageString: string) => {
   try {
@@ -77,17 +71,7 @@ websocket.onmessage = (event) => {
       console.log(messageObject);
       mergePacket(messageObject.packet);
       break;
-    case "authfail":
-      sessionStorage.removeItem("authToken");
-      attemptAuthRefresh().then((newToken) => {
-        if (newToken) {
-          sendSocketAuthMessage(websocket, newToken);
-          return;
-        }
 
-        authForm.style.display = "flex";
-      });
-      break;
     default:
       console.warn(
         `Received unknown message type: ${messageObject.type}`,
@@ -118,9 +102,6 @@ const SHOOT_COOLDOWN_TIME = 0.2;
 const DAMPING_FORCE = 5;
 const PLAYER_SPEED = 1000;
 let lastFrameTime = Date.now();
-
-let authForm: HTMLFormElement;
-let authMessage: HTMLElement;
 
 let canvas: HTMLCanvasElement;
 let fpsCounter: HTMLElement;
@@ -239,61 +220,9 @@ const update = () => {
   window.requestAnimationFrame(update);
 };
 
-const handleAuth = async (event: SubmitEvent) => {
-  event.preventDefault();
-  const form = event.target as HTMLFormElement;
-  const formData = new FormData(form);
-  const username = formData.get("username") as string;
-  const password = formData.get("password") as string;
-  const action = (event.submitter as HTMLButtonElement).value;
-
-  const endpoint = action === "login" ? "/login" : "/register";
-
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ username, password }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    authMessage.textContent = errorText || "Failed";
-    authMessage.classList.remove("success");
-    setTimeout(() => {
-      authMessage.textContent = "";
-    }, 3000);
-    return;
-  }
-
-  const data = await response.json();
-  sessionStorage.setItem("authToken", data.token);
-  sendSocketAuthMessage(websocket, data.token);
-
-  authMessage.textContent =
-    action === "login" ? "Login successful!" : "Registration successful!";
-  authMessage.classList.add("success");
-  form.reset();
-  setTimeout(() => {
-    authMessage.textContent = "";
-    authMessage.classList.remove("success");
-  }, 2000);
-};
-
 document.addEventListener("DOMContentLoaded", () => {
   canvas = document.getElementById("canvas") as HTMLCanvasElement;
   fpsCounter = document.getElementById("fps-counter") as HTMLParagraphElement;
-
-  authForm = document.getElementById("auth-form") as HTMLFormElement;
-  authMessage = document.getElementById("auth-message") as HTMLElement;
-  authForm.addEventListener("submit", handleAuth);
-
-  const authToken = sessionStorage.getItem("authToken");
-  if (authToken) {
-    authForm.style.display = "none";
-  }
-
   window.requestAnimationFrame(update);
 });
 

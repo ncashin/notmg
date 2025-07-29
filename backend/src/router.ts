@@ -1,8 +1,6 @@
 import type { Server } from "bun";
-import { authRoutes } from "./auth";
 import { createEntity } from "./ecsProvider";
 
-// Router type definition
 export type RouteHandler = (
   req: Request,
   server: Server,
@@ -27,13 +25,11 @@ const handleWebSocket: RouteHandler = async (req, server) => {
 };
 
 const router: Router = {
-  ...authRoutes,
   "/websocket": {
     GET: handleWebSocket,
   },
 };
 
-// Serve static files from frontend build
 const serveStaticFile = async (path: string): Promise<Response | null> => {
   try {
     const filePath = `./public${path}`;
@@ -53,7 +49,6 @@ const serveStaticFile = async (path: string): Promise<Response | null> => {
 export async function fetchHandler(req: Request, server: Server) {
   const url = new URL(req.url);
   const path = url.pathname;
-
 
   if (path === "/") {
     const file = Bun.file("./public/index.html");

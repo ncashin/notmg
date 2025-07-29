@@ -2,24 +2,16 @@ import type { ServerWebSocket, WebSocketHandler } from "bun";
 import { POSITION_COMPONENT_DEF } from "core";
 import type { ClientMessage } from "core";
 import invariant from "tiny-invariant";
-import { authenticate } from "./auth";
 import {
   getComponent,
   getECSCatchupPacket,
   getECSUpdatePacket,
 } from "./ecsProvider";
-import {
-  handleAuthenticatedPlayerSetup,
-  handleSocketClosePlayerCleanup,
-  handleSocketOpenPlayerSetup,
-  playerShoot,
-} from "./entities/player";
-import { createItem } from "./item";
+import { handleCleanupPlayer, handleSetupPlayer } from "./player";
 import { addUpdateCallback } from "./update";
 
 export type WebSocketData = {
   entity: number;
-  userID?: string;
 };
 let connectedSockets: Array<ServerWebSocket<WebSocketData>> = [];
 export const sendUpdatePacket = () => {
@@ -49,40 +41,14 @@ const websocketMessageHandlers: Record<string, MessageHandler> = {
     position.x = message.x;
     position.y = message.y;
   },
-  shoot: (websocket, message) => {
+  shoot: (_websocket, message) => {
     invariant(message.type === "shoot");
-    playerShoot(websocket.data.entity, message.targetX, message.targetY);
-  },
-  createItem: async (websocket, message) => {
-    invariant(message.type === "createItem");
-    if (!websocket.data.userID) {
-      websocket.send("Must be authenticated to create items");
-      return;
-    }
-    await createItem(websocket.data.userID, message.offsetX, message.offsetY);
-  },
-  auth: async (websocket, message) => {
-    invariant(message.type === "auth");
-    const user = await authenticate(message.token);
-
-    if (!user) {
-      websocket.send(
-        JSON.stringify({
-          type: "authfail",
-        }),
-      );
-      return;
-    }
-
-    handleAuthenticatedPlayerSetup(websocket, message, user);
-
-    websocket.send("Authentication succeeded");
   },
 };
 
 export const websocketHandler: WebSocketHandler<WebSocketData> = {
   open(websocket) {
-    handleSocketOpenPlayerSetup(websocket);
+    handleSetupPlayer(websocket);
     websocket.send(
       JSON.stringify({
         type: "initialization",
@@ -111,7 +77,7 @@ export const websocketHandler: WebSocketHandler<WebSocketData> = {
     connectedSockets = connectedSockets.filter(
       (socket) => socket !== websocket,
     );
-    handleSocketClosePlayerCleanup(websocket);
+    handleCleanupPlayer(websocket);
   },
 };
 

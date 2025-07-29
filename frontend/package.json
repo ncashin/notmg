@@ -1,6 +1,5 @@
 {
-  "name": "frontend",
-  "private": true,
+  "name": "notmg-frontend",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
@@ -14,8 +13,6 @@
   },
   "dependencies": {
     "core": "*",
-    "@types/d3-quadtree": "^3.0.6",
-    "d3-quadtree": "^3.0.1",
     "tiny-invariant": "^1.3.3",
     "zod": "^3.24.4"
   }

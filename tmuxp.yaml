@@ -5,4 +5,4 @@ windows:
     layout: even-horizontal
     panes:
       - shell_command: npm run frontend
-      - shell_command: npm run backend 
+      - shell_command: npm run backend

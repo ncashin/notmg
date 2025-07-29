@@ -1,13 +1,9 @@
 import {
-  CIRCLE_COLLIDER_COMPONENT_DEF,
   type Component,
-  POSITION_COMPONENT_DEF,
   type Packet,
   mergeDeep,
   provideECSInstanceFunctions,
 } from "core";
-
-import { collisionTree } from "./collision";
 
 export const {
   ecsInstance,
@@ -24,29 +20,6 @@ export const {
   runQuery,
 } = provideECSInstanceFunctions({
   addComponentCallback: (entity, component) => {
-    if (component.type === POSITION_COMPONENT_DEF.type) {
-      const circleCollider = getComponent(
-        entity,
-        CIRCLE_COLLIDER_COMPONENT_DEF,
-      );
-      if (circleCollider) {
-        collisionTree.add([
-          entity,
-          component as typeof POSITION_COMPONENT_DEF,
-          circleCollider,
-        ]);
-      }
-    }
-    if (component.type === CIRCLE_COLLIDER_COMPONENT_DEF.type) {
-      const positionComponent = getComponent(entity, POSITION_COMPONENT_DEF);
-      if (positionComponent) {
-        collisionTree.add([
-          entity,
-          positionComponent,
-          component as typeof CIRCLE_COLLIDER_COMPONENT_DEF,
-        ]);
-      }
-    }
 
     if (!component.networked) {
       return;
