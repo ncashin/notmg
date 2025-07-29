@@ -1,5 +1,6 @@
 export const BASE_ENTITY_COMPONENT_DEF: {
   type: "baseEntity";
+  networked: true;
   x: number;
   y: number;
   vx: number;
@@ -7,6 +8,7 @@ export const BASE_ENTITY_COMPONENT_DEF: {
   angle: number;
 } = {
   type: "baseEntity",
+  networked: true,
   x: 0,
   y: 0,
   vx: 0,
@@ -16,6 +18,8 @@ export const BASE_ENTITY_COMPONENT_DEF: {
 
 export const PLAYER_COMPONENT_DEF: {
   type: "player";
+  networked: true;
 } = {
   type: "player",
+  networked: true,
 };
