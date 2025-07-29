@@ -3,6 +3,7 @@ import { runQuery } from "./ecsProvider";
 
 let canvas: HTMLCanvasElement;
 let context: CanvasRenderingContext2D;
+
 document.addEventListener("DOMContentLoaded", () => {
   canvas = document.getElementById("canvas") as HTMLCanvasElement;
   const updateCanvasSize = () => {
@@ -53,9 +54,12 @@ const drawBaseEntities = () => {
     context.arc(baseEntity.x, baseEntity.y, radius, 0, Math.PI * 2);
     context.stroke();
 
-    context.fillStyle = "blue";
-    context.beginPath();
-    context.arc(baseEntity.x, baseEntity.y, 3, 0, Math.PI * 2);
-    context.fill();
+    // Draw velocity vector as a line from the entity's position
+      context.strokeStyle = "red";
+      context.beginPath();
+      context.moveTo(baseEntity.x, baseEntity.y);
+      context.lineTo(baseEntity.x + baseEntity.vx * 10, baseEntity.y + baseEntity.vy * 10);
+      context.stroke();
+    
   });
 };
