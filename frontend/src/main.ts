@@ -1,10 +1,8 @@
 import "./style.css";
 import "./draw";
-import { POSITION_COMPONENT_DEF, VELOCITY_COMPONENT_DEF } from "core";
+import { BASE_ENTITY_COMPONENT_DEF } from "core";
 
 import { type Packet, mergeDeep } from "core";
-import { PLAYER_COMPONENT_DEF } from "core";
-import type { CreateItemMessage } from "core";
 import { draw } from "./draw";
 import {
   addComponent,
@@ -45,9 +43,7 @@ export const mergePacket = (packet: Packet) => {
 
 let timeUpdateReceived = Date.now();
 const websocket = new WebSocket("/websocket");
-websocket.onopen = () => {
-
-};
+websocket.onopen = () => {};
 const parseSocketMessage = (messageString: string) => {
   try {
     return JSON.parse(messageString);
@@ -86,14 +82,18 @@ websocket.onclose = () => {
   console.log("Disconnected from server");
 };
 
-export const CLIENT_POSITION_COMPONENT_DEF: {
-  type: "clientPosition";
+export const CLIENT_BASE_ENTITY_COMPONENT_DEF: {
+  type: "clientBaseEntity";
   x: number;
   y: number;
+  vx: number;
+  vy: number;
 } = {
-  type: "clientPosition",
+  type: "clientBaseEntity",
   x: 0,
   y: 0,
+  vx: 0,
+  vy: 0,
 };
 
 let shootCooldown = 0;
@@ -129,11 +129,11 @@ const update = () => {
 
   const rawInterpolationPercent = (Date.now() - timeUpdateReceived) / 1000;
   const interpolationPercent = Math.cbrt(rawInterpolationPercent);
-  runQuery([POSITION_COMPONENT_DEF], (entity, [serverPosition]) => {
-    let clientPosition = getComponent(entity, CLIENT_POSITION_COMPONENT_DEF);
+  runQuery([BASE_ENTITY_COMPONENT_DEF], (entity, [serverPosition]) => {
+    let clientPosition = getComponent(entity, CLIENT_BASE_ENTITY_COMPONENT_DEF);
     if (clientPosition === undefined) {
-      addComponent(entity, CLIENT_POSITION_COMPONENT_DEF);
-      clientPosition = getComponent(entity, CLIENT_POSITION_COMPONENT_DEF);
+      addComponent(entity, CLIENT_BASE_ENTITY_COMPONENT_DEF);
+      clientPosition = getComponent(entity, CLIENT_BASE_ENTITY_COMPONENT_DEF);
       if (clientPosition === undefined) {
         throw new Error("Client position not found");
       }
@@ -152,70 +152,69 @@ const update = () => {
   });
 
   // updateCollisionSystem(ecsInstance);
-  const position = getComponent(playerEntity, CLIENT_POSITION_COMPONENT_DEF);
-  const velocity = getComponent(playerEntity, VELOCITY_COMPONENT_DEF);
+  const clientBaseEntity = getComponent(
+    playerEntity,
+    CLIENT_BASE_ENTITY_COMPONENT_DEF,
+  );
 
-  const player = getComponent(playerEntity, PLAYER_COMPONENT_DEF);
-  if (
-    position !== undefined &&
-    velocity !== undefined &&
-    player &&
-    !player.isDead
-  ) {
-    // Reset velocity when dead
-    if (player.isDead) {
-      velocity.x = 0;
-      velocity.y = 0;
-    } else {
-      if (inputMap.d) {
-        velocity.x += PLAYER_SPEED * deltaTime;
-      }
-      if (inputMap.a) {
-        velocity.x -= PLAYER_SPEED * deltaTime;
-      }
-      if (inputMap.s) {
-        velocity.y += PLAYER_SPEED * deltaTime;
-      }
-      if (inputMap.w) {
-        velocity.y -= PLAYER_SPEED * deltaTime;
-      }
+  const player = getComponent(playerEntity, BASE_ENTITY_COMPONENT_DEF);
 
-      velocity.x -= velocity.x * DAMPING_FORCE * deltaTime;
-      velocity.y -= velocity.y * DAMPING_FORCE * deltaTime;
+  if (clientBaseEntity && player) {
+    if (typeof clientBaseEntity.vx !== "number") clientBaseEntity.vx = 0;
+    if (typeof clientBaseEntity.vy !== "number") clientBaseEntity.vy = 0;
 
-      position.x += velocity.x * deltaTime;
-      position.y += velocity.y * deltaTime;
+    if (inputMap.d) {
+      clientBaseEntity.vx += PLAYER_SPEED * deltaTime;
+    }
+    if (inputMap.a) {
+      clientBaseEntity.vx -= PLAYER_SPEED * deltaTime;
+    }
+    if (inputMap.s) {
+      clientBaseEntity.vy += PLAYER_SPEED * deltaTime;
+    }
+    if (inputMap.w) {
+      clientBaseEntity.vy -= PLAYER_SPEED * deltaTime;
+    }
 
-      // Send player position update
-      const moveMessage = {
-        type: "move",
-        x: position.x,
-        y: position.y,
+    clientBaseEntity.x += clientBaseEntity.vx * deltaTime;
+    clientBaseEntity.y += clientBaseEntity.vy * deltaTime;
+
+    // Apply damping to velocity
+    clientBaseEntity.vx -= clientBaseEntity.vx * DAMPING_FORCE * deltaTime;
+    clientBaseEntity.vy -= clientBaseEntity.vy * DAMPING_FORCE * deltaTime;
+
+    // Send player position update
+    const moveMessage = {
+      type: "move",
+      x: clientBaseEntity.x,
+      y: clientBaseEntity.y,
+    };
+    websocket.send(JSON.stringify(moveMessage));
+
+    // Calculate mouse position in world coordinates
+    const worldX =
+      mousePosition.x - canvas.offsetWidth / 2 + clientBaseEntity.x;
+    const worldY =
+      mousePosition.y - canvas.offsetHeight / 2 + clientBaseEntity.y;
+
+    // Handle shooting
+    if (shootCooldown > 0) {
+      shootCooldown -= deltaTime;
+    }
+
+    if (mouseClicked && shootCooldown <= 0) {
+      const shootMessage = {
+        type: "shoot",
+        targetX: worldX,
+        targetY: worldY,
       };
-      websocket.send(JSON.stringify(moveMessage));
-
-      // Calculate mouse position in world coordinates
-      const worldX = mousePosition.x - canvas.offsetWidth / 2 + position.x;
-      const worldY = mousePosition.y - canvas.offsetHeight / 2 + position.y;
-
-      // Handle shooting
-      if (shootCooldown > 0) {
-        shootCooldown -= deltaTime;
-      }
-
-      if (mouseClicked && shootCooldown <= 0) {
-        const shootMessage = {
-          type: "shoot",
-          targetX: worldX,
-          targetY: worldY,
-        };
-        websocket.send(JSON.stringify(shootMessage));
-        shootCooldown = SHOOT_COOLDOWN_TIME;
-      }
+      websocket.send(JSON.stringify(shootMessage));
+      shootCooldown = SHOOT_COOLDOWN_TIME;
     }
   }
-  if (position) {
-    draw(position, playerEntity);
+
+  if (clientBaseEntity) {
+    draw(clientBaseEntity);
   }
   window.requestAnimationFrame(update);
 };
@@ -224,15 +223,4 @@ document.addEventListener("DOMContentLoaded", () => {
   canvas = document.getElementById("canvas") as HTMLCanvasElement;
   fpsCounter = document.getElementById("fps-counter") as HTMLParagraphElement;
   window.requestAnimationFrame(update);
-});
-
-document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") {
-    const message: CreateItemMessage = {
-      type: "createItem",
-      offsetX: 0,
-      offsetY: 0,
-    };
-    websocket.send(JSON.stringify(message));
-  }
 });

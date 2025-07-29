@@ -1,6 +1,5 @@
 import type { ServerWebSocket, WebSocketHandler } from "bun";
-import { POSITION_COMPONENT_DEF } from "core";
-import type { ClientMessage } from "core";
+import { BASE_ENTITY_COMPONENT_DEF, type ClientMessage } from "core";
 import invariant from "tiny-invariant";
 import {
   getComponent,
@@ -33,19 +32,18 @@ type MessageHandler = (
 const websocketMessageHandlers: Record<string, MessageHandler> = {
   move: (websocket, message) => {
     invariant(message.type === "move");
-    const position = getComponent(
+    const baseEntity = getComponent(
       websocket.data.entity,
-      POSITION_COMPONENT_DEF,
+      BASE_ENTITY_COMPONENT_DEF,
     );
-    if (!position) return;
-    position.x = message.x;
-    position.y = message.y;
+    if (!baseEntity) return;
+    baseEntity.x = message.x;
+    baseEntity.y = message.y;
   },
   shoot: (_websocket, message) => {
     invariant(message.type === "shoot");
   },
 };
-
 export const websocketHandler: WebSocketHandler<WebSocketData> = {
   open(websocket) {
     handleSetupPlayer(websocket);

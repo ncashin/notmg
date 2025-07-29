@@ -1,10 +1,5 @@
-import {
-  CIRCLE_COLLIDER_COMPONENT_DEF,
-  POSITION_COMPONENT_DEF,
-  VELOCITY_COMPONENT_DEF,
-} from "core";
+import { BASE_ENTITY_COMPONENT_DEF } from "core";
 import { runQuery } from "./ecsProvider";
-import { CLIENT_POSITION_COMPONENT_DEF } from "./main";
 
 let canvas: HTMLCanvasElement;
 let context: CanvasRenderingContext2D;
@@ -31,9 +26,7 @@ declare global {
 }
 
 window.DEBUG_DRAW = true;
-export const draw = (
-  centerPoint: { x: number; y: number },
-) => {
+export const draw = (centerPoint: { x: number; y: number }) => {
   context.clearRect(0, 0, canvas.width, canvas.height);
 
   context.save();
@@ -46,42 +39,23 @@ export const draw = (
   canvas.style.backgroundPosition = `${-centerPoint.x}px ${-centerPoint.y}px`;
 
   if (window.DEBUG_DRAW) {
-    drawCircleColliders();
-    drawVelocity();
+    drawBaseEntities();
   }
 
   context.restore();
 };
 
-const drawCircleColliders = () => {
+const drawBaseEntities = () => {
   context.strokeStyle = "blue";
-  runQuery(
-    [CLIENT_POSITION_COMPONENT_DEF, CIRCLE_COLLIDER_COMPONENT_DEF],
-    (_entity, [position, collider]) => {
-      // Calculate radius as half of the larger dimension
-      context.beginPath();
-      context.arc(position.x, position.y, collider.radius, 0, Math.PI * 2);
-      context.stroke();
-    },
-  );
-};
+  runQuery([BASE_ENTITY_COMPONENT_DEF], (_entity, [baseEntity]) => {
+    const radius = 20;
+    context.beginPath();
+    context.arc(baseEntity.x, baseEntity.y, radius, 0, Math.PI * 2);
+    context.stroke();
 
-const drawVelocity = () => {
-  context.strokeStyle = "purple";
-  runQuery(
-    [
-      CLIENT_POSITION_COMPONENT_DEF,
-      POSITION_COMPONENT_DEF,
-      VELOCITY_COMPONENT_DEF,
-    ],
-    (_entity, [clientPosition, position, velocity]) => {
-      const pos = clientPosition || position;
-      context.beginPath();
-      context.moveTo(pos.x, pos.y);
-      context.lineTo(pos.x + velocity.x, pos.y + velocity.y);
-      context.closePath();
-      context.stroke();
-      context.moveTo(0, 0);
-    },
-  );
+    context.fillStyle = "blue";
+    context.beginPath();
+    context.arc(baseEntity.x, baseEntity.y, 3, 0, Math.PI * 2);
+    context.fill();
+  });
 };
