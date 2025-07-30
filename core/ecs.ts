@@ -1,3 +1,5 @@
+import { cloneWithVector2, Vector2 } from './vector2';
+
 export type Entity = number;
 export type ComponentTypeString = string;
 export type Component = { type: ComponentTypeString } & Record<string, unknown>;
@@ -85,6 +87,14 @@ const lookupComponentPool = (
   }
   return instance.componentPools[componentType];
 };
+
+// Custom cloning function that preserves Vector2 instances
+const cloneComponent = <ComponentType extends Component>(
+  COMPONENT_TYPE_DEF: ComponentType,
+): ComponentType => {
+  return cloneWithVector2(COMPONENT_TYPE_DEF) as ComponentType;
+};
+
 const createComponentReference = <ComponentType extends Component>(
   instance: ECSInstance,
   entity: Entity,
@@ -94,8 +104,9 @@ const createComponentReference = <ComponentType extends Component>(
     instance.componentPools[COMPONENT_TYPE_DEF.type] = {};
   }
   instance.componentPools[COMPONENT_TYPE_DEF.type][entity] =
-    structuredClone(COMPONENT_TYPE_DEF);
+    cloneComponent(COMPONENT_TYPE_DEF);
 };
+
 const lookupAssociatedComposedPoolKeys = <ComponentType extends Component>(
   instance: ECSInstance,
   COMPONENT_TYPE_DEF: ComponentType,

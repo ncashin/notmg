@@ -1,13 +1,15 @@
+import { Vector2 } from "./vector2";
+
 export type MoveMessage = {
   type: "move";
-  x: number;
-  y: number;
+  position: Vector2;
+  velocity: Vector2;
+  angle: number;
 };
 
 export type ShootMessage = {
   type: "shoot";
-  targetX: number;
-  targetY: number;
+  targetPosition: Vector2;
 };
 
 export type ClientMessage =

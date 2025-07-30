@@ -9,5 +9,8 @@ export default defineConfig({
         rewriteWsOrigin: true,
       },
     },
+    allowedHosts: [
+      "newport",
+    ],
   },
 });

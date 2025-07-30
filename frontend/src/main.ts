@@ -1,8 +1,12 @@
 import "./style.css";
 import "./draw";
-import { BASE_ENTITY_COMPONENT_DEF } from "core";
-
-import { type Packet, mergeDeep } from "core";
+import {
+  BASE_ENTITY_COMPONENT_DEF,
+  type ClientMessage,
+  type Packet,
+  mergeDeep,
+  Vector2,
+} from "core";
 import { draw } from "./draw";
 import {
   addComponent,
@@ -11,10 +15,51 @@ import {
   removeComponent,
   runQuery,
 } from "./ecsProvider";
-import { inputMap, mouseClicked, mousePosition } from "./input";
+import { inputMap } from "./input";
 
-let playerEntity: number | undefined = undefined;
-export const mergePacket = (packet: Packet) => {
+let websocket: WebSocket;
+let playerEntity: number | undefined;
+let timeUpdateReceived = Date.now();
+
+// Helper function to reconstruct Vector2 instances from serialized data
+const reconstructVector2InComponent = (obj: any): any => {
+  if (obj && typeof obj === 'object') {
+    if (obj._isVector2 || (typeof obj.x === 'number' && typeof obj.y === 'number' && (obj.position || obj.velocity || Object.keys(obj).length === 2))) {
+      return new Vector2(obj.x, obj.y);
+    }
+    
+    if (Array.isArray(obj)) {
+      return obj.map(item => reconstructVector2InComponent(item));
+    }
+    
+    const reconstructed: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (key === 'position' || key === 'velocity') {
+        // These should be Vector2 instances
+        if (value && typeof value === 'object' && typeof (value as any).x === 'number' && typeof (value as any).y === 'number') {
+          reconstructed[key] = new Vector2((value as any).x, (value as any).y);
+        } else {
+          reconstructed[key] = value;
+        }
+      } else if (key === 'points' && Array.isArray(value)) {
+        // Asteroid points should be Vector2 array
+        reconstructed[key] = value.map(point => {
+          if (point && typeof point === 'object' && typeof point.x === 'number' && typeof point.y === 'number') {
+            return new Vector2(point.x, point.y);
+          }
+          return point;
+        });
+      } else {
+        reconstructed[key] = reconstructVector2InComponent(value);
+      }
+    }
+    return reconstructed;
+  }
+  
+  return obj;
+};
+
+const mergePacket = (packet: Packet) => {
   for (const [entity, components] of Object.entries(packet)) {
     if (components === null) {
       destroyEntity(Number.parseInt(entity));
@@ -27,80 +72,105 @@ export const mergePacket = (packet: Packet) => {
       }
       component.type = type;
 
-      const existingComponent = getComponent(Number(entity), component);
+      // Reconstruct Vector2 instances in the component
+      const reconstructedComponent = reconstructVector2InComponent(component);
+
+      const existingComponent = getComponent(Number(entity), reconstructedComponent);
       if (existingComponent === undefined) {
-        addComponent(Number(entity), component);
+        addComponent(Number(entity), reconstructedComponent);
         continue;
       }
 
-      if (Number.parseInt(entity) === playerEntity && type === "position") {
+      if (Number.parseInt(entity) === playerEntity && type === "baseEntity") {
         continue;
       }
-      mergeDeep(existingComponent, component);
+      mergeDeep(existingComponent, reconstructedComponent);
     }
   }
 };
 
-let timeUpdateReceived = Date.now();
-const websocket = new WebSocket("/websocket");
-websocket.onopen = () => {};
-const parseSocketMessage = (messageString: string) => {
-  try {
-    return JSON.parse(messageString);
-  } catch {
-    return messageString;
-  }
-};
-websocket.onmessage = (event) => {
+const receiveServerUpdate = (packet: any) => {
   timeUpdateReceived = Date.now();
-  const messageObject = parseSocketMessage(event.data);
-  if (typeof messageObject !== "object") {
-    console.log(messageObject);
-    return;
-  }
-  switch (messageObject.type) {
-    case "initialization":
-      playerEntity = messageObject.playerEntity;
-      mergePacket(messageObject.catchupPacket);
-      break;
-    case "update":
-      console.log(messageObject);
-      mergePacket(messageObject.packet);
-      break;
+  mergePacket(packet);
+};
 
-    default:
-      console.warn(
-        `Received unknown message type: ${messageObject.type}`,
-        messageObject,
-      );
+const receiveMessage = (message: any) => {
+  const messageData = JSON.parse(message.data, (key, value) => {
+    // Deserialize Vector2 objects from network data
+    if (value && typeof value === 'object' && value._isVector2) {
+      return new Vector2(value.x, value.y);
+    }
+    return value;
+  });
+
+  if (messageData.type === "initialization") {
+    playerEntity = messageData.playerEntity;
+    receiveServerUpdate(messageData.catchupPacket);
+  } else if (messageData.type === "update") {
+    receiveServerUpdate(messageData.packet);
   }
 };
-websocket.onerror = (error) => {
-  console.error("WebSocket error:", error);
+
+// Function to connect to the WebSocket
+const connectWebSocket = () => {
+  websocket = new WebSocket("ws://localhost:3000");
+
+  websocket.addEventListener("open", (_event) => {
+    console.log("Connected to WebSocket server");
+  });
+
+  websocket.addEventListener("message", receiveMessage);
+
+  websocket.addEventListener("close", (event) => {
+    console.log("WebSocket connection closed:", event);
+    // Attempt to reconnect after a delay
+    setTimeout(connectWebSocket, 3000); // Reconnect after 3 seconds
+  });
+
+  websocket.addEventListener("error", (error) => {
+    console.error("WebSocket error:", error);
+  });
 };
-websocket.onclose = () => {
-  console.log("Disconnected from server");
-};
+
+// Initial connection
+connectWebSocket();
+
+let mouseClicked = false;
+
+// Mouse event listeners
+window.addEventListener("mousedown", () => {
+  mouseClicked = true;
+});
+
+window.addEventListener("mouseup", () => {
+  mouseClicked = false;
+});
+
+window.addEventListener("mousemove", (event) => {
+  window.mouseX = event.clientX;
+  window.mouseY = event.clientY;
+});
+
+// Prevent right-click context menu
+window.addEventListener("contextmenu", (event) => {
+  event.preventDefault();
+});
 
 export const CLIENT_BASE_ENTITY_COMPONENT_DEF: {
   type: "clientBaseEntity";
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
+  position: Vector2;
+  velocity: Vector2;
 } = {
   type: "clientBaseEntity",
-  x: 0,
-  y: 0,
-  vx: 0,
-  vy: 0,
+  position: Vector2.zero(),
+  velocity: Vector2.zero(),
 };
 
 let shootCooldown = 0;
 const SHOOT_COOLDOWN_TIME = 0.2;
 
-const DAMPING_FORCE = 5;
-const PLAYER_SPEED = 1000;
+const ROTATION_SPEED = 3; // radians per second
+const THRUST_FORCE = 400; // Reduced for better control
 let lastFrameTime = Date.now();
 
 let canvas: HTMLCanvasElement;
@@ -129,26 +199,24 @@ const update = () => {
 
   const rawInterpolationPercent = (Date.now() - timeUpdateReceived) / 1000;
   const interpolationPercent = Math.cbrt(rawInterpolationPercent);
-  runQuery([BASE_ENTITY_COMPONENT_DEF], (entity, [serverPosition]) => {
-    let clientPosition = getComponent(entity, CLIENT_BASE_ENTITY_COMPONENT_DEF);
-    if (clientPosition === undefined) {
+  runQuery([BASE_ENTITY_COMPONENT_DEF], (entity, [serverEntity]) => {
+    let clientEntity = getComponent(entity, CLIENT_BASE_ENTITY_COMPONENT_DEF);
+    if (clientEntity === undefined) {
       addComponent(entity, CLIENT_BASE_ENTITY_COMPONENT_DEF);
-      clientPosition = getComponent(entity, CLIENT_BASE_ENTITY_COMPONENT_DEF);
-      if (clientPosition === undefined) {
-        throw new Error("Client position not found");
+      clientEntity = getComponent(entity, CLIENT_BASE_ENTITY_COMPONENT_DEF);
+      if (clientEntity === undefined) {
+        throw new Error("Client entity not found");
       }
 
-      clientPosition.x = serverPosition.x;
-      clientPosition.y = serverPosition.y;
+      clientEntity.position.setFrom(serverEntity.position);
     }
     if (entity === playerEntity) {
       return;
     }
 
-    const dx = serverPosition.x - clientPosition.x;
-    const dy = serverPosition.y - clientPosition.y;
-    clientPosition.x += dx * interpolationPercent;
-    clientPosition.y += dy * interpolationPercent;
+    // Interpolate position towards server position
+    const positionDelta = serverEntity.position.subtract(clientEntity.position);
+    clientEntity.position.addMut(positionDelta.multiply(interpolationPercent));
   });
 
   // updateCollisionSystem(ecsInstance);
@@ -160,61 +228,85 @@ const update = () => {
   const player = getComponent(playerEntity, BASE_ENTITY_COMPONENT_DEF);
 
   if (clientBaseEntity && player) {
-    if (typeof clientBaseEntity.vx !== "number") clientBaseEntity.vx = 0;
-    if (typeof clientBaseEntity.vy !== "number") clientBaseEntity.vy = 0;
+    // Ensure velocity is valid
+    if (typeof clientBaseEntity.velocity.x !== "number") clientBaseEntity.velocity.x = 0;
+    if (typeof clientBaseEntity.velocity.y !== "number") clientBaseEntity.velocity.y = 0;
 
+    // Tank controls: A/D for rotation
     if (inputMap.d) {
-      clientBaseEntity.vx += PLAYER_SPEED * deltaTime;
+      player.angle += ROTATION_SPEED * deltaTime;
     }
     if (inputMap.a) {
-      clientBaseEntity.vx -= PLAYER_SPEED * deltaTime;
+      player.angle -= ROTATION_SPEED * deltaTime;
+    }
+
+    // W/S for forward/backward thrust in the direction we're facing
+    if (inputMap.w) {
+      // Thrust forward
+      const thrustDirection = Vector2.fromPolar(player.angle, THRUST_FORCE * deltaTime);
+      clientBaseEntity.velocity.addMut(thrustDirection);
     }
     if (inputMap.s) {
-      clientBaseEntity.vy += PLAYER_SPEED * deltaTime;
+      // Thrust backward
+      const thrustDirection = Vector2.fromPolar(player.angle, -THRUST_FORCE * deltaTime);
+      clientBaseEntity.velocity.addMut(thrustDirection);
     }
-    if (inputMap.w) {
-      clientBaseEntity.vy -= PLAYER_SPEED * deltaTime;
-    }
 
-    clientBaseEntity.x += clientBaseEntity.vx * deltaTime;
-    clientBaseEntity.y += clientBaseEntity.vy * deltaTime;
+    // Update position based on velocity
+    const movement = clientBaseEntity.velocity.multiply(deltaTime);
+    clientBaseEntity.position.addMut(movement);
 
-    // Apply damping to velocity
-    clientBaseEntity.vx -= clientBaseEntity.vx * DAMPING_FORCE * deltaTime;
-    clientBaseEntity.vy -= clientBaseEntity.vy * DAMPING_FORCE * deltaTime;
+    // Apply very light damping to velocity for space-like physics
+    const dampingFactor = Math.pow(0.995, deltaTime * 60); // Consistent regardless of framerate
+    clientBaseEntity.velocity.multiplyMut(dampingFactor);
 
-    // Send player position update
+    // Send player position, angle, and velocity update for better sync
     const moveMessage = {
       type: "move",
-      x: clientBaseEntity.x,
-      y: clientBaseEntity.y,
+      position: clientBaseEntity.position.toObject(),
+      velocity: clientBaseEntity.velocity.toObject(),
+      angle: player.angle,
     };
-    websocket.send(JSON.stringify(moveMessage));
+    
+    // Serialize Vector2 objects for network transmission
+    const serializedMessage = JSON.stringify(moveMessage, (key, value) => {
+      if (value instanceof Vector2) {
+        return { x: value.x, y: value.y, _isVector2: true };
+      }
+      return value;
+    });
+    websocket.send(serializedMessage);
 
-    // Calculate mouse position in world coordinates
-    const worldX =
-      mousePosition.x - canvas.offsetWidth / 2 + clientBaseEntity.x;
-    const worldY =
-      mousePosition.y - canvas.offsetHeight / 2 + clientBaseEntity.y;
-
-    // Handle shooting
+    // Handle shooting - now shoots in the direction player is facing
     if (shootCooldown > 0) {
       shootCooldown -= deltaTime;
     }
 
     if (mouseClicked && shootCooldown <= 0) {
+      // Shoot in the direction the player is facing
+      const shootDistance = 1000; // How far ahead to shoot
+      const shootDirection = Vector2.fromPolar(player.angle, shootDistance);
+      const targetPosition = clientBaseEntity.position.add(shootDirection);
+      
       const shootMessage = {
         type: "shoot",
-        targetX: worldX,
-        targetY: worldY,
+        targetPosition: targetPosition.toObject(),
       };
-      websocket.send(JSON.stringify(shootMessage));
+      
+      // Serialize Vector2 objects for network transmission
+      const serializedShootMessage = JSON.stringify(shootMessage, (key, value) => {
+        if (value instanceof Vector2) {
+          return { x: value.x, y: value.y, _isVector2: true };
+        }
+        return value;
+      });
+      websocket.send(serializedShootMessage);
       shootCooldown = SHOOT_COOLDOWN_TIME;
     }
   }
 
   if (clientBaseEntity) {
-    draw(clientBaseEntity);
+    draw(clientBaseEntity.position);
   }
   window.requestAnimationFrame(update);
 };

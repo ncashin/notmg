@@ -1,5 +1,5 @@
 import type { ServerWebSocket } from "bun";
-import { BASE_ENTITY_COMPONENT_DEF, PLAYER_COMPONENT_DEF } from "core";
+import { BASE_ENTITY_COMPONENT_DEF, PLAYER_COMPONENT_DEF, Vector2 } from "core";
 import {
   addComponent,
   createEntity,
@@ -26,8 +26,14 @@ export const handleCleanupPlayer = (
 };
 
 addUpdateCallback(() => {
+  const deltaTime = 1 / 60; // 60 FPS on server
   runQuery([BASE_ENTITY_COMPONENT_DEF], (_entity, [baseEntity]) => {
-    baseEntity.x += baseEntity.vx;
-    baseEntity.y += baseEntity.vy;
+    // Update position based on velocity with deltaTime
+    const movement = baseEntity.velocity.multiply(deltaTime);
+    baseEntity.position.addMut(movement);
+    
+    // Apply very light damping to velocity for realistic space physics
+    const damping = 0.998; // Even lighter damping to preserve momentum better
+    baseEntity.velocity.multiplyMut(damping);
   });
 });

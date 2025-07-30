@@ -1,4 +1,4 @@
-import { BASE_ENTITY_COMPONENT_DEF } from "core";
+import { ASTEROID_COMPONENT_DEF, BASE_ENTITY_COMPONENT_DEF, PLAYER_COMPONENT_DEF, Vector2 } from "core";
 import { runQuery } from "./ecsProvider";
 
 let canvas: HTMLCanvasElement;
@@ -27,7 +27,7 @@ declare global {
 }
 
 window.DEBUG_DRAW = true;
-export const draw = (centerPoint: { x: number; y: number }) => {
+export const draw = (centerPoint: Vector2) => {
   context.clearRect(0, 0, canvas.width, canvas.height);
 
   context.save();
@@ -47,19 +47,59 @@ export const draw = (centerPoint: { x: number; y: number }) => {
 };
 
 const drawBaseEntities = () => {
-  context.strokeStyle = "blue";
-  runQuery([BASE_ENTITY_COMPONENT_DEF], (_entity, [baseEntity]) => {
-    const radius = 20;
-    context.beginPath();
-    context.arc(baseEntity.x, baseEntity.y, radius, 0, Math.PI * 2);
-    context.stroke();
+  runQuery([BASE_ENTITY_COMPONENT_DEF, PLAYER_COMPONENT_DEF], (_entity, [baseEntity, _player]) => {
+    const size = 15; // Triangle size
+    
+    context.strokeStyle = "white";
 
-    // Draw velocity vector as a line from the entity's position
+    // Draw triangle pointing in the direction of baseEntity.angle
+    context.save();
+    context.translate(baseEntity.position.x, baseEntity.position.y);
+    context.rotate(baseEntity.angle);
+    
+    context.beginPath();
+    // Triangle pointing right (0 angle)
+    context.moveTo(size, 0);              // Front point
+    context.lineTo(-size * 0.7, -size * 0.5);  // Back left
+    context.lineTo(-size * 0.7, size * 0.5);   // Back right
+    context.closePath();
+    context.stroke();
+    
+    context.restore();
+
+    
+  });
+  runQuery([BASE_ENTITY_COMPONENT_DEF], (_entity, [baseEntity]) => {
+    if (window.DEBUG_DRAW) {
       context.strokeStyle = "red";
       context.beginPath();
-      context.moveTo(baseEntity.x, baseEntity.y);
-      context.lineTo(baseEntity.x + baseEntity.vx * 10, baseEntity.y + baseEntity.vy * 10);
+      context.moveTo(baseEntity.position.x, baseEntity.position.y);
+      context.lineTo(baseEntity.position.x + baseEntity.velocity.x, baseEntity.position.y + baseEntity.velocity.y);
       context.stroke();
-    
+    }
+  });
+
+  // Draw asteroids
+  runQuery([BASE_ENTITY_COMPONENT_DEF, ASTEROID_COMPONENT_DEF], (_entity, [baseEntity, asteroid]) => {
+    if (!asteroid.points || asteroid.points.length === 0) return;
+
+    context.save();
+    context.strokeStyle = "gray";
+    context.beginPath();
+    // Move to the first point
+    context.moveTo(
+      asteroid.points[0].x + baseEntity.position.x,
+      asteroid.points[0].y + baseEntity.position.y
+    );
+    // Draw lines to each subsequent point
+    for (let i = 1; i < asteroid.points.length; i++) {
+      context.lineTo(
+        asteroid.points[i].x + baseEntity.position.x,
+        asteroid.points[i].y + baseEntity.position.y
+      );
+    }
+    context.closePath();
+    context.stroke();
+    context.restore();
   });
 };
